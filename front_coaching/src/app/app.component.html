@@ -1,0 +1,116 @@
+<!-- Navigation Bar -->
+<nav class="navbar">
+  <div class="container">
+    <!-- Logo -->
+    <a class="navbar-logo" routerLink="/">
+      <i class="bi bi-activity"></i>
+      <span>SportCoach</span>
+    </a>
+
+    <!-- Navigation Links -->
+    <div class="navbar-links">
+      <a
+        class="nav-link"
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Accueil</a
+      >
+      <a class="nav-link" routerLink="/coachs" routerLinkActive="active"
+        >Nos Coachs</a
+      >
+      <a class="nav-link" routerLink="/seances" routerLinkActive="active"
+        >Séances</a
+      >
+    </div>
+
+    <!-- Buttons -->
+    <div class="navbar-buttons">
+      <a class="btn btn-outline" routerLink="/inscription">Inscription</a>
+      <a class="btn btn-primary" routerLink="/connexion">Connexion</a>
+    </div>
+
+    <!-- Mobile Toggle Button -->
+    <button id="navbar-toggle" class="navbar-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Navigation -->
+<div id="navbar-mobile" class="navbar-mobile">
+  <div class="navbar-mobile-links">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >Accueil</a
+    >
+    <a routerLink="/coachs" routerLinkActive="active">Nos Coachs</a>
+    <a routerLink="/seances" routerLinkActive="active">Séances</a>
+    <a routerLink="/inscription" class="mobile-btn-outline">Inscription</a>
+    <a routerLink="/connexion" class="mobile-btn-primary">Connexion</a>
+  </div>
+</div>
+
+<!-- Main Content -->
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3 class="footer-title">SportCoach</h3>
+        <p class="footer-description">
+          Votre plateforme de suivi d'entraînements sportifs et coaching
+          personnalisé.
+        </p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-section">
+        <h3 class="footer-title">Navigation</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Accueil</a></li>
+          <li><a routerLink="/coachs">Nos Coachs</a></li>
+          <li><a routerLink="/seances">Séances</a></li>
+          <li><a routerLink="/contact">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3 class="footer-title">Compte</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/connexion">Connexion</a></li>
+          <li><a routerLink="/inscription">Inscription</a></li>
+          <li><a routerLink="/profil">Mon Profil</a></li>
+          <li><a routerLink="/historique">Historique</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3 class="footer-title">Informations</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/a-propos">À propos</a></li>
+          <li><a routerLink="/confidentialite">Confidentialité</a></li>
+          <li><a routerLink="/conditions">Conditions d'utilisation</a></li>
+          <li><a routerLink="/faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2024 SportCoach. Tous droits réservés.</p>
+    </div>
+  </div>
+</footer>
