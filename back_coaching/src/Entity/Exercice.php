@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\Difficulte;
 use App\Repository\ExerciceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,14 +22,14 @@ class Exercice
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column]
     private ?int $duree_estimee = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $difficulte = null;
+    #[ORM\Column(enumType: Difficulte::class)]
+    private ?Difficulte $difficulte = null;
 
     /**
      * @var Collection<int, Seance>
@@ -40,10 +41,6 @@ class Exercice
     {
         $this->seances = new ArrayCollection();
     }
-
-    public const DIFFICULTE_FACILE = 'facile';
-    public const DIFFICULTE_MOYEN = 'moyen';
-    public const DIFFICULTE_DIFFICILE = 'difficile';
 
     public function getId(): ?Uuid
     {
@@ -67,7 +64,7 @@ class Exercice
         return $this->description;
     }
 
-    public function setDescription(string $description): static
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
 
@@ -86,14 +83,15 @@ class Exercice
         return $this;
     }
 
-    public function getDifficulte(): ?string
+    public function getDifficulte(): ?Difficulte
     {
         return $this->difficulte;
     }
 
-    public function setDifficulte(string $difficulte): static
+    public function setDifficulte(Difficulte $difficulte): static
     {
-        if (!in_array($difficulte, [self::DIFFICULTE_FACILE, self::DIFFICULTE_MOYEN, self::DIFFICULTE_DIFFICILE])) {
+
+        if (!in_array($difficulte, [Difficulte::FACILE, Difficulte::MOYEN, Difficulte::DIFFICILE])) {
             throw new \InvalidArgumentException('Difficulté invalide');
         }
 

@@ -2,22 +2,21 @@
 
 namespace App\Entity;
 
+use App\Enum\Niveau;
 use App\Repository\SportifRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-
+use App\Entity\Utilisateur;
 #[ORM\Entity(repositoryClass: SportifRepository::class)]
 class Sportif extends Utilisateur
 {
-    // Pas d'id car on hérite de Utilisateur
-
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date_inscription = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $niveau_sportif = null;
+    #[ORM\Column(enumType: Niveau::class)]
+    private ?Niveau $niveau_sportif = null;
 
     /**
      * @var Collection<int, Seance>
@@ -29,10 +28,6 @@ class Sportif extends Utilisateur
     {
         $this->seances = new ArrayCollection();
     }
-
-    public const NIVEAU_DEBUTANT = 'Débutant';
-    public const NIVEAU_INTERMEDIAIRE = 'Intermédiaire';
-    public const NIVEAU_AVANCE = 'Avancé';
 
     public function getDateInscription(): ?\DateTimeInterface
     {
@@ -46,14 +41,14 @@ class Sportif extends Utilisateur
         return $this;
     }
 
-    public function getNiveauSportif(): ?string
+    public function getNiveauSportif(): ?Niveau
     {
         return $this->niveau_sportif;
     }
 
-    public function setNiveauSportif(string $niveau_sportif): static
+    public function setNiveauSportif(Niveau $niveau_sportif): static
     {
-        if (!in_array($niveau_sportif, [self::NIVEAU_DEBUTANT, self::NIVEAU_INTERMEDIAIRE, self::NIVEAU_AVANCE])) {
+        if (!in_array($niveau_sportif, [Niveau::DEBUTANT, Niveau::INTERMEDIAIRE, Niveau::AVANCE])) {
             throw new \InvalidArgumentException('Niveau sportif invalide');
         }
 

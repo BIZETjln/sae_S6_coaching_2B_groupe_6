@@ -2,12 +2,18 @@
 
 namespace App\Entity;
 
+use App\Enum\Niveau;
+use App\Enum\StatutSeance;
+use App\Enum\TypeSeance;
 use App\Repository\SeanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use App\Enum\ThemeSeance;
+use App\Entity\Sportif;
+
 #[ORM\Entity(repositoryClass: SeanceRepository::class)]
 class Seance
 {
@@ -20,11 +26,11 @@ class Seance
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date_heure = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $type_seance = null;
+    #[ORM\Column(enumType: TypeSeance::class)]
+    private ?TypeSeance $type_seance = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $theme_seance = null;
+    #[ORM\Column(enumType: ThemeSeance::class)]
+    private ?ThemeSeance $theme_seance = null;
 
     #[ORM\ManyToOne(inversedBy: 'seances')]
     #[ORM\JoinColumn(nullable: false)]
@@ -36,34 +42,17 @@ class Seance
     #[ORM\ManyToMany(targetEntity: Sportif::class, inversedBy: 'seances')]
     private Collection $sportifs;
 
+    #[ORM\Column(enumType: StatutSeance::class)]
+    private ?StatutSeance $statut = null;
+
+    #[ORM\Column(enumType: Niveau::class)]
+    private ?Niveau $niveau_seance = null;
+
     /**
      * @var Collection<int, Exercice>
      */
     #[ORM\ManyToMany(targetEntity: Exercice::class, inversedBy: 'seances')]
     private Collection $exercices;
-
-    #[ORM\Column(length: 20)]
-    private ?string $statut = null;
-
-    #[ORM\Column(length: 30)]
-    private ?string $niveau_seance = null;
-
-    public const TYPE_SOLO = 'solo';
-    public const TYPE_DUO = 'duo';
-    public const TYPE_TRIO = 'trio';
-
-    public const THEME_FITNESS = 'fitness';
-    public const THEME_CARDIO = 'cardio';
-    public const THEME_MUSCULATION = 'musculation';
-    public const THEME_CROSSFIT = 'crossfit';
-
-    public const STATUT_PREVUE = 'prevue';
-    public const STATUT_VALIDEE = 'validee';
-    public const STATUT_ANNULEE = 'annulee';
-
-    public const NIVEAU_DEBUTANT = 'debutant';
-    public const NIVEAU_INTERMEDIAIRE = 'intermediaire';
-    public const NIVEAU_AVANCE = 'avance';
 
     public function __construct()
     {
@@ -88,30 +77,26 @@ class Seance
         return $this;
     }
 
-    public function getTypeSeance(): ?string
+    public function getTypeSeance(): ?TypeSeance
     {
         return $this->type_seance;
     }
 
-    public function setTypeSeance(string $type_seance): static
+    public function setTypeSeance(TypeSeance $type_seance): static
     {
-        if (!in_array($type_seance, [self::TYPE_SOLO, self::TYPE_DUO, self::TYPE_TRIO])) {
-            throw new \InvalidArgumentException('Type de séance invalide');
-        }
-
         $this->type_seance = $type_seance;
 
         return $this;
     }
 
-    public function getThemeSeance(): ?string
+    public function getThemeSeance(): ?ThemeSeance
     {
         return $this->theme_seance;
     }
 
-    public function setThemeSeance(string $theme_seance): static
+    public function setThemeSeance(ThemeSeance $theme_seance): static
     {
-        if (!in_array($theme_seance, [self::THEME_FITNESS, self::THEME_CARDIO, self::THEME_MUSCULATION, self::THEME_CROSSFIT])) {
+        if (!in_array($theme_seance, [ThemeSeance::FITNESS, ThemeSeance::CARDIO, ThemeSeance::MUSCULATION, ThemeSeance::CROSSFIT])) {
             throw new \InvalidArgumentException('Thème de séance invalide');
         }
 
@@ -160,6 +145,35 @@ class Seance
         return $this;
     }
 
+    public function getStatut(): ?StatutSeance
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(StatutSeance $statut): static
+    {
+        $this->statut = $statut;
+
+        return $this;
+    }
+
+    public function getNiveauSeance(): ?Niveau
+    {
+        return $this->niveau_seance;
+    }
+
+    public function setNiveauSeance(Niveau $niveau_seance): static
+    {
+
+        if (!in_array($niveau_seance, [Niveau::DEBUTANT, Niveau::INTERMEDIAIRE, Niveau::AVANCE])) {
+            throw new \InvalidArgumentException('Niveau de séance invalide');
+        }
+
+        $this->niveau_seance = $niveau_seance;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Exercice>
      */
@@ -180,34 +194,6 @@ class Seance
     public function removeExercice(Exercice $exercice): static
     {
         $this->exercices->removeElement($exercice);
-
-        return $this;
-    }
-
-    public function getStatut(): ?string
-    {
-        return $this->statut;
-    }
-
-    public function setStatut(string $statut): static
-    {
-        $this->statut = $statut;
-
-        return $this;
-    }
-
-    public function getNiveauSeance(): ?string
-    {
-        return $this->niveau_seance;
-    }
-
-    public function setNiveauSeance(string $niveau_seance): static
-    {
-        if (!in_array($niveau_seance, [self::NIVEAU_DEBUTANT, self::NIVEAU_INTERMEDIAIRE, self::NIVEAU_AVANCE])) {
-            throw new \InvalidArgumentException('Niveau de séance invalide');
-        }
-
-        $this->niveau_seance = $niveau_seance;
 
         return $this;
     }

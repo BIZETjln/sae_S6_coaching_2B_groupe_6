@@ -47,12 +47,12 @@ class Coach extends Utilisateur
         return $this;
     }
 
-    public function getTarifHoraire(): ?string
+    public function getTarifHoraire(): ?float
     {
         return $this->tarif_horaire;
     }
 
-    public function setTarifHoraire(string $tarif_horaire): static
+    public function setTarifHoraire(float $tarif_horaire): static
     {
         $this->tarif_horaire = $tarif_horaire;
 
