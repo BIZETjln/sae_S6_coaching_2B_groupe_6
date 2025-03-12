@@ -12,21 +12,21 @@ export class HomeComponent implements OnInit {
   // Données pour les témoignages
   testimonials = [
     {
-      name: 'Sophie M.',
-      role: 'Membre depuis 6 mois',
-      text: "Grâce à SportCoach, j'ai pu suivre mes progrès et atteindre mes objectifs. Les coachs sont professionnels et à l'écoute.",
+      name: 'Sophie Martin',
+      role: 'Membre depuis 2 ans',
+      text: "SportCoach a complètement transformé ma routine d'entraînement. Les coachs sont incroyables et les séances toujours motivantes !",
       rating: 5,
     },
     {
-      name: 'Thomas L.',
-      role: 'Membre depuis 1 an',
-      text: "Les séances en duo sont parfaites pour se motiver. L'application est intuitive et permet de bien suivre sa progression.",
+      name: 'Thomas Dubois',
+      role: 'Membre depuis 6 mois',
+      text: "J'ai perdu 15kg en suivant les conseils de mon coach. La plateforme est intuitive et les séances sont adaptées à mon niveau.",
       rating: 4.5,
     },
     {
-      name: 'Julien D.',
-      role: 'Membre depuis 8 mois',
-      text: "J'apprécie particulièrement le suivi personnalisé et les statistiques qui me permettent de visualiser mes progrès au fil du temps.",
+      name: 'Emma Petit',
+      role: 'Membre depuis 1 an',
+      text: "Les séances en duo sont parfaites pour rester motivé. J'apprécie particulièrement la diversité des exercices proposés.",
       rating: 5,
     },
   ];
@@ -34,27 +34,59 @@ export class HomeComponent implements OnInit {
   // Données pour les thèmes d'entraînement
   trainingThemes = [
     {
-      title: 'Cardio',
-      description: 'Améliorez votre endurance et votre santé cardiovasculaire',
+      title: 'Fitness',
+      description:
+        'Améliorez votre condition physique générale avec des exercices variés.',
       icon: 'bi-heart-pulse',
       color: 'text-danger',
     },
     {
-      title: 'CrossFit',
-      description: 'Entraînement fonctionnel à haute intensité',
+      title: 'Musculation',
+      description:
+        'Développez votre force et votre masse musculaire avec des programmes ciblés.',
+      icon: 'bi-trophy',
+      color: 'text-primary',
+    },
+    {
+      title: 'Cardio',
+      description:
+        'Renforcez votre endurance et améliorez votre santé cardiovasculaire.',
       icon: 'bi-lightning-charge',
       color: 'text-warning',
     },
     {
-      title: 'Fitness',
-      description: 'Améliorez votre condition physique générale',
-      icon: 'bi-bicycle',
+      title: 'Yoga',
+      description:
+        'Gagnez en souplesse et en équilibre tout en réduisant votre stress.',
+      icon: 'bi-flower1',
       color: 'text-success',
     },
     {
-      title: 'Musculation',
-      description: 'Développez votre force et votre masse musculaire',
-      icon: 'bi-trophy',
+      title: 'CrossFit',
+      description:
+        'Relevez des défis variés combinant force, endurance et agilité.',
+      icon: 'bi-stopwatch',
+      color: 'text-danger',
+    },
+    {
+      title: 'Nutrition',
+      description:
+        'Optimisez vos résultats avec des conseils nutritionnels adaptés.',
+      icon: 'bi-egg-fried',
+      color: 'text-success',
+    },
+    {
+      title: 'Récupération',
+      description:
+        'Apprenez les techniques essentielles pour une récupération optimale.',
+      icon: 'bi-battery-charging',
+      color: 'text-info',
+    },
+    {
+      title: 'Perte de poids',
+      description:
+        'Atteignez vos objectifs de perte de poids avec un suivi personnalisé.',
+      icon: 'bi-graph-down-arrow',
       color: 'text-primary',
     },
   ];
@@ -80,12 +112,11 @@ export class HomeComponent implements OnInit {
     );
 
     // Sélectionner tous les éléments à animer
-    document
-      .querySelectorAll(
-        '.feature-card, .pricing-card, .testimonial, .card, .cta'
-      )
-      .forEach((element) => {
-        observer.observe(element);
-      });
+    const animatedElements = document.querySelectorAll(
+      '.feature-card, .pricing-card, .theme-card, .testimonial, .cta'
+    );
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
   }
 }
