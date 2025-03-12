@@ -34,28 +34,28 @@ export class AuthService {
       name: 'Jean Dupont',
       email: 'client@example.com',
       role: UserRole.CLIENT,
-      avatar: 'assets/avatars/client.jpg'
+      avatar: '/assets/images/coach1.jpg'
     },
     {
       id: 2,
       name: 'Marie Coach',
       email: 'coach@example.com',
       role: UserRole.COACH,
-      avatar: 'assets/avatars/coach.jpg'
+      avatar: 'assets/images/default-avatar.png'
     },
     {
       id: 3,
       name: 'Pierre Agent',
       email: 'agent@example.com',
       role: UserRole.AGENT,
-      avatar: 'assets/avatars/agent.jpg'
+      avatar: 'assets/images/default-avatar.png'
     },
     {
       id: 4,
       name: 'Sophie Responsable',
       email: 'responsable@example.com',
       role: UserRole.RESPONSABLE,
-      avatar: 'assets/avatars/responsable.jpg'
+      avatar: 'assets/images/default-avatar.png'
     }
   ];
 
