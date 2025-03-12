@@ -23,6 +23,7 @@ export class CoachsComponent implements OnInit {
       nom: 'Yann Rouquié',
       specialite: 'Entraînement militaire',
       disponibilite: '7j/7 - 24h/24',
+      citation: 'Entrainement sous système fluide',
       image: 'assets/images/coach1.jpg',
     },
     {
