@@ -6,6 +6,7 @@ import { Component } from '@angular/core';
 import { HomeComponent } from './home/home.component';
 import { InscriptionComponent } from './inscription/inscription.component';
 import { ConnexionComponent } from './connexion/connexion.component';
+import { CoachsComponent } from './coachs/coachs.component';
 
 // Composant temporaire pour les routes non encore implémentées
 @Component({
@@ -21,7 +22,7 @@ const routes: Routes = [
   // Routes publiques
   { path: '', redirectTo: '/accueil', pathMatch: 'full' },
   { path: 'accueil', component: HomeComponent },
-  { path: 'coachs', component: PlaceholderComponent },
+  { path: 'coachs', component: CoachsComponent },
   { path: 'seances', component: PlaceholderComponent },
   { path: 'connexion', component: ConnexionComponent },
   { path: 'inscription', component: InscriptionComponent },
