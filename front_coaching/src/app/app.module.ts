@@ -8,9 +8,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { ConnexionComponent } from './connexion/connexion.component';
+import { InscriptionComponent } from './inscription/inscription.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ConnexionComponent],
+  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
   bootstrap: [AppComponent],

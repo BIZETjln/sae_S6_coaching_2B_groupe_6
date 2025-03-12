@@ -1,0 +1,176 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1>Inscription</h1>
+      <p>Rejoignez notre communauté de sportifs</p>
+    </div>
+
+    <form
+      [formGroup]="inscriptionForm"
+      (ngSubmit)="onSubmit()"
+      class="register-form"
+    >
+      <!-- Nom -->
+      <div class="form-group">
+        <label for="nom">Nom</label>
+        <div class="input-container">
+          <i class="bi bi-person"></i>
+          <input
+            type="text"
+            id="nom"
+            formControlName="nom"
+            placeholder="Votre nom"
+            [ngClass]="{ 'is-invalid': submitted && f['nom'].errors }"
+          />
+        </div>
+        <div *ngIf="submitted && f['nom'].errors" class="error-message">
+          <span *ngIf="f['nom'].errors['required']">Le nom est requis</span>
+          <span *ngIf="f['nom'].errors['minlength']"
+            >Le nom doit contenir au moins 2 caractères</span
+          >
+        </div>
+      </div>
+
+      <!-- Prénom -->
+      <div class="form-group">
+        <label for="prenom">Prénom</label>
+        <div class="input-container">
+          <i class="bi bi-person"></i>
+          <input
+            type="text"
+            id="prenom"
+            formControlName="prenom"
+            placeholder="Votre prénom"
+            [ngClass]="{ 'is-invalid': submitted && f['prenom'].errors }"
+          />
+        </div>
+        <div *ngIf="submitted && f['prenom'].errors" class="error-message">
+          <span *ngIf="f['prenom'].errors['required']"
+            >Le prénom est requis</span
+          >
+          <span *ngIf="f['prenom'].errors['minlength']"
+            >Le prénom doit contenir au moins 2 caractères</span
+          >
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-container">
+          <i class="bi bi-envelope"></i>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Votre adresse email"
+            [ngClass]="{ 'is-invalid': submitted && f['email'].errors }"
+          />
+        </div>
+        <div *ngIf="submitted && f['email'].errors" class="error-message">
+          <span *ngIf="f['email'].errors['required']">L'email est requis</span>
+          <span *ngIf="f['email'].errors['email']"
+            >Veuillez entrer un email valide</span
+          >
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <div class="input-container">
+          <i class="bi bi-lock"></i>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Votre mot de passe"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="submitted && f['password'].errors" class="error-message">
+          <span *ngIf="f['password'].errors['required']"
+            >Le mot de passe est requis</span
+          >
+          <span *ngIf="f['password'].errors['minlength']"
+            >Le mot de passe doit contenir au moins 6 caractères</span
+          >
+        </div>
+      </div>
+
+      <!-- Niveau -->
+      <div class="form-group">
+        <label for="niveau">Niveau sportif</label>
+        <div class="input-container">
+          <i class="bi bi-trophy"></i>
+          <select
+            id="niveau"
+            formControlName="niveau"
+            [ngClass]="{ 'is-invalid': submitted && f['niveau'].errors }"
+          >
+            <option *ngFor="let niveau of niveaux" [value]="niveau">
+              {{ niveau }}
+            </option>
+          </select>
+        </div>
+        <div *ngIf="submitted && f['niveau'].errors" class="error-message">
+          <span *ngIf="f['niveau'].errors['required']"
+            >Le niveau est requis</span
+          >
+        </div>
+      </div>
+
+      <!-- Rôle (invisible) -->
+      <div class="form-group hidden">
+        <label for="role">Rôle</label>
+        <div class="input-container">
+          <i class="bi bi-person-badge"></i>
+          <input type="text" id="role" formControlName="role" />
+        </div>
+      </div>
+
+      <!-- Date d'inscription -->
+      <div class="form-group">
+        <label for="dateInscription">Date d'inscription</label>
+        <div class="input-container">
+          <i class="bi bi-calendar"></i>
+          <input
+            type="date"
+            id="dateInscription"
+            formControlName="dateInscription"
+            readonly
+          />
+        </div>
+      </div>
+
+      <!-- Bouton d'inscription -->
+      <div class="form-actions">
+        <button type="submit" class="btn-register" [disabled]="loading">
+          <span *ngIf="!loading">S'inscrire</span>
+          <span *ngIf="loading" class="spinner">
+            <i class="bi bi-arrow-repeat"></i>
+          </span>
+        </button>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div *ngIf="error" class="alert-error">
+        {{ error }}
+      </div>
+    </form>
+
+    <div class="register-footer">
+      <p>
+        Vous avez déjà un compte ?
+        <a routerLink="/connexion">Connectez-vous</a>
+      </p>
+    </div>
+  </div>
+</div>
