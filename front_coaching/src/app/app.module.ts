@@ -9,9 +9,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { ConnexionComponent } from './connexion/connexion.component';
 import { InscriptionComponent } from './inscription/inscription.component';
+import { CoachsComponent } from './coachs/coachs.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent],
+  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
   bootstrap: [AppComponent]

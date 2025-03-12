@@ -1,17 +1,24 @@
 /* Hero Section */
 .hero {
   position: relative;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-secondary)
-  );
+  background: url("../../assets/images/accueil.jpg") center/cover no-repeat;
   color: white;
   text-align: center;
   padding: 120px 20px;
   margin-bottom: 60px;
   overflow: hidden;
   z-index: 1;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: -1;
 }
 
 .hero-content {
@@ -24,6 +31,7 @@
   font-weight: 700;
   margin-bottom: 20px;
   animation: fadeInUp 1s ease-out;
+  color: white;
 }
 
 .hero-text {
@@ -329,15 +337,25 @@ section {
 }
 
 .cta {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-secondary)
-  );
+  background: url("../../assets/images/cta-bg.jpg") center/cover no-repeat;
+  position: relative;
   color: white;
   text-align: center;
   padding: 60px 30px;
   border-radius: 15px;
+  z-index: 1;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 15px;
+  z-index: -1;
 }
 
 .cta-title {
