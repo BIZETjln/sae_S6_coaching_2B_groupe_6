@@ -1,0 +1,230 @@
+/* Styles généraux */
+.coachs-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  background-color: #f8f9fa;
+}
+
+.coachs-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.coachs-header h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.coachs-header h1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 5px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 3px;
+}
+
+/* Grille des coachs */
+.coachs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+}
+
+/* Carte de coach */
+.coach-card {
+  background-color: #fff;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 1;
+}
+
+.coach-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.coach-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  z-index: 2;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.coach-card:hover::before {
+  transform: scaleX(1);
+}
+
+.coach-image {
+  height: 320px;
+  overflow: hidden;
+  position: relative;
+}
+
+.coach-image::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.coach-card:hover .coach-image::after {
+  opacity: 1;
+}
+
+.coach-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.coach-card:hover .coach-image img {
+  transform: scale(1.08);
+}
+
+.coach-info {
+  padding: 2rem;
+  position: relative;
+}
+
+.coach-info h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  color: #2c3e50;
+  transition: color 0.3s ease;
+}
+
+.coach-card:hover .coach-info h2 {
+  color: #3498db;
+}
+
+.coach-specialty {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #3498db;
+  margin-bottom: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.coach-card:hover .coach-specialty {
+  transform: translateX(5px);
+}
+
+.coach-availability {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #e74c3c;
+  margin-bottom: 1.2rem;
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 20px;
+}
+
+.coach-quote {
+  font-style: italic;
+  color: #7f8c8d;
+  border-left: 4px solid #3498db;
+  padding: 0.8rem 1.2rem;
+  margin-top: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 0 5px 5px 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  position: relative;
+}
+
+.coach-quote::before {
+  content: '"';
+  position: absolute;
+  top: 0;
+  left: 10px;
+  font-size: 2.5rem;
+  color: rgba(52, 152, 219, 0.2);
+  font-family: Georgia, serif;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .coachs-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .coachs-header h1 {
+    font-size: 3rem;
+  }
+
+  .coach-image {
+    height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .coachs-container {
+    padding: 2rem 1rem;
+  }
+
+  .coachs-header {
+    margin-bottom: 3rem;
+  }
+
+  .coachs-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .coach-info h2 {
+    font-size: 1.8rem;
+  }
+
+  .coach-specialty {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .coachs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .coachs-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .coach-image {
+    height: 250px;
+  }
+
+  .coach-info {
+    padding: 1.5rem;
+  }
+}
