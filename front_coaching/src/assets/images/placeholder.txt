@@ -1,6 +1,0 @@
-Pour que la page d'accueil fonctionne correctement, veuillez ajouter les images suivantes dans ce dossier :
-
-1. hero-bg.jpg - Une image de fond pour la section héro (athlètes en train de s'entraîner)
-2. cta-bg.jpg - Une image de fond pour la section d'appel à l'action
-
-Ces images doivent être de haute qualité et représenter des activités sportives ou de fitness. 
