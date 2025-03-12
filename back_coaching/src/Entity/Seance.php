@@ -34,7 +34,7 @@ class Seance
 
     #[ORM\ManyToOne(inversedBy: 'seances')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Coach $coach_id = null;
+    private ?Coach $coach = null;
 
     /**
      * @var Collection<int, Sportif>
@@ -107,12 +107,12 @@ class Seance
 
     public function getCoach(): ?Coach
     {
-        return $this->coach_id;
+        return $this->coach;
     }
 
-    public function setCoach(?Coach $coach_id): static
+    public function setCoach(?Coach $coach): static
     {
-        $this->coach_id = $coach_id;
+        $this->coach = $coach;
 
         return $this;
     }

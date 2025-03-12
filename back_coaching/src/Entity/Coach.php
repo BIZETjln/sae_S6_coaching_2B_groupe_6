@@ -26,7 +26,7 @@ class Coach extends Utilisateur
     /**
      * @var Collection<int, FicheDePaie>
      */
-    #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach_id')]
+    #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach')]
     private Collection $ficheDePaies;
 
     public function __construct()
@@ -101,7 +101,7 @@ class Coach extends Utilisateur
     {
         if (!$this->ficheDePaies->contains($ficheDePaie)) {
             $this->ficheDePaies->add($ficheDePaie);
-            $ficheDePaie->setCoachId($this);
+            $ficheDePaie->setCoach($this);
         }
 
         return $this;
@@ -111,8 +111,8 @@ class Coach extends Utilisateur
     {
         if ($this->ficheDePaies->removeElement($ficheDePaie)) {
             // set the owning side to null (unless already changed)
-            if ($ficheDePaie->getCoachId() === $this) {
-                $ficheDePaie->setCoachId(null);
+            if ($ficheDePaie->getCoach() === $this) {
+                $ficheDePaie->setCoach(null);
             }
         }
 

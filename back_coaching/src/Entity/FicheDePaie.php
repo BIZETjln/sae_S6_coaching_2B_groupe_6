@@ -10,6 +10,7 @@ use App\Enum\PeriodePaie;
 #[ORM\Entity(repositoryClass: FicheDePaieRepository::class)]
 class FicheDePaie
 {
+    #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
@@ -17,7 +18,7 @@ class FicheDePaie
 
     #[ORM\ManyToOne(inversedBy: 'ficheDePaies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Coach $coach_id = null;
+    private ?Coach $coach = null;
 
     #[ORM\Column(enumType: PeriodePaie::class)]
     private ?PeriodePaie $periode = null;
@@ -35,12 +36,12 @@ class FicheDePaie
 
     public function getCoach(): ?Coach
     {
-        return $this->coach_id;
+        return $this->coach;
     }
 
-    public function setCoach(?Coach $coach_id): static
+    public function setCoach(?Coach $coach): static
     {
-        $this->coach_id = $coach_id;
+        $this->coach = $coach;
 
         return $this;
     }
