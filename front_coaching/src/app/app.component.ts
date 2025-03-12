@@ -3,10 +3,11 @@ import { Component, OnInit, Renderer2 } from '@angular/core';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
   title = 'SportCoach';
+  sidebarMini = false;
 
   constructor(private renderer: Renderer2) {}
 
@@ -15,7 +16,19 @@ export class AppComponent implements OnInit {
     this.initMobileMenu();
   }
 
+  toggleSidebar(): void {
+    this.sidebarMini = !this.sidebarMini;
+    // Sauvegarder la préférence dans le localStorage
+    localStorage.setItem('sidebarMini', this.sidebarMini.toString());
+  }
+
   private initMobileMenu(): void {
+    // Récupérer la préférence du mode sidebar depuis le localStorage
+    const savedSidebarMode = localStorage.getItem('sidebarMini');
+    if (savedSidebarMode) {
+      this.sidebarMini = savedSidebarMode === 'true';
+    }
+    
     // Cette méthode sera appelée après le chargement du DOM
     setTimeout(() => {
       const navbarToggle = document.getElementById('navbar-toggle');
