@@ -1,49 +1,61 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService, UserRole, User } from '../services/auth.service';
 
 @Component({
   selector: 'app-connexion',
   templateUrl: './connexion.component.html',
-  styleUrl: './connexion.component.css',
+  styleUrls: ['./connexion.component.scss'],
+  standalone: false
 })
 export class ConnexionComponent implements OnInit {
-  loginForm!: FormGroup;
+  loginForm: FormGroup;
   loading = false;
   submitted = false;
   error = '';
-  showPassword = false;
+  returnUrl: string;
+  UserRole = UserRole; // Pour pouvoir l'utiliser dans le template
+  showPassword = false; // Propriété pour afficher/masquer le mot de passe
 
-  constructor(private formBuilder: FormBuilder, private router: Router) {}
-
-  ngOnInit(): void {
-    this.initForm();
-  }
-
-  // Initialisation du formulaire avec validation
-  private initForm(): void {
+  constructor(
+    private formBuilder: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
+    private authService: AuthService
+  ) {
+    // Rediriger vers la page d'accueil si déjà connecté
+    if (this.authService.isLoggedIn) {
+      this.router.navigate(['/']);
+    }
+    
+    // Initialiser le formulaire
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false],
+      rememberMe: [false]
     });
+    
+    // Récupérer l'URL de retour des paramètres de requête ou utiliser la page d'accueil
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
   }
 
-  // Getter pour accéder facilement aux champs du formulaire
-  get f() {
-    return this.loginForm.controls;
+  ngOnInit(): void {
+    // Rien à faire ici pour l'instant
   }
 
-  // Afficher/masquer le mot de passe
+  // Méthode pour afficher/masquer le mot de passe
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
-  // Soumission du formulaire
-  onSubmit(): void {
+  // Getter pratique pour accéder facilement aux champs du formulaire
+  get f() { return this.loginForm.controls; }
+
+  onSubmit() {
     this.submitted = true;
 
-    // Arrêter si le formulaire est invalide
+    // Arrêter ici si le formulaire est invalide
     if (this.loginForm.invalid) {
       return;
     }
@@ -51,22 +63,47 @@ export class ConnexionComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // Simulation d'une connexion (à remplacer par un vrai appel API)
-    setTimeout(() => {
-      // Exemple de vérification simple (à remplacer par une vraie authentification)
-      const email = this.f['email'].value;
-      const password = this.f['password'].value;
+    this.authService.login(this.f['email'].value, this.f['password'].value)
+      .subscribe({
+        next: () => {
+          this.router.navigate([this.returnUrl]);
+        },
+        error: (error: Error) => {
+          this.error = error.message || 'Une erreur est survenue';
+          this.loading = false;
+        }
+      });
+  }
 
-      if (email === 'user@example.com' && password === 'password') {
-        // Connexion réussie
-        console.log('Connexion réussie');
-        // Redirection vers la page d'accueil
-        this.router.navigate(['/']);
-      } else {
-        // Échec de connexion
-        this.error = 'Email ou mot de passe incorrect';
+  // Méthodes pour se connecter rapidement avec différents rôles (pour les tests)
+  loginAsClient() {
+    this.loginAs(UserRole.CLIENT);
+  }
+
+  loginAsCoach() {
+    this.loginAs(UserRole.COACH);
+  }
+
+  loginAsAgent() {
+    this.loginAs(UserRole.AGENT);
+  }
+
+  loginAsResponsable() {
+    this.loginAs(UserRole.RESPONSABLE);
+  }
+
+  private loginAs(role: UserRole) {
+    this.loading = true;
+    this.error = '';
+    
+    this.authService.loginAs(role).subscribe({
+      next: () => {
+        this.router.navigate([this.returnUrl]);
+      },
+      error: (error: Error) => {
+        this.error = error.message || 'Une erreur est survenue';
         this.loading = false;
       }
-    }, 1500); // Délai simulé pour montrer le chargement
+    });
   }
 }

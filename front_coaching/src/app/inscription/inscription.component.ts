@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
   selector: 'app-inscription',
   templateUrl: './inscription.component.html',
   styleUrl: './inscription.component.css',
+  standalone: false
 })
 export class InscriptionComponent implements OnInit {
   inscriptionForm!: FormGroup;

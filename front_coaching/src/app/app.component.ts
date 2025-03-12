@@ -1,17 +1,34 @@
 import { Component, OnInit, Renderer2 } from '@angular/core';
+import { AuthService, User, UserRole } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  standalone: false
 })
 export class AppComponent implements OnInit {
   title = 'SportCoach';
   sidebarMini = false;
+  currentUser: User | null = null;
 
-  constructor(private renderer: Renderer2) {}
+  constructor(
+    private authService: AuthService,
+    private renderer: Renderer2
+  ) {}
 
   ngOnInit(): void {
+    // S'abonner aux changements d'utilisateur
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
+    
+    // Récupérer la préférence du mode sidebar depuis le localStorage
+    const savedSidebarMode = localStorage.getItem('sidebarMini');
+    if (savedSidebarMode) {
+      this.sidebarMini = savedSidebarMode === 'true';
+    }
+    
     // Initialiser le menu mobile
     this.initMobileMenu();
   }
@@ -22,13 +39,33 @@ export class AppComponent implements OnInit {
     localStorage.setItem('sidebarMini', this.sidebarMini.toString());
   }
 
+  // Méthodes de vérification de rôle
+  isClient(): boolean {
+    return this.authService.hasRole(UserRole.CLIENT);
+  }
+
+  isCoach(): boolean {
+    return this.authService.hasRole(UserRole.COACH);
+  }
+
+  isAgent(): boolean {
+    return this.authService.hasRole(UserRole.AGENT);
+  }
+
+  isResponsable(): boolean {
+    return this.authService.hasRole(UserRole.RESPONSABLE);
+  }
+
+  isStaff(): boolean {
+    return this.authService.hasAnyRole([UserRole.COACH, UserRole.AGENT, UserRole.RESPONSABLE]);
+  }
+
+  // Méthode de déconnexion
+  logout(): void {
+    this.authService.logout();
+  }
+
   private initMobileMenu(): void {
-    // Récupérer la préférence du mode sidebar depuis le localStorage
-    const savedSidebarMode = localStorage.getItem('sidebarMini');
-    if (savedSidebarMode) {
-      this.sidebarMini = savedSidebarMode === 'true';
-    }
-    
     // Cette méthode sera appelée après le chargement du DOM
     setTimeout(() => {
       const navbarToggle = document.getElementById('navbar-toggle');

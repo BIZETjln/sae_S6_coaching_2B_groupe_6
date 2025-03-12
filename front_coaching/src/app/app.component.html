@@ -11,6 +11,7 @@
   </div>
 
   <nav class="sidebar-nav">
+    <!-- Liens communs à tous les utilisateurs -->
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
       <i class="bi bi-house-door"></i>
       <span>Accueil</span>
@@ -25,14 +26,102 @@
       <i class="bi bi-calendar-check"></i>
       <span>Séances</span>
     </a>
+
+    <!-- Utilisateur non connecté -->
+    <ng-container *ngIf="!currentUser">
+      <a routerLink="/connexion" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-box-arrow-in-right"></i>
+        <span>Connexion</span>
+      </a>
+
+      <a routerLink="/inscription" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-person-plus"></i>
+        <span>Inscription</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les clients connectés -->
+    <ng-container *ngIf="isClient()">
+      <a routerLink="/mes-seances" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-week"></i>
+        <span>Mes Séances</span>
+      </a>
+
+      <a routerLink="/mon-suivi" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-graph-up"></i>
+        <span>Mon Suivi</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les coachs -->
+    <ng-container *ngIf="isCoach()">
+      <a routerLink="/mes-clients" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Mes Clients</span>
+      </a>
+
+      <a routerLink="/planning" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-week"></i>
+        <span>Planning</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les agents -->
+    <ng-container *ngIf="isAgent()">
+      <a routerLink="/gestion-clients" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Clients</span>
+      </a>
+
+      <a routerLink="/reservations" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-plus"></i>
+        <span>Réservations</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les responsables -->
+    <ng-container *ngIf="isResponsable()">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/gestion-personnel" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Personnel</span>
+      </a>
+
+      <a routerLink="/statistiques" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-bar-chart-fill"></i>
+        <span>Statistiques</span>
+      </a>
+
+      <a routerLink="/parametres" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-gear-fill"></i>
+        <span>Paramètres</span>
+      </a>
+    </ng-container>
+
+    <!-- Lien vers le back-office pour le personnel -->
+    <ng-container *ngIf="isStaff()">
+      <a routerLink="/back-office" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-shield-lock"></i>
+        <span>Back Office</span>
+      </a>
+    </ng-container>
   </nav>
 
-  <div class="user-profile">
-    <img src="assets/default-avatar.png" alt="Photo de profil" class="avatar">
+  <!-- Profil utilisateur (visible uniquement si connecté) -->
+  <div class="user-profile" *ngIf="currentUser">
+    <img [src]="currentUser.avatar || 'assets/default-avatar.png'" alt="Photo de profil" class="avatar">
     <div class="user-info">
-      <div class="user-name">John Doe</div>
-      <div class="user-email">john.doe&#64;example.fr</div>
+      <div class="user-name">{{ currentUser.name }}</div>
+      <div class="user-email">{{ currentUser.email }}</div>
     </div>
+    <a (click)="logout()" class="logout-btn">
+      <i class="bi bi-box-arrow-left"></i>
+      <span>Déconnexion</span>
+    </a>
   </div>
 </aside>
 
@@ -72,8 +161,10 @@
         <div class="footer-section">
           <h3 class="footer-title">Compte</h3>
           <ul class="footer-links">
-            <li><a routerLink="/connexion">Connexion</a></li>
-            <li><a routerLink="/inscription">Inscription</a></li>
+            <li *ngIf="!currentUser"><a routerLink="/connexion">Connexion</a></li>
+            <li *ngIf="!currentUser"><a routerLink="/inscription">Inscription</a></li>
+            <li *ngIf="currentUser"><a routerLink="/profil">Mon Profil</a></li>
+            <li *ngIf="currentUser"><a (click)="logout()" style="cursor: pointer;">Déconnexion</a></li>
           </ul>
         </div>
 

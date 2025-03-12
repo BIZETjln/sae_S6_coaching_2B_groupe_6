@@ -14,6 +14,6 @@ import { InscriptionComponent } from './inscription/inscription.component';
   declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
