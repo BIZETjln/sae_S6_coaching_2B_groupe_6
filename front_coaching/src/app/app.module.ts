@@ -10,9 +10,10 @@ import { HomeComponent } from './home/home.component';
 import { ConnexionComponent } from './connexion/connexion.component';
 import { InscriptionComponent } from './inscription/inscription.component';
 import { CoachsComponent } from './coachs/coachs.component';
+import { SeancesComponent } from './seances/seances.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent],
+  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent, SeancesComponent],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
   bootstrap: [AppComponent]
