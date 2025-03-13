@@ -17,6 +17,13 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 
 class SportifCrudController extends AbstractCrudController
 {
@@ -30,6 +37,13 @@ class SportifCrudController extends AbstractCrudController
     public static function getEntityFqcn(): string
     {
         return Sportif::class;
+    }
+
+    public static function getSubscribedEvents()
+    {
+        return [
+            BeforeEntityPersistedEvent::class => ['hashPassword'],
+        ];
     }
 
     public function configureCrud(Crud $crud): Crud
@@ -56,19 +70,19 @@ class SportifCrudController extends AbstractCrudController
             FormField::addPanel('Informations personnelles')
                 ->setIcon('fa fa-user')
                 ->setHelp('Informations de base du sportif'),
-            
+
             TextField::new('nom', 'Nom')
                 ->setFormTypeOption('attr', ['placeholder' => 'Nom du sportif'])
                 ->setColumns(6),
-            
+
             TextField::new('prenom', 'Prénom')
                 ->setFormTypeOption('attr', ['placeholder' => 'Prénom du sportif'])
                 ->setColumns(6),
-            
+
             EmailField::new('email', 'Email')
                 ->setFormTypeOption('attr', ['placeholder' => 'email@exemple.com'])
                 ->setColumns(12),
-            
+
             TextField::new('password')
                 ->setFormType(RepeatedType::class)
                 ->setFormTypeOptions([
@@ -83,7 +97,8 @@ class SportifCrudController extends AbstractCrudController
                         'attr' => ['placeholder' => 'Confirmer le mot de passe'],
                         'row_attr' => ['class' => 'col-md-6'],
                     ],
-                    'mapped' => true,
+                    'mapped' => false,
+                    'required' => false,
                     'row_attr' => ['class' => 'row'],
                 ])
                 ->setRequired($pageName === Crud::PAGE_NEW)
@@ -93,71 +108,65 @@ class SportifCrudController extends AbstractCrudController
             FormField::addPanel('Informations sportives')
                 ->setIcon('fa fa-running')
                 ->setHelp('Niveau et date d\'inscription du sportif'),
-            
+
             DateTimeField::new('dateInscription', 'Date d\'inscription')
                 ->setFormTypeOption('attr', ['placeholder' => 'Date d\'inscription'])
                 ->setColumns(6)
                 ->setRequired(false),
-            
+
             ChoiceField::new('niveauSportif', 'Niveau sportif')
                 ->setChoices($niveaux)
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'niveau-container'])
                 ->setColumns(6)
                 ->setRequired(true),
-            
+
             AssociationField::new('seances', 'Séances')
                 ->onlyOnDetail(),
         ];
     }
 
     // Surcharge de la méthode persistEntity pour les nouveaux sportifs
-    public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
-        $this->hashPassword($entityInstance);
-        
-        // Définir une valeur par défaut pour le niveau sportif si non défini
-        if ($entityInstance instanceof Sportif && $entityInstance->getNiveauSportif() === null) {
-            $entityInstance->setNiveauSportif(Niveau::DEBUTANT);
-        }
-        
-        // Définir la date d'inscription à maintenant si non définie
-        if ($entityInstance instanceof Sportif && $entityInstance->getDateInscription() === null) {
-            $entityInstance->setDateInscription(new \DateTime());
-        }
-        
-        parent::persistEntity($entityManager, $entityInstance);
+        $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
+        return $this->addPasswordEventListener($formBuilder);
     }
 
-    // Surcharge de la méthode updateEntity pour les sportifs existants
-    public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
-        $this->hashPassword($entityInstance);
-        parent::updateEntity($entityManager, $entityInstance);
+        $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
+        return $this->addPasswordEventListener($formBuilder);
     }
 
-    // Méthode privée pour hacher le mot de passe
-    private function hashPassword($sportif): void
+    private function addPasswordEventListener(FormBuilderInterface $formBuilder): FormBuilderInterface
     {
-        if (!$sportif instanceof Sportif) {
-            return;
-        }
-
-        // Ne hache le mot de passe que s'il est défini et non vide
-        if ($sportif->getPassword()) {
-            $hashedPassword = $this->passwordHasher->hashPassword(
-                $sportif,
-                $sportif->getPassword()
-            );
-            $sportif->setPassword($hashedPassword);
-        }
+        return $formBuilder->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword());
     }
 
-    // Définir des valeurs par défaut lors de la création d'une nouvelle entité
+    private function hashPassword()
+    {
+        return function ($event) {
+            $form = $event->getForm();
+            if (!$form->isValid()) {
+                return;
+            }
+
+            $password = $form->get('password')->getData();
+            if ($password === null) {
+                return;
+            }
+
+            $hash = $this->passwordHasher->hashPassword($event->getData(), $password);
+            $form->getData()->setPassword($hash);
+        };
+    }
+
     public function createEntity(string $entityFqcn)
     {
         $sportif = new Sportif();
         $sportif->setDateInscription(new \DateTime());
+        $sportif->setRoles(['ROLE_USER']);
         return $sportif;
     }
 }
