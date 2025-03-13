@@ -1,4 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { AuthService, UserRole } from '../services/auth.service';
+import { Router } from '@angular/router';
 
 // Interface pour les exercices
 interface Exercice {
@@ -336,17 +338,33 @@ export class SeancesComponent implements OnInit {
   // Séances filtrées à afficher
   seancesFiltrees: Seance[] = [];
 
-  constructor() {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     // Initialiser les séances filtrées avec toutes les séances
     this.seancesFiltrees = [...this.seances];
   }
 
+  // Méthode pour vérifier si l'utilisateur est un client connecté
+  isClient(): boolean {
+    return this.authService.hasRole(UserRole.CLIENT);
+  }
+
   // Méthode pour sélectionner une séance et afficher ses détails
   selectionnerSeance(seance: Seance): void {
     // Désélectionner toutes les séances
     this.seances.forEach((s) => (s.selected = false));
+
+    // Si l'utilisateur n'est pas un client connecté, rediriger vers la page de connexion
+    if (!this.isClient()) {
+      this.router.navigate(['/connexion'], {
+        queryParams: {
+          returnUrl: '/seances',
+          message: 'Connectez-vous pour accéder aux détails des séances',
+        },
+      });
+      return;
+    }
 
     // Si on clique sur la séance déjà sélectionnée, on la désélectionne
     if (this.seanceSelectionnee && this.seanceSelectionnee.id === seance.id) {

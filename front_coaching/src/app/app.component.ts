@@ -1,11 +1,13 @@
 import { Component, OnInit, Renderer2 } from '@angular/core';
 import { AuthService, User, UserRole } from './services/auth.service';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  standalone: false
+  standalone: false,
 })
 export class AppComponent implements OnInit {
   title = 'SportCoach';
@@ -14,23 +16,31 @@ export class AppComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     // S'abonner aux changements d'utilisateur
-    this.authService.currentUser.subscribe(user => {
+    this.authService.currentUser.subscribe((user) => {
       this.currentUser = user;
     });
-    
+
     // Récupérer la préférence du mode sidebar depuis le localStorage
     const savedSidebarMode = localStorage.getItem('sidebarMini');
     if (savedSidebarMode) {
       this.sidebarMini = savedSidebarMode === 'true';
     }
-    
+
     // Initialiser le menu mobile
     this.initMobileMenu();
+
+    // S'abonner aux événements de fin de navigation pour défiler vers le haut
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        window.scrollTo(0, 0);
+      });
   }
 
   toggleSidebar(): void {
@@ -57,7 +67,11 @@ export class AppComponent implements OnInit {
   }
 
   isStaff(): boolean {
-    return this.authService.hasAnyRole([UserRole.COACH, UserRole.AGENT, UserRole.RESPONSABLE]);
+    return this.authService.hasAnyRole([
+      UserRole.COACH,
+      UserRole.AGENT,
+      UserRole.RESPONSABLE,
+    ]);
   }
 
   // Méthode de déconnexion

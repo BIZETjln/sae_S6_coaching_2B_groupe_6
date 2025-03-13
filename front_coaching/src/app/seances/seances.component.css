@@ -493,3 +493,73 @@
     font-size: 0.9rem;
   }
 }
+
+/* Message pour les utilisateurs non connectés */
+.login-prompt {
+  background-color: white;
+  border-radius: 10px;
+  padding: 40px 30px;
+  box-shadow: var(--shadow-md);
+  margin-top: 20px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+  border: 1px solid var(--color-neutral-100);
+}
+
+.login-prompt i {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.login-prompt h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--color-text-primary);
+}
+
+.login-prompt p {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 25px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.login-buttons .btn {
+  min-width: 150px;
+  padding: 10px 20px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 576px) {
+  .login-prompt {
+    padding: 30px 20px;
+  }
+
+  .login-prompt h3 {
+    font-size: 1.5rem;
+  }
+
+  .login-prompt p {
+    font-size: 1rem;
+  }
+
+  .login-buttons {
+    flex-direction: column;
+  }
+
+  .login-buttons .btn {
+    width: 100%;
+  }
+}

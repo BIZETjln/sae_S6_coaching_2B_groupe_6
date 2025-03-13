@@ -148,8 +148,12 @@
       </button>
     </div>
 
-    <!-- Détails de la séance sélectionnée -->
-    <div class="seance-details" *ngIf="seanceSelectionnee" #seanceDetails>
+    <!-- Détails de la séance sélectionnée (visible uniquement pour les clients connectés) -->
+    <div
+      class="seance-details"
+      *ngIf="seanceSelectionnee && isClient()"
+      #seanceDetails
+    >
       <div class="seance-details-header">
         <h2 class="details-title">{{ seanceSelectionnee.titre }}</h2>
         <div class="details-meta">

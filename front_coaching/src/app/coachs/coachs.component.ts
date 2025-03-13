@@ -14,7 +14,7 @@ interface Coach {
   selector: 'app-coachs',
   templateUrl: './coachs.component.html',
   styleUrl: './coachs.component.css',
-  standalone: false
+  standalone: false,
 })
 export class CoachsComponent implements OnInit {
   // Liste des coachs
