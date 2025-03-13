@@ -13,8 +13,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use App\Enum\ThemeSeance;
 use App\Entity\Sportif;
-
+use ApiPlatform\Metadata\ApiResource;
 #[ORM\Entity(repositoryClass: SeanceRepository::class)]
+#[ApiResource()]
 class Seance
 {
     #[ORM\Id]

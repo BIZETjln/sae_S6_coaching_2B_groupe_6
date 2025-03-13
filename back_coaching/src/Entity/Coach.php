@@ -7,8 +7,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-
+use ApiPlatform\Metadata\ApiResource;
 #[ORM\Entity(repositoryClass: CoachRepository::class)]
+#[ApiResource()]
 class Coach extends Utilisateur
 {
     #[ORM\Column(type: Types::ARRAY)]
@@ -117,5 +118,15 @@ class Coach extends Utilisateur
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        // Retourne le nom et prénom du coach, ou un autre identifiant approprié
+        // Adaptez selon les propriétés disponibles dans votre entité Coach
+        return $this->getNom() . ' ' . $this->getPrenom();
+        
+        // Alternative si vous n'avez pas de nom/prénom :
+        // return 'Coach #' . $this->getId();
     }
 }

@@ -9,8 +9,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-
+use ApiPlatform\Metadata\ApiResource;
 #[ORM\Entity(repositoryClass: ExerciceRepository::class)]
+#[ApiResource()]
 class Exercice
 {
     #[ORM\Id]
@@ -125,5 +126,10 @@ class Exercice
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getNom() ?? 'Exercice #' . $this->getId();
     }
 }

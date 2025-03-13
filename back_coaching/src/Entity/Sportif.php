@@ -9,7 +9,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Utilisateur;
+use ApiPlatform\Metadata\ApiResource;
 #[ORM\Entity(repositoryClass: SportifRepository::class)]
+#[ApiResource()]
 class Sportif extends Utilisateur
 {
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -82,5 +84,10 @@ class Sportif extends Utilisateur
         }
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getNom() . ' ' . $this->getPrenom();
     }
 }

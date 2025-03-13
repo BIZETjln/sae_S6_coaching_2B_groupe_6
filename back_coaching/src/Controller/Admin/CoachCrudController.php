@@ -42,9 +42,7 @@ class CoachCrudController extends AbstractCrudController
             array_map(fn($case) => $case->value, ThemeSeance::cases())
         );
 
-        return [
-            IdField::new('id')->hideOnForm(),
-            
+        return [            
             FormField::addPanel('Informations personnelles')
                 ->setIcon('fa fa-user')
                 ->setHelp('Informations de base du coach'),
