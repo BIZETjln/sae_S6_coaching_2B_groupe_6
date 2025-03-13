@@ -113,10 +113,12 @@
 
   <!-- Profil utilisateur (visible uniquement si connecté) -->
   <div class="user-profile" *ngIf="currentUser">
-    <img [src]="currentUser.avatar || 'assets/default-avatar.png'" alt="Photo de profil" class="avatar">
+    <div class="user-profile-header">   
+    <img [src]="currentUser.avatar || 'assets/images/default-avatar.png'" alt="Photo de profil" class="avatar" >
     <div class="user-info">
       <div class="user-name">{{ currentUser.name }}</div>
       <div class="user-email">{{ currentUser.email }}</div>
+    </div>
     </div>
     <a (click)="logout()" class="logout-btn">
       <i class="bi bi-box-arrow-left"></i>

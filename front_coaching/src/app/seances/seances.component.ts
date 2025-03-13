@@ -39,6 +39,7 @@ interface Seance {
   selector: 'app-seances',
   templateUrl: './seances.component.html',
   styleUrl: './seances.component.css',
+  standalone: false
 })
 export class SeancesComponent implements OnInit {
   // Référence à la section de détails pour le défilement

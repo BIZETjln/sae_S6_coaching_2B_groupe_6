@@ -11,9 +11,10 @@ import { ConnexionComponent } from './connexion/connexion.component';
 import { InscriptionComponent } from './inscription/inscription.component';
 import { CoachsComponent } from './coachs/coachs.component';
 import { SeancesComponent } from './seances/seances.component';
+import { MesSceancesComponent } from './mes-sceances/mes-sceances.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent, SeancesComponent],
+  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent, SeancesComponent, MesSceancesComponent],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
   bootstrap: [AppComponent]

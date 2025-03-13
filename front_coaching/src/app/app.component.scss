@@ -59,6 +59,18 @@
       }
     }
   }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    color: #dc3545;
+
+    span {
+      display: none;
+    }
+  }
   
   .nav-item {
     display: flex;
@@ -183,6 +195,12 @@
     background-color: rgba(13, 110, 253, 0.1);
     font-weight: 500;
   }
+}
+
+.user-profile-header {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
 }
 
 .user-profile {
