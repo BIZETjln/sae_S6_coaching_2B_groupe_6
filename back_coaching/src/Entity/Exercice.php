@@ -38,6 +38,9 @@ class Exercice
     #[ORM\ManyToMany(targetEntity: Seance::class, mappedBy: 'exercices')]
     private Collection $seances;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
     public function __construct()
     {
         $this->seances = new ArrayCollection();
@@ -128,6 +131,17 @@ class Exercice
         return $this;
     }
 
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): static
+    {
+        $this->photo = $photo;
+        return $this;
+    }
+    
     public function __toString(): string
     {
         return $this->getNom() ?? 'Exercice #' . $this->getId();
