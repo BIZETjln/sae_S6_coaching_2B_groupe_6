@@ -1,116 +1,188 @@
-<!-- Navigation Bar -->
-<nav class="navbar">
-  <div class="container">
-    <!-- Logo -->
-    <a class="navbar-logo" routerLink="/">
+<!-- Sidebar -->
+<aside class="sidebar" [class.sidebar-mini]="sidebarMini">
+  <div class="sidebar-header">
+    <div class="logo">
       <i class="bi bi-activity"></i>
       <span>SportCoach</span>
-    </a>
-
-    <!-- Navigation Links -->
-    <div class="navbar-links">
-      <a
-        class="nav-link"
-        routerLink="/"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Accueil</a
-      >
-      <a class="nav-link" routerLink="/coachs" routerLinkActive="active"
-        >Nos Coachs</a
-      >
-      <a class="nav-link" routerLink="/seances" routerLinkActive="active"
-        >Séances</a
-      >
     </div>
-
-    <!-- Buttons -->
-    <div class="navbar-buttons">
-      <a class="btn btn-outline" routerLink="/inscription">Inscription</a>
-      <a class="btn btn-primary" routerLink="/connexion">Connexion</a>
-    </div>
-
-    <!-- Mobile Toggle Button -->
-    <button id="navbar-toggle" class="navbar-toggle">
-      <span></span>
-      <span></span>
-      <span></span>
+    <button class="toggle-sidebar" (click)="toggleSidebar()">
+      <i class="bi" [ngClass]="sidebarMini ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
     </button>
   </div>
-</nav>
 
-<!-- Mobile Navigation -->
-<div id="navbar-mobile" class="navbar-mobile">
-  <div class="navbar-mobile-links">
-    <a
-      routerLink="/"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      >Accueil</a
-    >
-    <a routerLink="/coachs" routerLinkActive="active">Nos Coachs</a>
-    <a routerLink="/seances" routerLinkActive="active">Séances</a>
-    <a routerLink="/inscription" class="mobile-btn-outline">Inscription</a>
-    <a routerLink="/connexion" class="mobile-btn-primary">Connexion</a>
+  <nav class="sidebar-nav">
+    <!-- Liens communs à tous les utilisateurs -->
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+      <i class="bi bi-house-door"></i>
+      <span>Accueil</span>
+    </a>
+
+    <a routerLink="/coachs" routerLinkActive="active" class="nav-item">
+      <i class="bi bi-people"></i>
+      <span>Nos Coachs</span>
+    </a>
+
+    <a routerLink="/seances" routerLinkActive="active" class="nav-item">
+      <i class="bi bi-calendar-check"></i>
+      <span>Séances</span>
+    </a>
+
+    <!-- Utilisateur non connecté -->
+    <ng-container *ngIf="!currentUser">
+      <a routerLink="/connexion" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-box-arrow-in-right"></i>
+        <span>Connexion</span>
+      </a>
+
+      <a routerLink="/inscription" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-person-plus"></i>
+        <span>Inscription</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les clients connectés -->
+    <ng-container *ngIf="isClient()">
+      <a routerLink="/mes-seances" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-week"></i>
+        <span>Mes Séances</span>
+      </a>
+
+      <a routerLink="/mon-suivi" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-graph-up"></i>
+        <span>Mon Suivi</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les coachs -->
+    <ng-container *ngIf="isCoach()">
+      <a routerLink="/mes-clients" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Mes Clients</span>
+      </a>
+
+      <a routerLink="/planning" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-week"></i>
+        <span>Planning</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les agents -->
+    <ng-container *ngIf="isAgent()">
+      <a routerLink="/gestion-clients" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-person-lines-fill"></i>
+        <span>Gestion Clients</span>
+      </a>
+
+      <a routerLink="/reservations" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-calendar-plus"></i>
+        <span>Réservations</span>
+      </a>
+    </ng-container>
+
+    <!-- Liens pour les responsables -->
+    <ng-container *ngIf="isResponsable()">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/gestion-personnel" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-people-fill"></i>
+        <span>Personnel</span>
+      </a>
+
+      <a routerLink="/statistiques" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-bar-chart-fill"></i>
+        <span>Statistiques</span>
+      </a>
+
+      <a routerLink="/parametres" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-gear-fill"></i>
+        <span>Paramètres</span>
+      </a>
+    </ng-container>
+
+    <!-- Lien vers le back-office pour le personnel -->
+    <ng-container *ngIf="isStaff()">
+      <a routerLink="/back-office" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-shield-lock"></i>
+        <span>Back Office</span>
+      </a>
+    </ng-container>
+  </nav>
+
+  <!-- Profil utilisateur (visible uniquement si connecté) -->
+  <div class="user-profile" *ngIf="currentUser">
+    <div class="user-profile-header">   
+    <img [src]="currentUser.avatar || 'assets/images/default-avatar.png'" alt="Photo de profil" class="avatar" >
+    <div class="user-info">
+      <div class="user-name">{{ currentUser.name }}</div>
+      <div class="user-email">{{ currentUser.email }}</div>
+    </div>
+    </div>
+    <a (click)="logout()" class="logout-btn">
+      <i class="bi bi-box-arrow-left"></i>
+      <span>Déconnexion</span>
+    </a>
   </div>
-</div>
+</aside>
 
-<!-- Main Content -->
-<main>
-  <router-outlet></router-outlet>
-</main>
+<div class="content-wrapper" [class.content-wrapper-expanded]="sidebarMini">
+  <!-- Main Content -->
+  <main class="main-content" [class.main-content-expanded]="sidebarMini">
+    <router-outlet></router-outlet>
+  </main>
 
-<!-- Footer -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3 class="footer-title">SportCoach</h3>
-        <p class="footer-description">
-          Votre plateforme de suivi d'entraînements sportifs et coaching
-          personnalisé.
-        </p>
-        <div class="footer-social">
-          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-          <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
-          <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+  <!-- Footer -->
+  <footer class="footer" [class.footer-expanded]="sidebarMini">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3 class="footer-title">SportCoach</h3>
+          <p class="footer-description">
+            Votre plateforme de suivi d'entraînements sportifs et coaching
+            personnalisé.
+          </p>
+          <div class="footer-social">
+            <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3 class="footer-title">Navigation</h3>
+          <ul class="footer-links">
+            <li><a routerLink="/">Accueil</a></li>
+            <li><a routerLink="/coachs">Nos Coachs</a></li>
+            <li><a routerLink="/seances">Séances</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3 class="footer-title">Compte</h3>
+          <ul class="footer-links">
+            <li *ngIf="!currentUser"><a routerLink="/connexion">Connexion</a></li>
+            <li *ngIf="!currentUser"><a routerLink="/inscription">Inscription</a></li>
+            <li *ngIf="currentUser"><a routerLink="/profil">Mon Profil</a></li>
+            <li *ngIf="currentUser"><a (click)="logout()" style="cursor: pointer;">Déconnexion</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3 class="footer-title">Informations</h3>
+          <ul class="footer-links">
+            <li><a routerLink="/a-propos">À propos</a></li>
+            <li><a routerLink="/confidentialite">Confidentialité</a></li>
+            <li><a routerLink="/conditions">Conditions d'utilisation</a></li>
+          </ul>
         </div>
       </div>
 
-      <div class="footer-section">
-        <h3 class="footer-title">Navigation</h3>
-        <ul class="footer-links">
-          <li><a routerLink="/">Accueil</a></li>
-          <li><a routerLink="/coachs">Nos Coachs</a></li>
-          <li><a routerLink="/seances">Séances</a></li>
-          <li><a routerLink="/contact">Contact</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-section">
-        <h3 class="footer-title">Compte</h3>
-        <ul class="footer-links">
-          <li><a routerLink="/connexion">Connexion</a></li>
-          <li><a routerLink="/inscription">Inscription</a></li>
-          <li><a routerLink="/profil">Mon Profil</a></li>
-          <li><a routerLink="/historique">Historique</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-section">
-        <h3 class="footer-title">Informations</h3>
-        <ul class="footer-links">
-          <li><a routerLink="/a-propos">À propos</a></li>
-          <li><a routerLink="/confidentialite">Confidentialité</a></li>
-          <li><a routerLink="/conditions">Conditions d'utilisation</a></li>
-          <li><a routerLink="/faq">FAQ</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>&copy; 2024 SportCoach. Tous droits réservés.</p>
       </div>
     </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2024 SportCoach. Tous droits réservés.</p>
-    </div>
-  </div>
-</footer>
+  </footer>
+</div>

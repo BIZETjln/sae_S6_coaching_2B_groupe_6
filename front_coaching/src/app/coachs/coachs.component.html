@@ -1,0 +1,20 @@
+<div class="coachs-container">
+  <div class="coachs-header">
+    <h1>Nos coachs</h1>
+  </div>
+
+  <div class="coachs-grid">
+    <!-- Boucle sur les coachs -->
+    <div class="coach-card" *ngFor="let coach of coachs">
+      <div class="coach-image">
+        <img [src]="coach.image" [alt]="coach.nom" />
+      </div>
+      <div class="coach-info">
+        <h2>{{ coach.nom }}</h2>
+        <p class="coach-specialty">{{ coach.specialite }}</p>
+        <p class="coach-availability">{{ coach.disponibilite }}</p>
+        <p class="coach-quote" *ngIf="coach.citation">"{{ coach.citation }}"</p>
+      </div>
+    </div>
+  </div>
+</div>

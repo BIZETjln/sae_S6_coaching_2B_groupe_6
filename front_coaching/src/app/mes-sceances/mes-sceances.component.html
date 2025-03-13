@@ -1,0 +1,294 @@
+<div class="seances-container">
+  <div class="seances-header">
+    <h1>Mes Séances</h1>
+    <div class="view-toggle">
+      <button [class.active]="viewMode === 'calendar'" (click)="viewMode = 'calendar'">
+        <i class="bi bi-calendar3"></i> Calendrier
+      </button>
+      <button [class.active]="viewMode === 'list'" (click)="switchToListView()">
+        <i class="bi bi-list-ul"></i> Liste
+      </button>
+    </div>
+  </div>
+
+  <!-- Vue Calendrier -->
+  <div class="calendar-view" *ngIf="viewMode === 'calendar'">
+    <div class="calendar-header">
+      <button class="nav-btn" (click)="previousMonth()">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <h2>{{ months[currentMonth] }} {{ currentYear }}</h2>
+      <button class="nav-btn" (click)="nextMonth()">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="calendar">
+      <div class="weekdays">
+        <div class="weekday" *ngFor="let day of weekdays">{{ day }}</div>
+      </div>
+      <div class="days">
+        <div 
+          *ngFor="let day of daysInMonth" 
+          class="day" 
+          [class.empty]="day === 0"
+          [class.today]="isToday(day)"
+          [class.has-seances]="hasSeances(day)"
+          (click)="selectDate(day)"
+        >
+          <span class="day-number">{{ day !== 0 ? day : '' }}</span>
+          
+          <!-- Aperçu des séances au lieu d'un simple compteur -->
+          <div class="seance-preview-container" *ngIf="getSeancesForDay(day).length > 0">
+            <div 
+              *ngFor="let seance of getSeancesForDay(day).slice(0, 2)" 
+              class="seance-preview"
+              [style.background-color]="seance.couleur"
+            >
+              <span class="seance-preview-title">{{ seance.titre }}</span>
+              <span class="seance-preview-time">{{ seance.heureDebut }}</span>
+            </div>
+            <div class="more-seances" *ngIf="getSeancesForDay(day).length > 2">
+              +{{ getSeancesForDay(day).length - 2 }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Liste -->
+  <div class="list-view" *ngIf="viewMode === 'list'">
+    <div class="seances-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'avenir'"
+        (click)="switchTab('avenir')"
+      >
+        À venir ({{ seancesAVenir.length }})
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'passees'"
+        (click)="switchTab('passees')"
+      >
+        Passées ({{ seancesPassees.length }})
+      </button>
+    </div>
+
+    <div class="seances-list">
+      <!-- Séances à venir -->
+      <div *ngIf="activeTab === 'avenir'">
+        <div class="seance-card" *ngFor="let seance of seancesAVenir" (click)="selectSeance(seance)">
+          <div class="seance-date">
+            <div class="date-day">{{ seance.date.getDate() }}</div>
+            <div class="date-month">{{ months[seance.date.getMonth()].substring(0, 3) }}</div>
+          </div>
+          <div class="seance-info">
+            <h3>{{ seance.titre }}</h3>
+            <div class="seance-details">
+              <span><i class="bi bi-clock"></i> {{ seance.heureDebut }} - {{ seance.heureFin }}</span>
+              <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            </div>
+            <div class="seance-coach">
+              <img [src]="seance.coach.avatar" alt="{{ seance.coach.name }}">
+              <span>{{ seance.coach.name }}</span>
+            </div>
+          </div>
+          <div class="seance-type" [style.background-color]="seance.couleur">
+            {{ seance.type }}
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="seancesAVenir.length === 0">
+          <i class="bi bi-calendar-x"></i>
+          <p>Vous n'avez pas de séances à venir</p>
+          <button class="btn-primary">Réserver une séance</button>
+        </div>
+      </div>
+
+      <!-- Séances passées -->
+      <div *ngIf="activeTab === 'passees'">
+        <div class="seance-card" *ngFor="let seance of seancesPassees" (click)="selectSeance(seance)">
+          <div class="seance-date">
+            <div class="date-day">{{ seance.date.getDate() }}</div>
+            <div class="date-month">{{ months[seance.date.getMonth()].substring(0, 3) }}</div>
+          </div>
+          <div class="seance-info">
+            <h3>{{ seance.titre }}</h3>
+            <div class="seance-details">
+              <span><i class="bi bi-clock"></i> {{ seance.heureDebut }} - {{ seance.heureFin }}</span>
+              <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            </div>
+            <div class="seance-coach">
+              <img [src]="seance.coach.avatar" alt="{{ seance.coach.name }}">
+              <span>{{ seance.coach.name }}</span>
+            </div>
+          </div>
+          <div class="seance-type" [style.background-color]="seance.couleur">
+            {{ seance.type }}
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="seancesPassees.length === 0">
+          <i class="bi bi-calendar-check"></i>
+          <p>Vous n'avez pas de séances passées</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Jour -->
+  <div class="day-view" *ngIf="viewMode === 'day' && selectedDate">
+    <div class="day-header">
+      <button class="back-btn" (click)="backToCalendar()">
+        <i class="bi bi-arrow-left"></i> Retour
+      </button>
+      <h2>{{ formatDateFr(selectedDate) }}</h2>
+    </div>
+
+    <div class="day-seances">
+      <div class="seance-card" *ngFor="let seance of seancesAVenir" (click)="selectSeance(seance)">
+        <div class="seance-time">
+          <span>{{ seance.heureDebut }}</span>
+          <div class="time-line"></div>
+          <span>{{ seance.heureFin }}</span>
+        </div>
+        <div class="seance-content" [style.border-left-color]="seance.couleur">
+          <h3>{{ seance.titre }}</h3>
+          <p>{{ seance.description }}</p>
+          <div class="seance-details">
+            <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            <span><i class="bi bi-person"></i> {{ seance.coach.name }}</span>
+            <span *ngIf="seance.type === 'groupe'">
+              <i class="bi bi-people"></i> {{ seance.participantsActuels }}/{{ seance.capaciteMax }} participants
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="seancesAVenir.length === 0">
+        <i class="bi bi-calendar-x"></i>
+        <p>Pas de séances prévues ce jour</p>
+        <button class="btn-primary" (click)="redirectToSeances()">Réserver une séance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Détails d'une séance -->
+  <div class="seance-details-modal" *ngIf="selectedSeance">
+    <div class="modal-backdrop" (click)="closeSeanceDetails()"></div>
+    <div class="modal-content">
+      <button class="close-btn" (click)="closeSeanceDetails()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      
+      <div class="seance-header" [style.background-color]="selectedSeance.couleur">
+        <h2>{{ selectedSeance.titre }}</h2>
+        <div class="seance-meta">
+          <span><i class="bi bi-calendar"></i> {{ formatDateFr(selectedSeance.date) }}</span>
+          <span><i class="bi bi-clock"></i> {{ selectedSeance.heureDebut }} - {{ selectedSeance.heureFin }}</span>
+        </div>
+      </div>
+      
+      <div class="seance-body">
+        <div class="seance-description">
+          <h3>Description</h3>
+          <p>{{ selectedSeance.description }}</p>
+        </div>
+        
+        <div class="seance-info-grid">
+          <div class="info-item">
+            <i class="bi bi-geo-alt"></i>
+            <div>
+              <h4>Lieu</h4>
+              <p>{{ selectedSeance.lieu }}</p>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <i class="bi bi-stopwatch"></i>
+            <div>
+              <h4>Durée</h4>
+              <p>{{ selectedSeance.duree }} minutes</p>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <i class="bi bi-people"></i>
+            <div>
+              <h4>Type</h4>
+              <p>{{ selectedSeance.type === 'groupe' ? 'Séance en groupe' : 'Séance individuelle' }}</p>
+              <p *ngIf="selectedSeance.type === 'groupe'">
+                {{ selectedSeance.participantsActuels }}/{{ selectedSeance.capaciteMax }} participants
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="coach-info">
+          <h3>Votre coach</h3>
+          <div class="coach-card">
+            <img [src]="selectedSeance.coach.avatar" alt="{{ selectedSeance.coach.name }}">
+            <div>
+              <h4>{{ selectedSeance.coach.name }}</h4>
+              <p>{{ selectedSeance.coach.specialite }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="seance-actions">
+          <button class="btn-secondary" *ngIf="selectedSeance.statut === 'à venir'" (click)="showCancelConfirmationDialog()">
+            <i class="bi bi-calendar-x"></i> Annuler ma réservation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation d'annulation -->
+  <div class="cancel-confirmation-modal" *ngIf="selectedSeance && showCancelConfirmation">
+    <div class="modal-backdrop" (click)="closeCancelConfirmation()"></div>
+    <div class="modal-content cancel-content">
+      <div class="cancel-header">
+        <h2>Confirmation d'annulation</h2>
+        <button class="close-btn" (click)="closeCancelConfirmation()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="cancel-body">
+        <div class="warning-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        
+        <p class="cancel-message">
+          Êtes-vous sûr de vouloir annuler votre réservation pour la séance 
+          <strong>{{ selectedSeance.titre }}</strong> du 
+          <strong>{{ formatDateFr(selectedSeance.date) }}</strong> à 
+          <strong>{{ selectedSeance.heureDebut }}</strong> ?
+        </p>
+        
+        <div class="cancel-details">
+          <p>Informations importantes :</p>
+          <ul>
+            <li>Cette action est irréversible</li>
+            <li>Vous pourrez réserver une autre séance ultérieurement</li>
+            <li *ngIf="selectedSeance.type === 'individuelle'">
+              L'annulation moins de 24h avant la séance peut entraîner des frais
+            </li>
+          </ul>
+        </div>
+        
+        <div class="cancel-actions">
+          <button class="btn-outline" (click)="closeCancelConfirmation()">
+            <i class="bi bi-arrow-left"></i> Retour
+          </button>
+          <button class="btn-danger" (click)="cancelSeance()">
+            <i class="bi bi-calendar-x"></i> Confirmer l'annulation
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

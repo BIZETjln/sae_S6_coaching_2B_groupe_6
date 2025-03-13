@@ -1,0 +1,244 @@
+<!-- En-tête de la page -->
+<section class="seances-header">
+  <div class="container">
+    <h1 class="seances-title">Nos séances d'entraînement</h1>
+    <p class="seances-subtitle">
+      Découvrez nos programmes conçus par des professionnels pour atteindre vos
+      objectifs
+    </p>
+  </div>
+</section>
+
+<!-- Section principale -->
+<section class="seances-section">
+  <div class="container">
+    <!-- Filtres (à implémenter ultérieurement) -->
+    <div class="seances-filters">
+      <div class="filter-group">
+        <label>Type d'entraînement</label>
+        <div class="filter-buttons">
+          <button
+            class="filter-btn"
+            [class.active]="filtreTypeActif === 'Tous'"
+            (click)="filtrerParType('Tous')"
+          >
+            Tous
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreTypeActif === 'Musculation'"
+            (click)="filtrerParType('Musculation')"
+          >
+            Musculation
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreTypeActif === 'Cardio'"
+            (click)="filtrerParType('Cardio')"
+          >
+            Cardio
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreTypeActif === 'HIIT'"
+            (click)="filtrerParType('HIIT')"
+          >
+            HIIT
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreTypeActif === 'Mixte'"
+            (click)="filtrerParType('Mixte')"
+          >
+            Mixte
+          </button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Niveau</label>
+        <div class="filter-buttons">
+          <button
+            class="filter-btn"
+            [class.active]="filtreNiveauActif === 'Tous'"
+            (click)="filtrerParNiveau('Tous')"
+          >
+            Tous
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreNiveauActif === 'Débutant'"
+            (click)="filtrerParNiveau('Débutant')"
+          >
+            Débutant
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreNiveauActif === 'Intermédiaire'"
+            (click)="filtrerParNiveau('Intermédiaire')"
+          >
+            Intermédiaire
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreNiveauActif === 'Avancé'"
+            (click)="filtrerParNiveau('Avancé')"
+          >
+            Avancé
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des séances -->
+    <div class="seances-grid">
+      <div
+        class="seance-card"
+        *ngFor="let seance of seancesFiltrees"
+        [class.selected]="seance.selected"
+        (click)="selectionnerSeance(seance)"
+      >
+        <div class="seance-image">
+          <img
+            [src]="seance.image"
+            [alt]="seance.titre"
+            onerror="this.src='assets/images/default-seance.jpg'"
+          />
+          <div class="seance-badge" [ngClass]="seance.type.toLowerCase()">
+            {{ seance.type }}
+          </div>
+          <div class="seance-niveau">{{ seance.niveau }}</div>
+        </div>
+        <div class="seance-content">
+          <h3 class="seance-title">{{ seance.titre }}</h3>
+          <p class="seance-description">{{ seance.description }}</p>
+          <div class="seance-meta">
+            <div class="seance-meta-item">
+              <i class="bi bi-clock"></i>
+              <span>{{ seance.duree }}</span>
+            </div>
+            <div class="seance-meta-item">
+              <i class="bi bi-lightning-charge"></i>
+              <span>{{ seance.objectif }}</span>
+            </div>
+          </div>
+          <div class="seance-footer">
+            <div class="seance-coach">
+              <i class="bi bi-person-circle"></i>
+              <span>{{ seance.coach }}</span>
+            </div>
+            <div class="seance-exercises">
+              <i class="bi bi-list-check"></i>
+              <span>{{ seance.nombreExercices }} exercices</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucune séance ne correspond aux filtres -->
+    <div class="no-results" *ngIf="seancesFiltrees.length === 0">
+      <i class="bi bi-search"></i>
+      <h3>Aucune séance ne correspond à vos critères</h3>
+      <p>Essayez de modifier vos filtres pour voir plus de résultats</p>
+      <button
+        class="btn btn-primary"
+        (click)="filtrerParType('Tous'); filtrerParNiveau('Tous')"
+      >
+        Réinitialiser les filtres
+      </button>
+    </div>
+
+    <!-- Détails de la séance sélectionnée (visible uniquement pour les clients connectés) -->
+    <div
+      class="seance-details"
+      *ngIf="seanceSelectionnee && isClient()"
+      #seanceDetails
+    >
+      <div class="seance-details-header">
+        <h2 class="details-title">{{ seanceSelectionnee.titre }}</h2>
+        <div class="details-meta">
+          <div class="details-meta-item">
+            <i class="bi bi-clock"></i>
+            <span>{{ seanceSelectionnee.duree }}</span>
+          </div>
+          <div class="details-meta-item">
+            <i class="bi bi-lightning-charge"></i>
+            <span>{{ seanceSelectionnee.objectif }}</span>
+          </div>
+          <div class="details-meta-item">
+            <i class="bi bi-trophy"></i>
+            <span>{{ seanceSelectionnee.niveau }}</span>
+          </div>
+          <div class="details-meta-item">
+            <i class="bi bi-person-circle"></i>
+            <span>{{ seanceSelectionnee.coach }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="seance-details-body">
+        <div class="details-description">
+          <h3>Description</h3>
+          <p>{{ seanceSelectionnee.description }}</p>
+        </div>
+
+        <div class="details-muscles">
+          <h3>Groupes musculaires ciblés</h3>
+          <div class="muscle-tags">
+            <span
+              class="muscle-tag"
+              *ngFor="let muscle of seanceSelectionnee.groupesMusculaires"
+            >
+              {{ muscle }}
+            </span>
+          </div>
+        </div>
+
+        <div class="details-exercises">
+          <h3>Programme d'exercices</h3>
+          <div class="exercise-list">
+            <div
+              class="exercise-item"
+              *ngFor="
+                let exercice of seanceSelectionnee.exercices;
+                let i = index
+              "
+            >
+              <div
+                class="exercise-header"
+                (click)="exercice.expanded = !exercice.expanded"
+              >
+                <div class="exercise-number">{{ i + 1 }}</div>
+                <div class="exercise-name">{{ exercice.nom }}</div>
+                <div class="exercise-sets">{{ exercice.series }} séries</div>
+                <div class="exercise-reps">{{ exercice.repetitions }}</div>
+                <div class="exercise-rest">{{ exercice.repos }}</div>
+                <div class="exercise-toggle">
+                  <i
+                    class="bi"
+                    [ngClass]="
+                      exercice.expanded ? 'bi-chevron-up' : 'bi-chevron-down'
+                    "
+                  ></i>
+                </div>
+              </div>
+              <div
+                class="exercise-details"
+                [ngClass]="{ expanded: exercice.expanded }"
+              >
+                <p class="exercise-description">{{ exercice.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="seance-details-footer">
+        <button class="btn btn-primary btn-lg">Réserver cette séance</button>
+        <button class="btn btn-outline-primary btn-lg">
+          Contacter le coach
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
