@@ -116,21 +116,21 @@
 }
 
 .coach-info h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 0.8rem;
-  color: #2c3e50;
+  color: #333333;
   transition: color 0.3s ease;
 }
 
 .coach-card:hover .coach-info h2 {
-  color: #3498db;
+  color: #ff4d4d;
 }
 
 .coach-specialty {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #3498db;
+  color: #ff4d4d;
   margin-bottom: 0.8rem;
   transition: transform 0.3s ease;
 }
@@ -152,7 +152,7 @@
 
 .coach-quote {
   font-style: italic;
-  color: #7f8c8d;
+  color: #666666;
   border-left: 4px solid #3498db;
   padding: 0.8rem 1.2rem;
   margin-top: 1.5rem;
