@@ -8,6 +8,7 @@ import { InscriptionComponent } from './inscription/inscription.component';
 import { ConnexionComponent } from './connexion/connexion.component';
 import { CoachsComponent } from './coachs/coachs.component';
 import { SeancesComponent } from './seances/seances.component';
+import { MesSceancesComponent } from './mes-sceances/mes-sceances.component';
 // Composant temporaire pour les routes non encore implémentées
 @Component({
   template: `<div class="container mt-5">
@@ -34,7 +35,7 @@ const routes: Routes = [
   // Routes pour les clients
   {
     path: 'mes-seances',
-    component: PlaceholderComponent,
+    component: MesSceancesComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.CLIENT] },
   },
