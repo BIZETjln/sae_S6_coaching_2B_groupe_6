@@ -20,7 +20,7 @@
   padding-bottom: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 3px;
-  color: #2c3e50;
+  color: #333333;
   margin-bottom: 1rem;
 }
 
@@ -32,7 +32,7 @@
   transform: translateX(-50%);
   width: 100px;
   height: 5px;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
+  background: linear-gradient(90deg, #ff4d4d, #ff7a00);
   border-radius: 3px;
 }
 
@@ -66,7 +66,7 @@
   left: 0;
   width: 100%;
   height: 5px;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
+  background: linear-gradient(90deg, #ff4d4d, #ff7a00);
   z-index: 2;
   transform: scaleX(0);
   transform-origin: left;
@@ -116,21 +116,21 @@
 }
 
 .coach-info h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 0.8rem;
-  color: #2c3e50;
+  color: #333333;
   transition: color 0.3s ease;
 }
 
 .coach-card:hover .coach-info h2 {
-  color: #3498db;
+  color: #ff4d4d;
 }
 
 .coach-specialty {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #3498db;
+  color: #ff4d4d;
   margin-bottom: 0.8rem;
   transition: transform 0.3s ease;
 }
@@ -152,8 +152,8 @@
 
 .coach-quote {
   font-style: italic;
-  color: #7f8c8d;
-  border-left: 4px solid #3498db;
+  color: #666666;
+  border-left: 4px solid #ff4d4d;
   padding: 0.8rem 1.2rem;
   margin-top: 1.5rem;
   background-color: #f8f9fa;
@@ -169,7 +169,7 @@
   top: 0;
   left: 10px;
   font-size: 2.5rem;
-  color: rgba(52, 152, 219, 0.2);
+  color: rgba(255, 77, 77, 0.2);
   font-family: Georgia, serif;
 }
 
