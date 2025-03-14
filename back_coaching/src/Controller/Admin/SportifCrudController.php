@@ -45,12 +45,13 @@ class SportifCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        // Récupération des valeurs de l'enum Niveau pour les niveaux sportifs
-        $niveaux = [
-            'Débutant' => Niveau::DEBUTANT,
-            'Intermédiaire' => Niveau::INTERMEDIAIRE,
-            'Avancé' => Niveau::AVANCE,
-        ];
+        // Récupération dynamique des valeurs de l'enum Niveau
+        $niveaux = [];
+        foreach (Niveau::cases() as $niveau) {
+            // Transformation de 'DEBUTANT' en 'Débutant' pour l'affichage
+            $label = ucfirst(strtolower($niveau->name));
+            $niveaux[$label] = $niveau;
+        }
 
         return [
             FormField::addPanel('Informations personnelles')
@@ -97,7 +98,7 @@ class SportifCrudController extends AbstractCrudController
             DateTimeField::new('dateInscription', 'Date d\'inscription')
                 ->setFormTypeOption('attr', ['placeholder' => 'Date d\'inscription'])
                 ->setColumns(6)
-                ->setRequired(false),
+                ->setRequired(true),
             
             ChoiceField::new('niveauSportif', 'Niveau sportif')
                 ->setChoices($niveaux)

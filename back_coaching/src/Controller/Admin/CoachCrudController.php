@@ -92,6 +92,7 @@ class CoachCrudController extends AbstractCrudController
                 ->setColumns(12),
             
             MoneyField::new('tarifHoraire', 'Tarif horaire')
+                ->setRequired(true)
                 ->setCurrency('EUR')
                 ->setStoredAsCents(false)
                 ->setFormTypeOption('attr', ['placeholder' => '0.00'])
