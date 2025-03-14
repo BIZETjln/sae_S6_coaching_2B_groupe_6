@@ -1,14 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
-// Interface pour les coachs
-interface Coach {
-  id: number;
-  nom: string;
-  specialite: string;
-  disponibilite: string;
-  citation?: string;
-  image: string;
-}
+import { CoachService, Coach } from '../services/coach.service';
 
 @Component({
   selector: 'app-coachs',
@@ -18,36 +9,32 @@ interface Coach {
 })
 export class CoachsComponent implements OnInit {
   // Liste des coachs
-  coachs: Coach[] = [
-    {
-      id: 1,
-      nom: 'Yann Rouquié',
-      specialite: 'Entraînement militaire',
-      disponibilite: '7j/7 - 24h/24',
-      citation: 'Entrainement sous système fluide',
-      image: 'assets/images/coach1.jpg',
-    },
-    {
-      id: 2,
-      nom: 'Mael Carrié',
-      specialite: 'Entraînement bodybuilding',
-      disponibilite: '5j/7 - 2h/24',
-      citation: 'Je ne compte pas mes temps de repos, mes muscles me parlent',
-      image: 'assets/images/coach2.jpg',
-    },
-    {
-      id: 3,
-      nom: 'Julien Bizet',
-      specialite: 'Devenir coach',
-      disponibilite: '1j/7 - 1h/24',
-      citation: 'Moi je suis coach',
-      image: 'assets/images/coach3.png',
-    },
-  ];
+  coachs: Coach[] = [];
+  loading: boolean = true;
+  error: string | null = null;
 
-  constructor() {}
+  constructor(private coachService: CoachService) {}
 
   ngOnInit(): void {
-    // Initialisation du composant
+    this.loadCoaches();
+  }
+
+  loadCoaches(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.coachService.getCoaches().subscribe({
+      next: (data) => {
+        this.coachs = data;
+        console.log('Coachs chargés avec succès:', this.coachs.length);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des coachs', err);
+        this.error =
+          'Impossible de charger les coachs. Veuillez réessayer plus tard.';
+        this.loading = false;
+      },
+    });
   }
 }
