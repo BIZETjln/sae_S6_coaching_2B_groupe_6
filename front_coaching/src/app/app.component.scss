@@ -39,22 +39,22 @@
   width: 60px;
   background-color: #f8f9fa;
   padding: 1rem 0.5rem;
-  
+
   .sidebar-header {
     display: flex;
     justify-content: center;
     margin-bottom: 1.75rem;
-    
+
     .logo {
       justify-content: center;
       margin: 0 auto;
-      
+
       span {
         display: none;
       }
-      
+
       i {
-        color: #0d6efd;
+        color: #ff4d4d;
         font-size: 1.1rem;
       }
     }
@@ -71,43 +71,43 @@
       display: none;
     }
   }
-  
+
   .nav-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 0.75rem;
-    color: #0d6efd;
+    color: #ff4d4d;
     text-decoration: none;
     border-radius: 4px;
     transition: all 0.2s;
-    
+
     span {
       display: none;
     }
-    
+
     i {
       font-size: 1.1rem;
       margin: 0;
     }
-    
+
     &:hover {
-      background-color: rgba(13, 110, 253, 0.1);
+      background-color: rgba(255, 77, 77, 0.1);
     }
-    
+
     &.active {
-      background-color: rgba(13, 110, 253, 0.1);
+      background-color: rgba(255, 77, 77, 0.1);
       font-weight: 500;
     }
   }
-  
+
   .user-profile {
     align-items: center;
-    
+
     .user-info {
       display: none;
     }
-    
+
     .avatar {
       width: 40px;
       height: 40px;
@@ -122,23 +122,23 @@
   align-items: center;
   justify-content: space-between;
   position: relative;
-  
+
   .logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 1.25rem;
     font-weight: bold;
-    
+
     i {
-      color: #0d6efd;
+      color: #ff4d4d;
     }
   }
-  
+
   .toggle-sidebar {
     background-color: white;
     border: 1px solid #e9ecef;
-    color: #0d6efd;
+    color: #ff4d4d;
     cursor: pointer;
     font-size: 0.9rem;
     width: 28px;
@@ -154,9 +154,9 @@
     transform: translateY(-50%);
     z-index: 1060;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    
+
     &:hover {
-      background-color: #0d6efd;
+      background-color: #ff4d4d;
       color: white;
     }
   }
@@ -178,7 +178,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  color: #0d6efd;
+  color: #ff4d4d;
   text-decoration: none;
   border-radius: 4px;
   transition: all 0.2s;
@@ -188,11 +188,11 @@
   }
 
   &:hover {
-    background-color: rgba(13, 110, 253, 0.1);
+    background-color: rgba(255, 77, 77, 0.1);
   }
 
   &.active {
-    background-color: rgba(13, 110, 253, 0.1);
+    background-color: rgba(255, 77, 77, 0.1);
     font-weight: 500;
   }
 }
@@ -222,12 +222,12 @@
   .user-info {
     display: flex;
     flex-direction: column;
-    
+
     .user-name {
       font-weight: 500;
       color: #333;
     }
-    
+
     .user-email {
       font-size: 0.875rem;
       color: #6c757d;
@@ -298,7 +298,7 @@
   left: 0;
   width: 50px;
   height: 3px;
-  background-color: #0d6efd;
+  background-color: #ff4d4d;
   border-radius: 3px;
 }
 
@@ -326,7 +326,7 @@
 }
 
 .footer-social a:hover {
-  background-color: #0d6efd;
+  background-color: #ff4d4d;
   transform: translateY(-3px);
 }
 
@@ -356,7 +356,7 @@
   transform: translateY(-50%);
   width: 6px;
   height: 6px;
-  background-color: #0d6efd;
+  background-color: #ff4d4d;
   border-radius: 50%;
 }
 
@@ -380,12 +380,13 @@
   .sidebar {
     width: 200px;
   }
-  
-  .main-content, .footer {
+
+  .main-content,
+  .footer {
     margin-left: 200px;
     width: calc(100% - 200px);
   }
-  
+
   .footer-content {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -396,32 +397,33 @@
     width: 70px;
     padding: 1rem 0.5rem;
   }
-  
+
   .sidebar-header .logo span,
   .nav-item span,
   .user-profile .user-info {
     display: none;
   }
-  
+
   .nav-item {
     justify-content: center;
     padding: 0.5rem;
   }
-  
+
   .nav-item i {
     font-size: 1.25rem;
     margin: 0;
   }
-  
+
   .user-profile {
     align-items: center;
   }
-  
-  .main-content, .footer {
+
+  .main-content,
+  .footer {
     margin-left: 70px;
     width: calc(100% - 70px);
   }
-  
+
   .footer-content {
     grid-template-columns: 1fr;
   }
@@ -433,13 +435,14 @@
     padding: 0;
     overflow: hidden;
   }
-  
-  .main-content, .footer {
+
+  .main-content,
+  .footer {
     margin-left: 0;
     width: 100%;
   }
-  
+
   .footer {
     padding: 40px 0 20px;
   }
-} 
+}

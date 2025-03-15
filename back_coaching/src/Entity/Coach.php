@@ -43,6 +43,9 @@ class Coach extends Utilisateur
     #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach')]
     private Collection $ficheDePaies;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
+
     public function __construct()
     {
         $this->seances = new ArrayCollection();
@@ -141,5 +144,17 @@ class Coach extends Utilisateur
         
         // Alternative si vous n'avez pas de nom/prénom :
         // return 'Coach #' . $this->getId();
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
     }
 }

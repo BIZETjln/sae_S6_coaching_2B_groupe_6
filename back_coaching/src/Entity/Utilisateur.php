@@ -48,6 +48,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $prenom = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
     public function getId(): ?Uuid
     {
         return $this->id;
@@ -144,6 +147,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->nom = $nom;
 
+        return $this;
+    }
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): static
+    {
+        $this->photo = $photo;
         return $this;
     }
 }

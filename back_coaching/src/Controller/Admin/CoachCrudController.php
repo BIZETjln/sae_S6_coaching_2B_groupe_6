@@ -10,14 +10,31 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 
 class CoachCrudController extends AbstractCrudController
 {
+    private UserPasswordHasherInterface $passwordHasher;
+
+    public function __construct(UserPasswordHasherInterface $passwordHasher)
+    {
+        $this->passwordHasher = $passwordHasher;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Coach::class;
@@ -42,23 +59,23 @@ class CoachCrudController extends AbstractCrudController
             array_map(fn($case) => $case->value, ThemeSeance::cases())
         );
 
-        return [            
+        return [
             FormField::addPanel('Informations personnelles')
                 ->setIcon('fa fa-user')
                 ->setHelp('Informations de base du coach'),
-            
+
             TextField::new('nom', 'Nom')
                 ->setFormTypeOption('attr', ['placeholder' => 'Nom du coach'])
                 ->setColumns(6),
-            
+
             TextField::new('prenom', 'Prénom')
                 ->setFormTypeOption('attr', ['placeholder' => 'Prénom du coach'])
                 ->setColumns(6),
-            
+
             EmailField::new('email', 'Email')
                 ->setFormTypeOption('attr', ['placeholder' => 'email@exemple.com'])
                 ->setColumns(12),
-            
+
             TextField::new('password')
                 ->setFormType(RepeatedType::class)
                 ->setFormTypeOptions([
@@ -83,26 +100,69 @@ class CoachCrudController extends AbstractCrudController
             FormField::addPanel('Compétences et tarification')
                 ->setIcon('fa fa-dumbbell')
                 ->setHelp('Spécialités et tarifs du coach'),
-            
+
             ChoiceField::new('specialites', 'Spécialités')
                 ->setChoices($specialites)
                 ->allowMultipleChoices()
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'specialites-container'])
                 ->setColumns(12),
-            
+
             MoneyField::new('tarifHoraire', 'Tarif horaire')
                 ->setRequired(true)
                 ->setCurrency('EUR')
                 ->setStoredAsCents(false)
                 ->setFormTypeOption('attr', ['placeholder' => '0.00'])
                 ->setColumns(6),
-            
+
             AssociationField::new('seances', 'Séances')
                 ->onlyOnDetail(),
-            
+
             AssociationField::new('ficheDePaies', 'Fiches de paie')
                 ->onlyOnDetail(),
         ];
+    }
+
+    // Surcharge de la méthode persistEntity pour les nouveaux sportifs
+    public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
+    {
+        $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
+        return $this->addPasswordEventListener($formBuilder);
+    }
+
+    public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
+    {
+        $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
+        return $this->addPasswordEventListener($formBuilder);
+    }
+
+    private function addPasswordEventListener(FormBuilderInterface $formBuilder): FormBuilderInterface
+    {
+        return $formBuilder->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword());
+    }
+
+    private function hashPassword()
+    {
+        return function ($event) {
+            $form = $event->getForm();
+            if (!$form->isValid()) {
+                return;
+            }
+
+            $password = $form->get('password')->getData();
+            if ($password === null) {
+                return;
+            }
+
+            $hash = $this->passwordHasher->hashPassword($event->getData(), $password);
+            $form->getData()->setPassword($hash);
+        };
+    }
+
+    public function createEntity(string $entityFqcn)
+    {
+        $coach = new Coach();
+        $coach->setRoles(['ROLE_USER', 'ROLE_COACH']);
+        return $coach;
     }
 }

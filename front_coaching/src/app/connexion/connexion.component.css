@@ -263,14 +263,14 @@
 }
 
 .btn-facebook {
-  background-color: #4267b2;
+  background-color: #ff4d4d;
   color: white;
-  border-color: #4267b2;
+  border-color: #ff4d4d;
 }
 
 .btn-facebook:hover {
-  background-color: #365899;
-  border-color: #365899;
+  background-color: #e63939;
+  border-color: #e63939;
 }
 
 .login-footer {

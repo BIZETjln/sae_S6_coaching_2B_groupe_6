@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  standalone: false
+  standalone: false,
 })
 export class HomeComponent implements OnInit {
   // Référence à Math pour l'utiliser dans le template
@@ -46,7 +46,7 @@ export class HomeComponent implements OnInit {
       description:
         'Développez votre force et votre masse musculaire avec des programmes ciblés.',
       icon: 'bi-trophy',
-      color: 'text-primary',
+      color: 'text-danger',
     },
     {
       title: 'Cardio',
@@ -60,7 +60,7 @@ export class HomeComponent implements OnInit {
       description:
         'Gagnez en souplesse et en équilibre tout en réduisant votre stress.',
       icon: 'bi-flower1',
-      color: 'text-success',
+      color: 'text-danger',
     },
     {
       title: 'CrossFit',
@@ -74,21 +74,21 @@ export class HomeComponent implements OnInit {
       description:
         'Optimisez vos résultats avec des conseils nutritionnels adaptés.',
       icon: 'bi-egg-fried',
-      color: 'text-success',
+      color: 'text-danger',
     },
     {
       title: 'Récupération',
       description:
         'Apprenez les techniques essentielles pour une récupération optimale.',
       icon: 'bi-battery-charging',
-      color: 'text-info',
+      color: 'text-danger',
     },
     {
       title: 'Perte de poids',
       description:
         'Atteignez vos objectifs de perte de poids avec un suivi personnalisé.',
       icon: 'bi-graph-down-arrow',
-      color: 'text-primary',
+      color: 'text-danger',
     },
   ];
 

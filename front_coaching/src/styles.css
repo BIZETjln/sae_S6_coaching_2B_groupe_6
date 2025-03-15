@@ -7,19 +7,19 @@
 /* Variables de couleurs modernes et harmonieuses */
 :root {
   /* Palette principale */
-  --primary: #3a86ff;
-  --primary-dark: #2667cc;
-  --primary-light: #61a0ff;
-  --secondary: #8338ec;
-  --secondary-dark: #6a2cc0;
-  --secondary-light: #9c5ef7;
-  --primary-rgb: 58, 134, 255;
-  --secondary-rgb: 131, 56, 236;
+  --primary: #ff4d4d;
+  --primary-dark: #e63939;
+  --primary-light: #ff7a7a;
+  --secondary: #ff7a00;
+  --secondary-dark: #e66f00;
+  --secondary-light: #ff9933;
+  --primary-rgb: 255, 77, 77;
+  --secondary-rgb: 255, 122, 0;
 
   /* Accents */
-  --accent-1: #ff006e;
-  --accent-2: #fb5607;
-  --accent-3: #ffbe0b;
+  --accent-1: #ff4d4d;
+  --accent-2: #ff7a00;
+  --accent-3: #e63939;
 
   /* Couleurs neutres */
   --neutral-100: #f8f9fa;
@@ -33,10 +33,10 @@
   --neutral-900: #212529;
 
   /* Couleurs fonctionnelles */
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
-  --info-color: #17a2b8;
+  --success-color: #ff4d4d;
+  --warning-color: #ff7a00;
+  --danger-color: #ff4d4d;
+  --info-color: #ff4d4d;
 
   /* Couleurs de texte */
   --text-color: var(--neutral-700);
