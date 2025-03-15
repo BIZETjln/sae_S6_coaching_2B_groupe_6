@@ -49,6 +49,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $photo = null;
 
     public function getId(): ?Uuid

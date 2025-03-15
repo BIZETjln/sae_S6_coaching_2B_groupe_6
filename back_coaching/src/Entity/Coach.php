@@ -43,6 +43,7 @@ class Coach extends Utilisateur
     #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach')]
     private Collection $ficheDePaies;
 
+    #[Groups(['coach:read'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
