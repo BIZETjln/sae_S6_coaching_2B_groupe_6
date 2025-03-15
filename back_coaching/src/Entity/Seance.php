@@ -14,25 +14,45 @@ use Symfony\Component\Uid\Uuid;
 use App\Enum\ThemeSeance;
 use App\Entity\Sportif;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 #[ORM\Entity(repositoryClass: SeanceRepository::class)]
-#[ApiResource()]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => ['seance:read']]),
+        new GetCollection(normalizationContext: ['groups' => ['seance:read']]),
+        new Patch(
+            denormalizationContext: ['groups' => ['seance:write:sportifs']],
+            // TODO A décommenter lorsque la sécurité sera implémentée
+            // security: "is_granted('ROLE_USER')"
+        )
+    ]
+)]
 class Seance
 {
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date_heure = null;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(enumType: TypeSeance::class)]
     private ?TypeSeance $type_seance = null;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(enumType: ThemeSeance::class)]
     private ?ThemeSeance $theme_seance = null;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\ManyToOne(inversedBy: 'seances')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coach $coach = null;
@@ -40,18 +60,22 @@ class Seance
     /**
      * @var Collection<int, Sportif>
      */
+    #[Groups(['seance:read', 'coach:read', 'seance:write:sportifs'])]
     #[ORM\ManyToMany(targetEntity: Sportif::class, inversedBy: 'seances')]
     private Collection $sportifs;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(enumType: StatutSeance::class)]
     private ?StatutSeance $statut = null;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(enumType: Niveau::class)]
     private ?Niveau $niveau_seance = null;
 
     /**
      * @var Collection<int, Exercice>
      */
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\ManyToMany(targetEntity: Exercice::class, inversedBy: 'seances')]
     private Collection $exercices;
 
