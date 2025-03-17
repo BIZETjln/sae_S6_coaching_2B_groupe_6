@@ -14,6 +14,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Form\FormBuilderInterface;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 
 class SeanceCrudController extends AbstractCrudController
 {
@@ -28,6 +33,7 @@ class SeanceCrudController extends AbstractCrudController
             FormField::addPanel('Informations générales')
                 ->setIcon('fa fa-calendar-alt')
                 ->setHelp('Informations de base de la séance'),
+
             
             DateTimeField::new('date_heure', 'Date et heure')
                 ->setFormTypeOptions([
@@ -126,7 +132,7 @@ class SeanceCrudController extends AbstractCrudController
         
         return $fields;
     }
-    
+
     public function configureCrud(Crud $crud): Crud
     {
         return $crud
