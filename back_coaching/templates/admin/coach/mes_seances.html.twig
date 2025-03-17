@@ -1,0 +1,41 @@
+{# templates/admin/coach/mes_seances.html.twig #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Mes séances à venir{% endblock %}
+
+{% block main %}
+    <div class="content">
+        {% if seances|length > 0 %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date et heure</th>
+                            <th>Type</th>
+                            <th>Thème</th>
+                            <th>Niveau</th>
+                            <th>Statut</th>
+                            <th>Coach</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for seance in seances %}
+                            <tr>
+                                <td>{{ seance.dateHeure|date('d/m/Y H:i') }}</td>
+                                <td>{{ seance.typeSeance.value }}</td>
+                                <td>{{ seance.themeSeance.value }}</td>
+                                <td>{{ seance.niveauSeance.value }}</td>
+                                <td>{{ seance.statut.value }}</td>
+                                <td>{{ seance.coach }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Vous n'avez aucune séance à venir.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
