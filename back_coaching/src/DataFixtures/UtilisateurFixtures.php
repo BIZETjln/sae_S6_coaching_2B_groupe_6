@@ -44,7 +44,7 @@ class UtilisateurFixtures extends Fixture
 
             // Génération aléatoire de spécialités
             $specialites = $faker->randomElements(
-                ['fitness', 'cardio', 'musculation', 'crossfit', 'yoga', 'pilates', 'stretching'],
+                ['fitness', 'cardio', 'musculation', 'crossfit'],
                 $faker->numberBetween(2, 4)
             );
             $coach->setSpecialites($specialites);
