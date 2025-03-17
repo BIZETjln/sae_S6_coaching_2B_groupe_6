@@ -19,6 +19,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class SeanceCrudController extends AbstractCrudController
 {
@@ -114,6 +116,13 @@ class SeanceCrudController extends AbstractCrudController
                     ],
                 ])
                 ->setColumns(12),
+            
+            ImageField::new('photo', 'Photo')
+                ->setBasePath('images/seances')
+                ->setUploadDir('public/images/seances')
+                ->setUploadedFileNamePattern('[randomhash].[extension]')
+                ->setRequired(false)
+                ->setColumns(12),
         ];
         
         // Ajouter le champ statut uniquement en mode édition
@@ -150,5 +159,61 @@ class SeanceCrudController extends AbstractCrudController
         $seance->setStatut(StatutSeance::PREVUE);
         
         return $seance;
+    }
+
+    public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
+    {
+        $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
+    }
+
+    public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
+    {
+        $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
+    }
+
+    private function handleImageUpload()
+    {
+        return function ($event) {
+            $form = $event->getForm();
+            if (!$form->isValid()) {
+                return;
+            }
+
+            $seance = $form->getData();
+            if (!$seance instanceof Seance) {
+                return;
+            }
+
+            $uploadedFile = $seance->getPhoto();
+
+            // Si on a une nouvelle image
+            if ($uploadedFile instanceof UploadedFile) {
+                // Supprimer l'ancienne photo si elle existe
+                $oldPhotoPath = $seance->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                }
+
+                // Upload la nouvelle photo
+                $newFilename = uniqid() . '.' . $uploadedFile->guessExtension();
+                $uploadedFile->move(
+                    'public/images/seances',
+                    $newFilename
+                );
+                $seance->setPhoto('images/seances/' . $newFilename);
+            }
+            // Si la photo a été supprimée (champ vidé)
+            elseif ($uploadedFile === null) {
+                $oldPhotoPath = $seance->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                    $seance->setPhoto(null);
+                }
+            }
+        };
     }
 }

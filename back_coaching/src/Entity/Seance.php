@@ -79,6 +79,10 @@ class Seance
     #[ORM\ManyToMany(targetEntity: Exercice::class, inversedBy: 'seances')]
     private Collection $exercices;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
     public function __construct()
     {
         $this->sportifs = new ArrayCollection();
@@ -259,6 +263,18 @@ class Seance
         
         $this->statut = StatutSeance::ANNULEE;
         
+        return $this;
+    }
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): static
+    {
+        $this->photo = $photo;
+
         return $this;
     }
 }
