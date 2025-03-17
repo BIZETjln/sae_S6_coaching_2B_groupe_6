@@ -29,7 +29,7 @@ class UtilisateurFixtures extends Fixture
         $admin->setEmail('admin@example.com');
         $admin->setNom('Admin');
         $admin->setPrenom('Super');
-        $admin->setRoles(['ROLE_ADMIN']);
+        $admin->setRoles(['ROLE_USER', 'ROLE_COACH', 'ROLE_ADMIN']);
         $admin->setPassword($this->hasher->hashPassword($admin, 'admin'));
         $manager->persist($admin);
 
@@ -39,7 +39,7 @@ class UtilisateurFixtures extends Fixture
             $coach->setEmail(sprintf('coach%d@example.com', $i + 1));
             $coach->setNom($faker->lastName);
             $coach->setPrenom($faker->firstName);
-            $coach->setRoles(['ROLE_COACH']);
+            $coach->setRoles(['ROLE_USER', 'ROLE_COACH']);
             $coach->setPassword($this->hasher->hashPassword($coach, 'coach'));
 
             // Génération aléatoire de spécialités

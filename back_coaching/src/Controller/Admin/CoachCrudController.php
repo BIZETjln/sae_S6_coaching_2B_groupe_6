@@ -25,6 +25,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class CoachCrudController extends AbstractCrudController
 {
@@ -76,6 +78,14 @@ class CoachCrudController extends AbstractCrudController
                 ->setFormTypeOption('attr', ['placeholder' => 'email@exemple.com'])
                 ->setColumns(12),
 
+            TextField::new('description', 'Description')
+                ->setFormTypeOption('attr', [
+                    'placeholder' => 'Description du coach, son expérience, ses spécialités...',
+                    'rows' => 5
+                ])
+                ->hideOnIndex()
+                ->setColumns(12),
+
             TextField::new('password')
                 ->setFormType(RepeatedType::class)
                 ->setFormTypeOptions([
@@ -90,7 +100,8 @@ class CoachCrudController extends AbstractCrudController
                         'attr' => ['placeholder' => 'Confirmer le mot de passe'],
                         'row_attr' => ['class' => 'col-md-6'],
                     ],
-                    'mapped' => true,
+                    'mapped' => false,
+                    'required' => false,
                     'row_attr' => ['class' => 'row'],
                 ])
                 ->setRequired($pageName === Crud::PAGE_NEW)
@@ -120,6 +131,13 @@ class CoachCrudController extends AbstractCrudController
 
             AssociationField::new('ficheDePaies', 'Fiches de paie')
                 ->onlyOnDetail(),
+
+            ImageField::new('photo', 'Photo')
+                ->setBasePath('images/coaches')
+                ->setUploadDir('public/images/coaches')
+                ->setUploadedFileNamePattern('[randomhash].[extension]')
+                ->setRequired(false)
+                ->setColumns(12),
         ];
     }
 
@@ -127,18 +145,17 @@ class CoachCrudController extends AbstractCrudController
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
-        return $this->addPasswordEventListener($formBuilder);
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword())
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
     }
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
-        return $this->addPasswordEventListener($formBuilder);
-    }
-
-    private function addPasswordEventListener(FormBuilderInterface $formBuilder): FormBuilderInterface
-    {
-        return $formBuilder->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword());
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword())
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
     }
 
     private function hashPassword()
@@ -164,5 +181,60 @@ class CoachCrudController extends AbstractCrudController
         $coach = new Coach();
         $coach->setRoles(['ROLE_USER', 'ROLE_COACH']);
         return $coach;
+    }
+
+    private function handleImageUpload()
+    {
+        return function ($event) {
+            $form = $event->getForm();
+            if (!$form->isValid()) {
+                return;
+            }
+
+            $coach = $form->getData();
+            if (!$coach instanceof Coach) {
+                return;
+            }
+
+            $uploadedFile = $coach->getPhoto();
+
+            // Si on a une nouvelle image
+            if ($uploadedFile instanceof UploadedFile) {
+                // Supprimer l'ancienne photo si elle existe
+                $oldPhotoPath = $coach->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                }
+
+                // Upload la nouvelle photo
+                $newFilename = uniqid() . '.' . $uploadedFile->guessExtension();
+                $uploadedFile->move(
+                    'public/images/coaches',
+                    $newFilename
+                );
+                $coach->setPhoto('images/coaches/' . $newFilename);
+            }
+            // Si la photo a été supprimée (champ vidé)
+            elseif ($uploadedFile === null) {
+                $oldPhotoPath = $coach->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                    $coach->setPhoto(null);
+                }
+            }
+        };
+    }
+
+    public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance instanceof Coach) {
+            // Supprimer la photo si elle existe
+            $photoPath = $entityInstance->getPhoto();
+            if ($photoPath && file_exists('public/' . $photoPath)) {
+                unlink('public/' . $photoPath);
+            }
+        }
+
+        parent::deleteEntity($entityManager, $entityInstance);
     }
 }
