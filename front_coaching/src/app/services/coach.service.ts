@@ -9,8 +9,10 @@ export interface ApiCoach {
   prenom: string;
   email: string;
   specialites: string[];
-  tarifHoraire: number;
+  tarif_horaire: number;
   seances: string[];
+  description: string;
+  photo?: string;
 }
 
 export interface CoachResponse {
@@ -26,7 +28,7 @@ export interface Coach {
   nom: string;
   specialite: string;
   disponibilite: string;
-  citation?: string;
+  description: string;
   image: string;
   tarifHoraire: number;
 }
@@ -36,6 +38,8 @@ export interface Coach {
 })
 export class CoachService {
   private apiUrl = 'https://127.0.0.1:8000/api/coaches?page=1';
+  private baseImageUrl = 'https://127.0.0.1:8000/images/coaches/';
+  private defaultImage = 'assets/images/default-avatar.png';
 
   // Options HTTP correspondant exactement à la requête curl
   private httpOptions = {
@@ -50,18 +54,24 @@ export class CoachService {
     return this.http.get<CoachResponse>(this.apiUrl, this.httpOptions).pipe(
       map((response) => {
         return response.member.map((coach) => {
-          // Génération d'un numéro d'image aléatoire entre 1 et 3
-          const imageNumber = Math.floor(Math.random() * 3) + 1;
-          const imageExtension = imageNumber === 3 ? 'png' : 'jpg';
+          // Gestion de l'image du coach
+          let imagePath = this.defaultImage; // Image par défaut
+
+          // Si le coach a une photo, utiliser l'URL de l'image depuis le back-end
+          if (coach.photo) {
+            imagePath = `${this.baseImageUrl}${coach.photo}`;
+          }
 
           return {
             id: coach.id,
             nom: `${coach.prenom} ${coach.nom}`,
             specialite: coach.specialites.join(', '),
             disponibilite: 'Disponible sur rendez-vous',
-            citation: `Spécialiste en ${coach.specialites[0] || 'coaching'}`,
-            image: `assets/images/coach${imageNumber}.${imageExtension}`,
-            tarifHoraire: coach.tarifHoraire,
+            description:
+              coach.description ||
+              `Spécialiste en ${coach.specialites[0] || 'coaching'}`,
+            image: imagePath,
+            tarifHoraire: coach.tarif_horaire,
           };
         });
       })

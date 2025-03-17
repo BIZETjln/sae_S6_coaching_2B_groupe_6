@@ -20,14 +20,20 @@
     <!-- Boucle sur les coachs -->
     <div class="coach-card" *ngFor="let coach of coachs">
       <div class="coach-image">
-        <img [src]="coach.image" [alt]="coach.nom" />
+        <img
+          [src]="coach.image"
+          [alt]="coach.nom"
+          [style.object-position]="getImagePosition(coach)"
+        />
       </div>
       <div class="coach-info">
         <h2>{{ coach.nom }}</h2>
         <p class="coach-specialty">{{ coach.specialite }}</p>
         <p class="coach-availability">{{ coach.disponibilite }}</p>
-        <p class="coach-tarif">{{ coach.tarifHoraire }}€/heure</p>
-        <p class="coach-quote" *ngIf="coach.citation">"{{ coach.citation }}"</p>
+        <p class="coach-tarif">
+          {{ coach.tarifHoraire | number : "1.2-2" }}€/heure
+        </p>
+        <p class="coach-description">{{ coach.description }}</p>
       </div>
     </div>
   </div>

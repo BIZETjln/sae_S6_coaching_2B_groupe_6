@@ -37,4 +37,10 @@ export class CoachsComponent implements OnInit {
       },
     });
   }
+
+  // Méthode pour déterminer la position optimale de l'image en fonction du coach
+  getImagePosition(coach: Coach): string {
+    // Par défaut, on centre l'image et on privilégie le haut (pour voir le visage)
+    return 'center 20%';
+  }
 }
