@@ -291,6 +291,37 @@
   text-decoration: underline;
 }
 
+/* Styles pour le bouton de connexion rapide (dev) */
+.dev-login {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.btn-dev-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--neutral-800);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-dev-login i {
+  font-size: 1rem;
+}
+
+.btn-dev-login:hover {
+  background-color: var(--neutral-900);
+  transform: translateY(-2px);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

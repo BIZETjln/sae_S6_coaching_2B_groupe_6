@@ -248,6 +248,13 @@ img {
   text-align: center;
 }
 
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 /* Typographie */
 .display-1 {
   font-size: 4.5rem;

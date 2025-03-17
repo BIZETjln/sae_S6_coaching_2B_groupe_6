@@ -30,6 +30,10 @@ export class MesSceancesComponent implements OnInit {
   selectedSeance: Seance | null = null;
   activeTab: 'avenir' | 'passees' = 'avenir'; // Onglet actif par défaut
   showCancelConfirmation: boolean = false; // Pour afficher la confirmation d'annulation
+  
+  // Pour les notifications
+  notification: { message: string, type: 'success' | 'error' | 'info' } | null = null;
+  showNotification: boolean = false;
 
   constructor(private seanceService: SeanceService, private router: Router) { }
 
@@ -42,23 +46,44 @@ export class MesSceancesComponent implements OnInit {
     this.seanceService.getMesSeances().subscribe(seances => {
       this.seances = seances;
       this.organizeSeances();
-      console.log('Séances chargées:', this.seances);
-      console.log('Séances par jour:', this.seancesParJour);
     });
   }
 
   organizeSeances(): void {
     // Séances à venir et passées
-    this.seancesAVenir = this.seances.filter(s => s.statut === 'à venir');
-    this.seancesPassees = this.seances.filter(s => s.statut === 'terminée');
+    console.log('Séances récupérées:', this.seances);
+    this.seancesAVenir = this.seances.filter(s => 
+      s.statut === 'à venir' || 
+      s.statut === 'validee' || 
+      s.statut === 'prevue'
+    );
+    
+    this.seancesPassees = this.seances.filter(s => 
+      s.statut === 'terminée' || 
+      s.statut === 'annulee'
+    );
+    
+    console.log('Séances à venir:', this.seancesAVenir);
+    console.log('Séances passées:', this.seancesPassees);
     
     // Organiser les séances par jour pour le calendrier
     this.seancesParJour = {};
     this.seances.forEach(seance => {
       // S'assurer que seance.date est bien un objet Date
-      const seanceDate = seance.date instanceof Date ? seance.date : new Date(seance.date);
+      let seanceDate: Date;
+      
+      if (seance.date) {
+        seanceDate = seance.date instanceof Date ? seance.date : new Date(seance.date);
+      } else if (seance.date_heure) {
+        seanceDate = new Date(seance.date_heure);
+      } else if (seance.dateHeure) {
+        seanceDate = new Date(seance.dateHeure);
+      } else {
+        // Si aucune date n'est disponible, ignorer cette séance
+        return;
+      }
+      
       const dateStr = this.formatDate(seanceDate);
-      console.log('Date formatée pour la séance:', dateStr, seance.titre);
       
       if (!this.seancesParJour[dateStr]) {
         this.seancesParJour[dateStr] = [];
@@ -72,9 +97,16 @@ export class MesSceancesComponent implements OnInit {
     this.activeTab = tab;
     // Recharger les séances appropriées
     if (tab === 'avenir') {
-      this.seancesAVenir = this.seances.filter(s => s.statut === 'à venir');
+      this.seancesAVenir = this.seances.filter(s => 
+        s.statut === 'à venir' || 
+        s.statut === 'validee' || 
+        s.statut === 'prevue'
+      );
     } else {
-      this.seancesPassees = this.seances.filter(s => s.statut === 'terminée');
+      this.seancesPassees = this.seances.filter(s => 
+        s.statut === 'terminée' || 
+        s.statut === 'annulee'
+      );
     }
   }
 
@@ -150,8 +182,15 @@ export class MesSceancesComponent implements OnInit {
   switchToListView(): void {
     this.viewMode = 'list';
     this.activeTab = 'avenir'; // Initialiser l'onglet actif à "à venir"
-    this.seancesAVenir = this.seances.filter(s => s.statut === 'à venir');
-    this.seancesPassees = this.seances.filter(s => s.statut === 'terminée');
+    this.seancesAVenir = this.seances.filter(s => 
+      s.statut === 'à venir' || 
+      s.statut === 'validee' || 
+      s.statut === 'prevue'
+    );
+    this.seancesPassees = this.seances.filter(s => 
+      s.statut === 'terminée' || 
+      s.statut === 'annulee'
+    );
     this.selectedDate = null;
   }
 
@@ -198,15 +237,77 @@ export class MesSceancesComponent implements OnInit {
     this.showCancelConfirmation = true;
   }
 
-  // Annuler la séance (pour l'instant juste fermer la modale)
+  // Annuler la séance
   cancelSeance(): void {
-    // Ici, on ajouterait la logique pour annuler réellement la séance
-    console.log('Séance annulée:', this.selectedSeance);
-    this.closeSeanceDetails();
+    if (!this.selectedSeance) return;
+    
+    // Afficher un indicateur de chargement si nécessaire
+    
+    this.seanceService.cancelSeance(this.selectedSeance.id).subscribe({
+      next: (response) => {
+        console.log('Séance annulée avec succès:', response);
+        
+        // Mettre à jour la liste des séances
+        this.loadSeances();
+        
+        // Fermer la modale
+        this.closeSeanceDetails();
+        
+        // Afficher un message de succès
+        this.showSuccessMessage('Votre séance a été annulée avec succès');
+      },
+      error: (error) => {
+        console.error('Erreur lors de l\'annulation de la séance:', error);
+        
+        // Afficher un message d'erreur
+        this.showErrorMessage('Une erreur est survenue lors de l\'annulation de la séance');
+        
+        // Fermer quand même la modale
+        this.closeSeanceDetails();
+      }
+    });
   }
 
   // Fermer la confirmation sans annuler
   closeCancelConfirmation(): void {
     this.showCancelConfirmation = false;
+  }
+
+  // Afficher un message de succès
+  showSuccessMessage(message: string): void {
+    this.notification = { message, type: 'success' };
+    this.showNotification = true;
+    setTimeout(() => this.hideNotification(), 5000); // Masquer après 5 secondes
+  }
+  
+  // Afficher un message d'erreur
+  showErrorMessage(message: string): void {
+    this.notification = { message, type: 'error' };
+    this.showNotification = true;
+    setTimeout(() => this.hideNotification(), 5000); // Masquer après 5 secondes
+  }
+  
+  // Afficher un message d'information
+  showInfoMessage(message: string): void {
+    this.notification = { message, type: 'info' };
+    this.showNotification = true;
+    setTimeout(() => this.hideNotification(), 5000); // Masquer après 5 secondes
+  }
+  
+  // Masquer la notification
+  hideNotification(): void {
+    if (!this.notification) return;
+    
+    // Ajouter la classe pour l'animation de sortie
+    const notificationElement = document.querySelector('.notification');
+    if (notificationElement) {
+      notificationElement.classList.add('hiding');
+    }
+    
+    // Attendre la fin de l'animation avant de masquer
+    setTimeout(() => {
+      this.showNotification = false;
+      setTimeout(() => this.notification = null, 100);
+    }, 300);
   }
 }

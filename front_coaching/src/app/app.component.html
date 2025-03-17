@@ -116,8 +116,8 @@
     <div class="user-profile-header">   
     <img [src]="currentUser.avatar || 'assets/images/default-avatar.png'" alt="Photo de profil" class="avatar" >
     <div class="user-info">
-      <div class="user-name">{{ currentUser.name }}</div>
-      <div class="user-email">{{ currentUser.email }}</div>
+      <div class="user-name text-truncate">{{ currentUser.nom }} {{ currentUser.prenom }}</div>
+      <div class="user-email text-truncate">{{ currentUser.email }}</div>
     </div>
     </div>
     <a (click)="logout()" class="logout-btn">
