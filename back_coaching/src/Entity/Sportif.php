@@ -10,19 +10,56 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Utilisateur;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
+
 #[ORM\Entity(repositoryClass: SportifRepository::class)]
-#[ApiResource()]
+#[ApiResource(
+    operations: [
+        new Get(
+            normalizationContext: ['groups' => ['sportif:read']],
+            // TODO : décommenter quand on aura un système de sécurité
+            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['sportif:read']],
+            // security: "is_granted('ROLE_ADMIN')"
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['sportif:write']],
+            normalizationContext: ['groups' => ['sportif:read']],
+            // security: "is_granted('ROLE_ADMIN')"
+        ),
+        new Put(
+            denormalizationContext: ['groups' => ['sportif:write']],
+            normalizationContext: ['groups' => ['sportif:read']],
+            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
+        ),
+        new Delete(
+            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
+        )
+    ],
+    // security: "is_granted('".AuthenticatedVoter::IS_AUTHENTICATED_FULLY."')"
+)]
 class Sportif extends Utilisateur
 {
+    #[Groups(['sportif:read', 'sportif:write'])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date_inscription = null;
 
+    #[Groups(['sportif:read', 'sportif:write'])]
     #[ORM\Column(enumType: Niveau::class)]
     private ?Niveau $niveau_sportif = null;
 
     /**
      * @var Collection<int, Seance>
      */
+    #[Groups(['sportif:read'])]
     #[ORM\ManyToMany(targetEntity: Seance::class, mappedBy: 'sportifs')]
     private Collection $seances;
 

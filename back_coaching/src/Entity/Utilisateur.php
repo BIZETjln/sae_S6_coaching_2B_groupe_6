@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\InheritanceType('JOINED')]
@@ -19,9 +20,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $email = null;
 
     /**
@@ -34,15 +37,19 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups(['sportif:write'])]
     private ?string $password = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['coach:read', 'sportif:read', 'sportif:write'])]
     private ?string $photo = null;
 
     public function getId(): ?Uuid

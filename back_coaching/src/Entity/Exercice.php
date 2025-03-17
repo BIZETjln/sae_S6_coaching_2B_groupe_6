@@ -10,31 +10,46 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 #[ORM\Entity(repositoryClass: ExerciceRepository::class)]
-#[ApiResource()]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => ['exercice:read']]),
+        new GetCollection(normalizationContext: ['groups' => ['exercice:read']])
+    ]
+)]
 class Exercice
 {
+    #[Groups(['exercice:read', 'seance:read'])]
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
 
+    #[Groups(['exercice:read', 'seance:read'])]
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
+    #[Groups(['exercice:read', 'seance:read'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[Groups(['exercice:read', 'seance:read'])]
     #[ORM\Column]
     private ?int $duree_estimee = null;
 
+    #[Groups(['exercice:read', 'seance:read'])]
     #[ORM\Column(enumType: Difficulte::class)]
     private ?Difficulte $difficulte = null;
 
     /**
      * @var Collection<int, Seance>
      */
+    #[Groups(['exercice:read'])]
     #[ORM\ManyToMany(targetEntity: Seance::class, mappedBy: 'exercices')]
     private Collection $seances;
 

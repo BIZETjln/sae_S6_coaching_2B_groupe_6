@@ -8,28 +8,42 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 #[ORM\Entity(repositoryClass: CoachRepository::class)]
-#[ApiResource()]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => ['coach:read']]),
+        new GetCollection(normalizationContext: ['groups' => ['coach:read']])
+    ],
+)]
 class Coach extends Utilisateur
 {
+    #[Groups(['coach:read'])]
     #[ORM\Column(type: Types::ARRAY)]
     private array $specialites = [];
 
+    #[Groups(['coach:read'])]
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $tarif_horaire = null;
 
     /**
      * @var Collection<int, Seance>
      */
+    #[Groups(['coach:read'])]
     #[ORM\OneToMany(targetEntity: Seance::class, mappedBy: 'coach')]
     private Collection $seances;
 
     /**
      * @var Collection<int, FicheDePaie>
      */
+    #[Groups(['coach:read'])]
     #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach')]
     private Collection $ficheDePaies;
 
+    #[Groups(['coach:read'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 

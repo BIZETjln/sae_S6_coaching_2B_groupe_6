@@ -24,67 +24,107 @@ class SeanceCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        return [
+        $fields = [
             FormField::addPanel('Informations générales')
                 ->setIcon('fa fa-calendar-alt')
                 ->setHelp('Informations de base de la séance'),
-                
+            
             DateTimeField::new('date_heure', 'Date et heure')
                 ->setFormTypeOptions([
                     'html5' => true,
                     'widget' => 'single_text',
+                    'attr' => [
+                        'min' => (new \DateTime('now'))->format('Y-m-d\TH:i')
+                    ]
                 ])
                 ->setColumns(12),
-                
+            
             FormField::addPanel('Caractéristiques de la séance')
                 ->setIcon('fa fa-list')
                 ->setHelp('Type, thème et niveau de la séance'),
-                
+            
             ChoiceField::new('type_seance', 'Type de séance')
                 ->setChoices(TypeSeance::cases())
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'type-seance-container'])
                 ->setColumns(4),
-                
+            
             ChoiceField::new('theme_seance', 'Thème de la séance')
                 ->setChoices(ThemeSeance::cases())
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'theme-seance-container'])
                 ->setColumns(4),
-                
+            
             ChoiceField::new('niveau_seance', 'Niveau de la séance')
                 ->setChoices(Niveau::cases())
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'niveau-seance-container'])
                 ->setColumns(4),
-                
-            ChoiceField::new('statut', 'Statut de la séance')
-                ->setChoices(StatutSeance::cases())
-                ->renderExpanded()
-                ->setFormTypeOption('row_attr', ['class' => 'statut-seance-container'])
-                ->setColumns(12),
-                
+            
             FormField::addPanel('Participants et contenu')
                 ->setIcon('fa fa-users')
                 ->setHelp('Coach, sportifs et exercices de la séance'),
-                
+            
             AssociationField::new('coach', 'Coach')
                 ->setRequired(true)
                 ->setColumns(12),
-                
+            
             AssociationField::new('sportifs', 'Sportifs')
                 ->setFormTypeOptions([
                     'by_reference' => false,
+                    'constraints' => [
+                        new \Symfony\Component\Validator\Constraints\Callback(function ($value, $context) {
+                            $form = $context->getRoot();
+                            $entity = $form->getData();
+                            $typeSeance = $entity->getTypeSeance();
+                            
+                            $limitesSportifs = [
+                                TypeSeance::SOLO->value => 1,
+                                TypeSeance::DUO->value => 2,
+                                TypeSeance::TRIO->value => 3,
+                            ];
+                            
+                            if (isset($limitesSportifs[$typeSeance->value]) && count($value) > $limitesSportifs[$typeSeance->value]) {
+                                $context->buildViolation(sprintf(
+                                    'Une séance %s ne peut avoir que %d sportif(s) maximum',
+                                    $typeSeance->value,
+                                    $limitesSportifs[$typeSeance->value]
+                                ))->addViolation();
+                            }
+                        })
+                    ],
                 ])
-                ->setHelp('Maximum 3 sportifs par séance')
+                ->setHelp('Le nombre maximum de sportifs dépend du type de séance : Solo (1), Duo (2), Trio (3)')
                 ->setColumns(12),
-                
+            
             AssociationField::new('exercices', 'Exercices')
                 ->setFormTypeOptions([
                     'by_reference' => false,
+                    'constraints' => [
+                        new \Symfony\Component\Validator\Constraints\Count([
+                            'min' => 1,
+                            'minMessage' => 'Vous devez sélectionner au moins un exercice',
+                        ]),
+                    ],
                 ])
                 ->setColumns(12),
         ];
+        
+        // Ajouter le champ statut uniquement en mode édition
+        if (Crud::PAGE_NEW !== $pageName) {
+            $fields[] = ChoiceField::new('statut', 'Statut de la séance')
+                ->setChoices(StatutSeance::cases())
+                ->renderExpanded()
+                ->setFormTypeOption('row_attr', ['class' => 'statut-seance-container'])
+                ->setColumns(12);
+        } else {
+            // En mode création, on ajoute un champ caché avec la valeur par défaut
+            $fields[] = ChoiceField::new('statut')
+                ->setFormTypeOption('data', StatutSeance::PREVUE)
+                ->hideOnForm();
+        }
+        
+        return $fields;
     }
     
     public function configureCrud(Crud $crud): Crud
@@ -96,5 +136,13 @@ class SeanceCrudController extends AbstractCrudController
             ->setPageTitle('new', 'Créer une séance')
             ->setPageTitle('edit', 'Modifier la séance')
             ->setPageTitle('detail', 'Détails de la séance');
+    }
+
+    public function createEntity(string $entityFqcn)
+    {
+        $seance = new Seance();
+        $seance->setStatut(StatutSeance::PREVUE);
+        
+        return $seance;
     }
 }
