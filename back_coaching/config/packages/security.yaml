@@ -12,6 +12,18 @@ security:
     # used to reload user from session & other features (e.g. switch_user)
     # used to reload user from session & other features (e.g. switch_user)
   firewalls:
+    login:
+        pattern: ^/api/login
+        stateless: true
+        json_login:
+            check_path: /api/login
+            username_path: email
+            success_handler: lexik_jwt_authentication.handler.authentication_success
+            failure_handler: lexik_jwt_authentication.handler.authentication_failure
+    api:
+        pattern: ^/api
+        stateless: true
+        jwt: ~
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
@@ -23,6 +35,7 @@ security:
         path: app_logout
         # where to redirect after logout
         # target: app_any_route
+      access_denied_handler: App\Security\AccessDeniedHandler
 
       # activate different ways to authenticate
       # https://symfony.com/doc/current/security.html#the-firewall
@@ -34,6 +47,8 @@ security:
   # Note: Only the *first* access control that matches will be used
   access_control:
     - { path: ^/admin, roles: ROLE_COACH }
+    - { path: ^/api/login, roles: PUBLIC_ACCESS }
+    - { path: ^/api, roles: PUBLIC_ACCESS } 
     # - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
