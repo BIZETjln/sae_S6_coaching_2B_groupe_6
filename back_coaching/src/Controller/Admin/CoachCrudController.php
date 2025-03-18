@@ -224,17 +224,4 @@ class CoachCrudController extends AbstractCrudController
             }
         };
     }
-
-    public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
-    {
-        if ($entityInstance instanceof Coach) {
-            // Supprimer la photo si elle existe
-            $photoPath = $entityInstance->getPhoto();
-            if ($photoPath && file_exists('public/' . $photoPath)) {
-                unlink('public/' . $photoPath);
-            }
-        }
-
-        parent::deleteEntity($entityManager, $entityInstance);
-    }
 }

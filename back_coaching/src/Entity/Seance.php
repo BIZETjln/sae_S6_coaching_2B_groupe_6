@@ -79,6 +79,10 @@ class Seance
     #[ORM\ManyToMany(targetEntity: Exercice::class, inversedBy: 'seances')]
     private Collection $exercices;
 
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
     public function __construct()
     {
         $this->sportifs = new ArrayCollection();
@@ -219,6 +223,57 @@ class Seance
     public function removeExercice(Exercice $exercice): static
     {
         $this->exercices->removeElement($exercice);
+
+        return $this;
+    }
+
+    /**
+     * Vérifie si la séance peut être annulée par un sportif
+     * (jusqu'à 24h avant)
+     */
+    public function canBeCancelledBySportif(): bool
+    {
+        if ($this->statut === StatutSeance::VALIDEE) {
+            return false;
+        }
+        
+        $now = new \DateTime();
+        $limit = new \DateTime($this->date_heure->format('Y-m-d H:i:s'));
+        $limit->modify('-24 hours');
+        
+        return $now < $limit;
+    }
+
+    /**
+     * Vérifie si la séance peut être modifiée
+     */
+    public function canBeModified(): bool
+    {
+        return $this->statut !== StatutSeance::VALIDEE;
+    }
+
+    /**
+     * Annule la séance
+     */
+    public function cancel(): static
+    {
+        if ($this->statut === StatutSeance::VALIDEE) {
+            throw new \LogicException('Une séance validée ne peut pas être annulée');
+        }
+        
+        $this->statut = StatutSeance::ANNULEE;
+        
+        return $this;
+    }
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): static
+    {
+        $this->photo = $photo;
 
         return $this;
     }

@@ -32,6 +32,12 @@ class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
 
+        // Menu pour les coachs
+        if ($this->isGranted('ROLE_COACH')) {
+            yield MenuItem::section('Mon espace coach');
+            yield MenuItem::linktoRoute('Mes Séances', 'fas fa-calendar-check', 'route_coach_seances')->setPermission('ROLE_COACH');
+        }
+
         // Section Gestion des comptes
         yield MenuItem::section('Gestion des comptes');
         yield MenuItem::linkToCrud('Coachs', 'fas fa-user-tie', Coach::class);
