@@ -28,7 +28,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
             uriTemplate: '/seances/{id}/inscription',
             input: false,
             controller: 'App\Controller\Api\SeanceInscriptionController::toggleInscription',
-            security: "is_granted('ROLE_SPORTIF')",
+            security: "is_granted('ROLE_USER')",
         )
     ]
 )]
