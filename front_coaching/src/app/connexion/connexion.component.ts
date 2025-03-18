@@ -106,4 +106,19 @@ export class ConnexionComponent implements OnInit {
       }
     });
   }
+
+  // Méthode pour la connexion rapide en tant que sportif1@example.com (pour les développeurs)
+  devLogin() {
+    this.loading = true;
+    this.error = '';
+    
+    // Remplir automatiquement le formulaire
+    this.loginForm.patchValue({
+      email: 'sportif1@example.com',
+      password: 'password123'
+    });
+    
+    // Soumettre le formulaire
+    this.onSubmit();
+  }
 }
