@@ -33,8 +33,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Put(
             denormalizationContext: ['groups' => ['sportif:write']],
             normalizationContext: ['groups' => ['sportif:read']],
+            security: "is_granted('ROLE_SPORTIF') and object.getId() == user.getId()",
+            securityMessage: "Vous ne pouvez modifier que votre propre profil."
         ),
         new Delete(
+            security: "is_granted('ROLE_SPORTIF') and object.getId() == user.getId()",
+            securityMessage: "Vous ne pouvez supprimer que votre propre profil."
         )
     ],
 )]

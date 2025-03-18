@@ -25,10 +25,11 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Get(normalizationContext: ['groups' => ['seance:read']]),
         new GetCollection(normalizationContext: ['groups' => ['seance:read']]),
         new Patch(
+            uriTemplate: '/seances/{id}/inscription',
+            input: false,
             controller: 'App\Controller\Api\SeanceInscriptionController::toggleInscription',
-            denormalizationContext: ['groups' => ['seance:write:sportifs']],
-            security: "is_granted('ROLE_SPORTIF')", 
-        ),
+            security: "is_granted('ROLE_SPORTIF')",
+        )
     ]
 )]
 class Seance
@@ -60,7 +61,7 @@ class Seance
     /**
      * @var Collection<int, Sportif>
      */
-    #[Groups(['seance:read', 'coach:read', 'seance:write:sportifs'])]
+    #[Groups(['seance:read', 'coach:read'])]
     #[ORM\ManyToMany(targetEntity: Sportif::class, inversedBy: 'seances')]
     private Collection $sportifs;
 

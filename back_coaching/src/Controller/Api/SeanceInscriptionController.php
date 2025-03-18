@@ -8,6 +8,7 @@ use App\Enum\TypeSeance;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 
@@ -15,16 +16,19 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 class SeanceInscriptionController extends AbstractController
 {
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
     ) {}
 
-    public function toggleInscription(Seance $seance): JsonResponse
+    public function toggleInscription(Request $request, Seance $seance): JsonResponse
     {
         // Vérifier que l'utilisateur est un sportif
         $user = $this->getUser();
         if (!$user instanceof Sportif) {
             return $this->json(['message' => 'Seuls les sportifs peuvent s\'inscrire à une séance'], Response::HTTP_FORBIDDEN);
         }
+
+        // On ignore les données de la requête et on utilise uniquement l'utilisateur courant
+        // Cela garantit que seul l'utilisateur courant peut s'inscrire/désinscrire
 
         // Si le sportif est déjà inscrit, on le désinscrit
         if ($seance->getSportifs()->contains($user)) {

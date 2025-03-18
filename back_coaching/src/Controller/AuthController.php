@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Utilisateur;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,11 +17,11 @@ final class AuthController extends AbstractController{
     #[Route('/api/user/me', name: 'api_user_me', methods: ['GET'])]
     public function me()
     {
+        /** @var Utilisateur|null $user */
         $user = $this->security->getUser();
         if (!empty($user)) {
             return new JsonResponse([
-                'email' => $user->getUserIdentifier(),
-                'roles' => $user->getRoles(),
+                'id' => $user->getId(),
             ]);
         } else {
             return new JsonResponse(null);
