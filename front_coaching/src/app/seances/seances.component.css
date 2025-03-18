@@ -107,6 +107,31 @@
   color: white;
 }
 
+/* Style pour les boutons de filtre de coachs */
+.filter-group:last-child .filter-buttons {
+  max-height: 135px; /* Hauteur max pour éviter un défilement trop grand */
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar {
+  width: 5px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar-track {
+  background: var(--color-bg-light);
+  border-radius: 10px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: 10px;
+}
+
+.filter-group:last-child .filter-btn {
+  white-space: nowrap;
+}
+
 /* Grille des séances */
 .seances-grid {
   display: grid;
@@ -334,6 +359,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -658,5 +692,27 @@
 
   .login-buttons .btn {
     width: 100%;
+  }
+}
+
+/* Ajustements responsifs pour les filtres */
+@media (max-width: 992px) {
+  .filter-group {
+    min-width: calc(50% - 10px);
+  }
+}
+
+@media (max-width: 768px) {
+  .seances-filters {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .filter-group {
+    min-width: 100%;
+  }
+  
+  .filter-group:last-child .filter-buttons {
+    max-height: 110px;
   }
 }
