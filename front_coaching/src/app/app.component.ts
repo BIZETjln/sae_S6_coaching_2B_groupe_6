@@ -81,7 +81,7 @@ export class AppComponent implements OnInit {
   }
 
   getAvatarUrl(): string {
-    return this.currentUser?.avatar || 'assets/images/default-avatar.png';
+    return this.authService.getUserAvatarUrl();
   }
 
   getUserDisplayName(): string {

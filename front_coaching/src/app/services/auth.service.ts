@@ -25,6 +25,7 @@ export interface User {
   role: UserRole;
   token?: string;
   avatar?: string;
+  photo?: string; // Nom du fichier image
   date_inscription?: string;
   niveau_sportif?: string;
   seances?: Seance[];
@@ -52,6 +53,7 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private apiUrl = 'https://127.0.0.1:8000/api';
+  private apiBaseUrl = 'https://127.0.0.1:8000';
 
   constructor(private http: HttpClient, private router: Router) {
     const storedUser = localStorage.getItem('currentUser');
@@ -86,6 +88,35 @@ export class AuthService {
       console.error('Erreur lors du décodage du token JWT', error);
       return null;
     }
+  }
+
+  /**
+   * Génère l'URL complète pour l'avatar de l'utilisateur
+   * @returns L'URL de l'avatar ou l'URL de l'image par défaut
+   */
+  public getUserAvatarUrl(): string {
+    const user = this.currentUserValue;
+    if (!user) {
+      return 'assets/images/default-avatar.png';
+    }
+
+    // Si l'utilisateur a un champ photo, on utilise le chemin vers /images/sportifs/
+    if (user.photo) {
+      return `${this.apiBaseUrl}/images/sportifs/${user.photo}`;
+    }
+
+    // Si l'utilisateur a un avatar déjà défini (URL complète ou relative)
+    if (user.avatar) {
+      // Vérifier si c'est une URL relative commençant par "assets/"
+      if (user.avatar.startsWith('assets/')) {
+        return user.avatar;
+      }
+      // Sinon, c'est peut-être une URL complète ou une autre forme
+      return user.avatar;
+    }
+
+    // Par défaut, retourner l'avatar par défaut
+    return 'assets/images/default-avatar.png';
   }
 
   /**
@@ -184,8 +215,11 @@ export class AuthService {
                   niveau_sportif: sportif.niveau_sportif,
                   role: role,
                   token: token,
+                  photo: sportif.photo,
                   seances: sportif.seances,
                 };
+
+                console.log('Utilisateur connecté avec photo:', user.photo);
 
                 // Stockez l'utilisateur dans le localStorage
                 this.updateCurrentUser(user);
