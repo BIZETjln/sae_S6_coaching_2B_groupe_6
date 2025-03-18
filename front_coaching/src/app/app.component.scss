@@ -226,11 +226,13 @@
     .user-name {
       font-weight: 500;
       color: #333;
+      max-width: 150px;
     }
 
     .user-email {
       font-size: 0.875rem;
       color: #6c757d;
+      max-width: 150px;
     }
   }
 

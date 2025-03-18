@@ -1,4 +1,20 @@
 <div class="seances-container">
+  <!-- Notification -->
+  <div class="notification" *ngIf="showNotification" [ngClass]="notification?.type">
+    <div class="notification-content">
+      <i class="bi" 
+         [ngClass]="{
+           'bi-check-circle-fill': notification?.type === 'success',
+           'bi-exclamation-circle-fill': notification?.type === 'error',
+           'bi-info-circle-fill': notification?.type === 'info'
+         }"></i>
+      <span>{{ notification?.message }}</span>
+    </div>
+    <button class="notification-close" (click)="hideNotification()">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+
   <div class="seances-header">
     <h1>Mes Séances</h1>
     <div class="view-toggle">
@@ -81,8 +97,8 @@
       <div *ngIf="activeTab === 'avenir'">
         <div class="seance-card" *ngFor="let seance of seancesAVenir" (click)="selectSeance(seance)">
           <div class="seance-date">
-            <div class="date-day">{{ seance.date.getDate() }}</div>
-            <div class="date-month">{{ months[seance.date.getMonth()].substring(0, 3) }}</div>
+            <div class="date-day">{{ seance.date?.getDate() }}</div>
+            <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
           </div>
           <div class="seance-info">
             <h3>{{ seance.titre }}</h3>
@@ -91,8 +107,8 @@
               <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
             </div>
             <div class="seance-coach">
-              <img [src]="seance.coach.avatar" alt="{{ seance.coach.name }}">
-              <span>{{ seance.coach.name }}</span>
+              <img [src]="seance.coach?.avatar" alt="{{ seance.coach?.name }}">
+              <span>{{ seance.coach?.name }}</span>
             </div>
           </div>
           <div class="seance-type" [style.background-color]="seance.couleur">
@@ -111,8 +127,8 @@
       <div *ngIf="activeTab === 'passees'">
         <div class="seance-card" *ngFor="let seance of seancesPassees" (click)="selectSeance(seance)">
           <div class="seance-date">
-            <div class="date-day">{{ seance.date.getDate() }}</div>
-            <div class="date-month">{{ months[seance.date.getMonth()].substring(0, 3) }}</div>
+            <div class="date-day">{{ seance.date?.getDate() }}</div>
+            <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
           </div>
           <div class="seance-info">
             <h3>{{ seance.titre }}</h3>
@@ -121,8 +137,8 @@
               <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
             </div>
             <div class="seance-coach">
-              <img [src]="seance.coach.avatar" alt="{{ seance.coach.name }}">
-              <span>{{ seance.coach.name }}</span>
+              <img [src]="seance.coach?.avatar" alt="{{ seance.coach?.name }}">
+              <span>{{ seance.coach?.name }}</span>
             </div>
           </div>
           <div class="seance-type" [style.background-color]="seance.couleur">
@@ -159,7 +175,7 @@
           <p>{{ seance.description }}</p>
           <div class="seance-details">
             <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
-            <span><i class="bi bi-person"></i> {{ seance.coach.name }}</span>
+            <span><i class="bi bi-person"></i> {{ seance.coach?.name }}</span>
             <span *ngIf="seance.type === 'groupe'">
               <i class="bi bi-people"></i> {{ seance.participantsActuels }}/{{ seance.capaciteMax }} participants
             </span>
@@ -186,7 +202,7 @@
       <div class="seance-header" [style.background-color]="selectedSeance.couleur">
         <h2>{{ selectedSeance.titre }}</h2>
         <div class="seance-meta">
-          <span><i class="bi bi-calendar"></i> {{ formatDateFr(selectedSeance.date) }}</span>
+          <span><i class="bi bi-calendar"></i> {{ formatDateFr(selectedSeance.date!) }}</span>
           <span><i class="bi bi-clock"></i> {{ selectedSeance.heureDebut }} - {{ selectedSeance.heureFin }}</span>
         </div>
       </div>
@@ -229,10 +245,10 @@
         <div class="coach-info">
           <h3>Votre coach</h3>
           <div class="coach-card">
-            <img [src]="selectedSeance.coach.avatar" alt="{{ selectedSeance.coach.name }}">
+            <img [src]="selectedSeance.coach?.avatar" alt="{{ selectedSeance.coach?.name }}">
             <div>
-              <h4>{{ selectedSeance.coach.name }}</h4>
-              <p>{{ selectedSeance.coach.specialite }}</p>
+              <h4>{{ selectedSeance.coach?.name }}</h4>
+              <p>{{ selectedSeance.coach?.specialite }}</p>
             </div>
           </div>
         </div>
@@ -265,7 +281,7 @@
         <p class="cancel-message">
           Êtes-vous sûr de vouloir annuler votre réservation pour la séance 
           <strong>{{ selectedSeance.titre }}</strong> du 
-          <strong>{{ formatDateFr(selectedSeance.date) }}</strong> à 
+          <strong>{{ formatDateFr(selectedSeance.date!) }}</strong> à 
           <strong>{{ selectedSeance.heureDebut }}</strong> ?
         </p>
         

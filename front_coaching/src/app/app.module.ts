@@ -14,9 +14,17 @@ import { SeancesComponent } from './seances/seances.component';
 import { MesSceancesComponent } from './mes-sceances/mes-sceances.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ConnexionComponent, InscriptionComponent, CoachsComponent, SeancesComponent, MesSceancesComponent],
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    ConnexionComponent,
+    InscriptionComponent,
+    CoachsComponent,
+    SeancesComponent,
+    MesSceancesComponent,
+  ],
   imports: [BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule],
   providers: [provideHttpClient()],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

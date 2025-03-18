@@ -3,18 +3,43 @@
     <h1>Nos coachs</h1>
   </div>
 
-  <div class="coachs-grid">
+  <!-- Message de chargement -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des coachs...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div class="error-container" *ngIf="error">
+    <p class="error-message">{{ error }}</p>
+    <button class="btn btn-primary" (click)="loadCoaches()">Réessayer</button>
+  </div>
+
+  <!-- Liste des coachs -->
+  <div class="coachs-grid" *ngIf="!loading && !error">
     <!-- Boucle sur les coachs -->
     <div class="coach-card" *ngFor="let coach of coachs">
       <div class="coach-image">
-        <img [src]="coach.image" [alt]="coach.nom" />
+        <img
+          [src]="coach.image"
+          [alt]="coach.nom"
+          [style.object-position]="getImagePosition(coach)"
+        />
       </div>
       <div class="coach-info">
         <h2>{{ coach.nom }}</h2>
         <p class="coach-specialty">{{ coach.specialite }}</p>
         <p class="coach-availability">{{ coach.disponibilite }}</p>
-        <p class="coach-quote" *ngIf="coach.citation">"{{ coach.citation }}"</p>
+        <p class="coach-tarif">
+          {{ coach.tarifHoraire | number : "1.2-2" }}€/heure
+        </p>
+        <p class="coach-description">{{ coach.description }}</p>
       </div>
     </div>
+  </div>
+
+  <!-- Message si aucun coach n'est disponible -->
+  <div class="no-coaches" *ngIf="!loading && !error && coachs.length === 0">
+    <p>Aucun coach disponible pour le moment.</p>
   </div>
 </div>
