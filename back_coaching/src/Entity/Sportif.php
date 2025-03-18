@@ -27,8 +27,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
             normalizationContext: ['groups' => ['sportif:read']],
         ),
         new Post(
+            controller: 'App\Controller\Api\SportifCreationController',
             denormalizationContext: ['groups' => ['sportif:write']],
-            normalizationContext: ['groups' => ['sportif:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
         ),
         new Put(
             denormalizationContext: ['groups' => ['sportif:write']],
