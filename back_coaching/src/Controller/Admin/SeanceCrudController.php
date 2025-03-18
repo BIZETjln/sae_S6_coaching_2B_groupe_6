@@ -15,7 +15,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -29,6 +28,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Form\ParticipationType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 
 class SeanceCrudController extends AbstractCrudController
 {
@@ -51,16 +51,43 @@ class SeanceCrudController extends AbstractCrudController
                 ->setIcon('fa fa-calendar-alt')
                 ->setHelp('Informations de base de la séance'),
 
-
-            DateTimeField::new('date_heure', 'Date et heure')
+            DateField::new('dateOnly', 'Date')
                 ->setFormTypeOptions([
-                    'html5' => true,
                     'widget' => 'single_text',
+                    'html5' => true,
                     'attr' => [
-                        'min' => (new \DateTime('now'))->format('Y-m-d\TH:i')
-                    ]
+                        'min' => (new \DateTime('now'))->format('Y-m-d')
+                    ],
+                    'mapped' => false,
+                    'data' => $pageName === Crud::PAGE_EDIT && $this->getContext()->getEntity()->getInstance()->getDateHeure() 
+                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('Y-m-d') 
+                        : null
                 ])
-                ->setColumns(12),
+                ->setColumns(6),
+            
+            ChoiceField::new('timeOnly', 'Heure')
+                ->setChoices(function() {
+                    $choices = [];
+                    // Créneaux de 30 minutes de 9h à 17h
+                    for ($hour = 9; $hour <= 17; $hour++) {
+                        $choices[sprintf("%02d:00", $hour)] = sprintf("%02d:00:00", $hour);
+                        if ($hour < 17) { // Pas de créneau à 17h30
+                            $choices[sprintf("%02d:30", $hour)] = sprintf("%02d:30:00", $hour);
+                        }
+                    }
+                    return $choices;
+                })
+                ->setFormTypeOptions([
+                    'mapped' => false,
+                    'data' => $pageName === Crud::PAGE_EDIT && $this->getContext()->getEntity()->getInstance()->getDateHeure()
+                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('H:i:s')
+                        : '10:00:00'
+                ])
+                ->setColumns(6),
+                
+            // Champ caché pour stocker la valeur combinée
+            DateTimeField::new('date_heure')
+                ->hideOnForm(),
 
             FormField::addPanel('Caractéristiques de la séance')
                 ->setIcon('fa fa-list')
@@ -169,6 +196,7 @@ class SeanceCrudController extends AbstractCrudController
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
         return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleDateTimeFields())
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload())
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleSportifs());
     }
@@ -177,8 +205,59 @@ class SeanceCrudController extends AbstractCrudController
     {
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
         return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleDateTimeFields())
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload())
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleSportifs());
+    }
+
+    private function handleDateTimeFields()
+    {
+        return function (FormEvent $event) {
+            $form = $event->getForm();
+            $seance = $form->getData();
+            
+            if (!$seance instanceof Seance) {
+                return;
+            }
+            
+            // Récupérer les valeurs des champs date et heure
+            $dateOnly = $form->get('dateOnly')->getData();
+            $timeOnly = $form->get('timeOnly')->getData();
+            
+            if ($dateOnly && $timeOnly) {
+                // Créer un objet DateTime combiné
+                $dateTime = new \DateTime($dateOnly->format('Y-m-d') . ' ' . $timeOnly);
+                // Définir cette valeur sur l'entité
+                $seance->setDateHeure($dateTime);
+                
+                // Vérifier les conflits de séances pour le coach
+                $this->checkCoachAvailability($form, $seance, $dateTime);
+            }
+        };
+    }
+    
+    /**
+     * Vérifie si le coach a des séances en conflit avec l'horaire choisi
+     */
+    private function checkCoachAvailability($form, Seance $seance, \DateTime $dateTime): void
+    {
+        $coach = $seance->getCoach();
+        if (!$coach) {
+            return; // Pas de coach sélectionné, on ne peut pas vérifier
+        }
+        
+        // Utiliser le repository au lieu de refaire la requête directement
+        $repository = $this->entityManager->getRepository(Seance::class);
+        if ($repository instanceof \App\Repository\SeanceRepository) {
+            $hasConflict = $repository->hasConflictingSession($coach, $dateTime, $seance->getId());
+            
+            if ($hasConflict) {
+                $form->addError(new \Symfony\Component\Form\FormError(
+                    'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                    'Il doit y avoir au moins 1h30 entre deux séances.'
+                ));
+            }
+        }
     }
 
     private function handleImageUpload()
@@ -261,6 +340,21 @@ class SeanceCrudController extends AbstractCrudController
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         try {
+            // Vérifier à nouveau les conflits de séances avant la persistance
+            // (en cas de modification directe du formulaire sans passer par l'événement)
+            if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
+                $repository = $entityManager->getRepository(Seance::class);
+                if ($repository instanceof \App\Repository\SeanceRepository) {
+                    $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
+                    if ($hasConflict) {
+                        throw new \LogicException(
+                            'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                            'Il doit y avoir au moins 1h30 entre deux séances.'
+                        );
+                    }
+                }
+            }
+            
             parent::persistEntity($entityManager, $entityInstance);
 
             // Mise à jour des informations sur les participations après sauvegarde
@@ -282,6 +376,20 @@ class SeanceCrudController extends AbstractCrudController
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         try {
+            // Vérifier à nouveau les conflits de séances avant la mise à jour
+            if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
+                $repository = $entityManager->getRepository(Seance::class);
+                if ($repository instanceof \App\Repository\SeanceRepository) {
+                    $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
+                    if ($hasConflict) {
+                        throw new \LogicException(
+                            'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                            'Il doit y avoir au moins 1h30 entre deux séances.'
+                        );
+                    }
+                }
+            }
+            
             // Récupérer les participations existantes avant modification
             $originalParticipations = new ArrayCollection();
             foreach ($entityManager->getRepository(Participation::class)->findBy(['seance' => $entityInstance]) as $participation) {
