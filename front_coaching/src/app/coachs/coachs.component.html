@@ -18,7 +18,11 @@
   <!-- Liste des coachs -->
   <div class="coachs-grid" *ngIf="!loading && !error">
     <!-- Boucle sur les coachs -->
-    <div class="coach-card" *ngFor="let coach of coachs">
+    <div
+      class="coach-card"
+      *ngFor="let coach of coachs"
+      (click)="voirSeancesCoach(coach)"
+    >
       <div class="coach-image">
         <img
           [src]="coach.image"
@@ -33,7 +37,34 @@
         <p class="coach-tarif">
           {{ coach.tarifHoraire | number : "1.2-2" }}€/heure
         </p>
-        <p class="coach-description">{{ coach.description }}</p>
+
+        <!-- Description avec possibilité de développer -->
+        <div class="coach-description-container">
+          <p
+            class="coach-description"
+            [class.expanded]="isDescriptionDevelloppee(coach.id.toString())"
+          >
+            {{ coach.description }}
+          </p>
+          <button
+            class="btn-toggle-description"
+            *ngIf="coach.description && coach.description.length > 100"
+            (click)="
+              toggleDescription(coach.id.toString()); $event.stopPropagation()
+            "
+          >
+            {{
+              isDescriptionDevelloppee(coach.id.toString())
+                ? "Voir moins"
+                : "Voir plus"
+            }}
+          </button>
+        </div>
+
+        <!-- Conteneur pour les boutons d'action -->
+        <div class="coach-actions">
+          <button class="btn-voir-seances">Voir ses séances</button>
+        </div>
       </div>
     </div>
   </div>

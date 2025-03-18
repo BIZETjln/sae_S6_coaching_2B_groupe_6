@@ -185,7 +185,7 @@ export class AuthService {
             `Bearer ${token}`
           );
 
-          // D'abord, on cherche l'utilisateur par son email pour obtenir son ID
+          // Tentative de récupération des informations de l'utilisateur
           return this.http
             .get<ApiResponse>(`${this.apiUrl}/sportifs`, {
               headers,
@@ -241,20 +241,47 @@ export class AuthService {
                       // Stockez l'utilisateur dans le localStorage
                       this.updateCurrentUser(user);
                       return user;
+                    }),
+                    catchError((err) => {
+                      console.warn(
+                        "Erreur lors de la récupération des détails du sportif. Création d'un utilisateur basique.",
+                        err
+                      );
+
+                      // Créer un utilisateur basique à partir des données limitées
+                      const basicUser: User = {
+                        id: sportifId || 'unknown-id',
+                        nom: sportif.nom || '',
+                        prenom: sportif.prenom || '',
+                        email: decodedToken.username,
+                        role: UserRole.CLIENT,
+                        token: token,
+                        photo: sportif.photo || null,
+                      };
+
+                      // Stockez l'utilisateur dans le localStorage
+                      this.updateCurrentUser(basicUser);
+                      return of(basicUser);
                     })
                   );
               }),
               catchError((err) => {
-                console.error(
-                  'Erreur lors de la récupération des informations utilisateur',
+                console.warn(
+                  "Erreur lors de la récupération de la liste des sportifs. Création d'un utilisateur basique.",
                   err
                 );
-                return throwError(
-                  () =>
-                    new Error(
-                      'Erreur lors de la récupération des informations utilisateur'
-                    )
-                );
+
+                // Si nous ne pouvons pas récupérer la liste des sportifs, créez un utilisateur basique
+                const fallbackUser: User = {
+                  id: 'unknown-id',
+                  email: decodedToken.username,
+                  role: UserRole.CLIENT,
+                  token: token,
+                };
+
+                // Stockez l'utilisateur dans le localStorage
+                this.updateCurrentUser(fallbackUser);
+                return of(fallbackUser);
               })
             );
         })

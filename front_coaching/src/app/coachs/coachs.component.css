@@ -130,6 +130,7 @@
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   z-index: 1;
+  cursor: pointer;
 }
 
 .coach-card:hover {
@@ -153,6 +154,11 @@
 
 .coach-card:hover::before {
   transform: scaleX(1);
+}
+
+.coach-card:active {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .coach-image {
@@ -198,6 +204,10 @@
 .coach-info {
   padding: 2rem;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 300px;
 }
 
 .coach-info h2 {
@@ -252,20 +262,89 @@
   color: #666;
 }
 
+/* Conteneur de description pour gérer l'affichage réduit/complet */
+.coach-description-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  min-height: 100px;
+}
+
 .coach-description {
-  color: #555;
-  border-left: 3px solid #ff4d4d;
-  padding: 0.6rem 1rem;
-  margin-top: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 0 4px 4px 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.5;
-  text-align: justify;
+  color: #666;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  transition: all 0.3s ease;
+  max-height: 4.5rem;
+}
+
+.coach-description.expanded {
+  -webkit-line-clamp: initial;
+  max-height: none;
 }
 
 .coach-card:hover .coach-description {
-  border-left-color: #ff7a00;
+  color: #333;
+}
+
+/* Bouton pour afficher/masquer la description */
+.btn-toggle-description {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  text-decoration: underline;
+  z-index: 10;
+}
+
+.btn-toggle-description:hover {
+  color: #ff7a00;
+}
+
+/* Conteneur pour les boutons d'action */
+.coach-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style pour le bouton de redirection vers les séances */
+.btn-voir-seances {
+  display: inline-block;
+  background: linear-gradient(90deg, #ff4d4d, #ff7a00);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(255, 77, 77, 0.2);
+  width: 100%;
+}
+
+.btn-voir-seances:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 77, 77, 0.4);
+  background: linear-gradient(90deg, #ff7a00, #ff4d4d);
+}
+
+.btn-voir-seances:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(255, 77, 77, 0.3);
 }
 
 /* Responsive */
