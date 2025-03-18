@@ -13,6 +13,7 @@ class Participation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['sportif:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Sportif::class, inversedBy: "participations")]
@@ -21,9 +22,11 @@ class Participation
 
     #[ORM\ManyToOne(targetEntity: Seance::class, inversedBy: "participations")]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['sportif:read'])]
     private ?Seance $seance = null;
 
     #[ORM\Column(type: 'boolean')]
+    #[Groups(['sportif:read'])]
     private bool $presence = false; // Par défaut, le sportif est absent
 
     public function getId(): ?int
