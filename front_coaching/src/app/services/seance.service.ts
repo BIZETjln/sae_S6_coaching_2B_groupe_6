@@ -497,38 +497,28 @@ export class SeanceService {
    * @returns Un Observable contenant la réponse de l'API
    */
   toggleReservationSeance(seanceId: string): Observable<any> {
-    // Récupérer l'utilisateur connecté
+    // Récupérer l'utilisateur connecté pour vérifier qu'il est authentifié
     const user = this.authService.currentUserValue;
     
     if (!user) {
       return throwError(() => new Error('Utilisateur non connecté'));
     }
     
-    // Extraire l'ID du sportif à partir de l'ID complet (au cas où il contient un chemin complet comme /api/sportifs/xxx)
-    const sportifId = user.id.includes('/') ? user.id.split('/').pop() : user.id;
-    
-    if (!sportifId) {
-      return throwError(() => new Error('ID du sportif non valide'));
-    }
-    
     // Construire l'URL de la requête
-    const url = `${this.apiUrl}/seances/${seanceId}/toggle-reservation`;
+    const url = `${this.apiUrl}/seances/${seanceId}/inscription`;
     
     // Configurer les en-têtes HTTP
+    // Note: Le token d'authentification devrait être automatiquement ajouté par un intercepteur HTTP
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/ld+json'
     });
     
-    // Préparer les données à envoyer
-    const data = {
-      sportifId: sportifId
-    };
-    
     // Exécuter la requête POST
-    return this.http.post<any>(url, data, { headers }).pipe(
+    // Pas besoin d'envoyer l'ID du sportif car l'API l'identifie via le token JWT
+    return this.http.post<any>(url, {}, { headers }).pipe(
       map(response => {
-        console.log('Réponse de toggle-reservation:', response);
+        console.log('Réponse d\'inscription/désinscription:', response);
         
         // Mettre à jour la liste des séances de l'utilisateur dans le AuthService
         this.authService.getUserSeances().subscribe();
@@ -542,7 +532,7 @@ export class SeanceService {
         };
       }),
       catchError(error => {
-        console.error(`Erreur lors de la réservation/annulation de la séance ${seanceId}:`, error);
+        console.error(`Erreur lors de l'inscription/désinscription à la séance ${seanceId}:`, error);
         
         // Gérer le cas où la séance est complète
         if (error.status === 400 && error.error && error.error.message === 'Séance complète') {
@@ -554,7 +544,7 @@ export class SeanceService {
           return throwError(() => new Error('Cette séance n\'est plus disponible pour inscription'));
         }
         
-        return throwError(() => new Error('Une erreur est survenue lors de la réservation'));
+        return throwError(() => new Error('Une erreur est survenue lors de l\'inscription'));
       })
     );
   }
