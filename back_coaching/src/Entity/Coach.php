@@ -39,7 +39,6 @@ class Coach extends Utilisateur
     /**
      * @var Collection<int, FicheDePaie>
      */
-    #[Groups(['coach:read'])]
     #[ORM\OneToMany(targetEntity: FicheDePaie::class, mappedBy: 'coach')]
     private Collection $ficheDePaies;
 

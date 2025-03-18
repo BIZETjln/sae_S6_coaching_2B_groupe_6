@@ -16,35 +16,27 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 
 #[ORM\Entity(repositoryClass: SportifRepository::class)]
 #[ApiResource(
     operations: [
         new Get(
             normalizationContext: ['groups' => ['sportif:read']],
-            // TODO : décommenter quand on aura un système de sécurité
-            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
         ),
         new GetCollection(
             normalizationContext: ['groups' => ['sportif:read']],
-            // security: "is_granted('ROLE_ADMIN')"
         ),
         new Post(
             denormalizationContext: ['groups' => ['sportif:write']],
             normalizationContext: ['groups' => ['sportif:read']],
-            // security: "is_granted('ROLE_ADMIN')"
         ),
         new Put(
             denormalizationContext: ['groups' => ['sportif:write']],
             normalizationContext: ['groups' => ['sportif:read']],
-            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
         ),
         new Delete(
-            // security: "is_granted('ROLE_ADMIN') or object.getId() == user.getId()"
         )
     ],
-    // security: "is_granted('".AuthenticatedVoter::IS_AUTHENTICATED_FULLY."')"
 )]
 class Sportif extends Utilisateur
 {
