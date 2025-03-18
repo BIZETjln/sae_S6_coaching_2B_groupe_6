@@ -140,12 +140,17 @@
       >
         <div class="seance-image">
           <img
-            [src]="seance.image || 'assets/images/default-seance.jpg'"
+            [src]="seance.photo || 'assets/images/default-seance.jpg'"
             [alt]="seance.titre"
             onerror="this.src='assets/images/default-seance.jpg'"
           />
           <div class="seance-badge" [ngClass]="(seance.theme || seance.themeSeance || seance.theme_seance || 'default').toLowerCase()">
             {{ seance.theme || seance.themeSeance || seance.theme_seance || 'Général' }}
+          </div>
+          <div class="seance-format" 
+               [ngClass]="(seance.type || seance.typeSeance || seance.type_seance || '').toLowerCase()"
+               *ngIf="seance.type || seance.typeSeance || seance.type_seance">
+            {{ seance.type || seance.typeSeance || seance.type_seance }}
           </div>
           <div class="seance-niveau">{{ seance.niveau || seance.niveauSeance || seance.niveau_seance || 'Tous niveaux' }}</div>
         </div>
@@ -162,6 +167,19 @@
               <span>{{ seance.theme || seance.themeSeance || seance.theme_seance }}</span>
             </div>
           </div>
+          
+          <!-- Nouvelle section dédiée à la date et l'heure -->
+          <div class="seance-datetime">
+            <div class="seance-meta-item" *ngIf="seance.date">
+              <i class="bi bi-calendar-date"></i>
+              <span>{{ seance.date | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="seance-meta-item" *ngIf="seance.heureDebut">
+              <i class="bi bi-alarm"></i>
+              <span>{{ seance.heureDebut }} - {{ seance.heureFin || '?' }}</span>
+            </div>
+          </div>
+          
           <div class="seance-footer">
             <div class="seance-coach">
               <i class="bi bi-person-circle"></i>
@@ -202,6 +220,14 @@
             <i class="bi bi-clock"></i>
             <span>{{ seanceSelectionnee.duree || '60 min' }}</span>
           </div>
+          <div class="details-meta-item" *ngIf="seanceSelectionnee.date">
+            <i class="bi bi-calendar-date"></i>
+            <span>{{ seanceSelectionnee.date | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="details-meta-item" *ngIf="seanceSelectionnee.heureDebut">
+            <i class="bi bi-alarm"></i>
+            <span>{{ seanceSelectionnee.heureDebut }} - {{ seanceSelectionnee.heureFin || '?' }}</span>
+          </div>
           <div class="details-meta-item" *ngIf="seanceSelectionnee.theme || seanceSelectionnee.themeSeance || seanceSelectionnee.theme_seance">
             <i class="bi bi-lightning-charge"></i>
             <span>{{ seanceSelectionnee.theme || seanceSelectionnee.themeSeance || seanceSelectionnee.theme_seance }}</span>
@@ -209,6 +235,15 @@
           <div class="details-meta-item">
             <i class="bi bi-trophy"></i>
             <span>{{ seanceSelectionnee.niveau || seanceSelectionnee.niveauSeance || seanceSelectionnee.niveau_seance || 'Tous niveaux' }}</span>
+          </div>
+          <div class="details-meta-item" *ngIf="seanceSelectionnee.type || seanceSelectionnee.typeSeance || seanceSelectionnee.type_seance">
+            <i class="bi bi-people" 
+               [ngClass]="{
+                  'format-solo': (seanceSelectionnee.type || seanceSelectionnee.typeSeance || seanceSelectionnee.type_seance || '').toLowerCase() === 'solo',
+                  'format-duo': (seanceSelectionnee.type || seanceSelectionnee.typeSeance || seanceSelectionnee.type_seance || '').toLowerCase() === 'duo',
+                  'format-trio': (seanceSelectionnee.type || seanceSelectionnee.typeSeance || seanceSelectionnee.type_seance || '').toLowerCase() === 'trio'
+               }"></i>
+            <span>{{ seanceSelectionnee.type || seanceSelectionnee.typeSeance || seanceSelectionnee.type_seance }}</span>
           </div>
           <div class="details-meta-item">
             <i class="bi bi-person-circle"></i>
@@ -276,9 +311,16 @@
 
       <div class="seance-details-footer">
         <button class="btn btn-primary btn-lg">Réserver cette séance</button>
-        <button class="btn btn-outline-primary btn-lg">
+        <a 
+          [href]="getCoachEmailLink()"
+          class="btn btn-outline-primary btn-lg"
+          [title]="hasCoachEmail() ? 'Envoyer un email à ' + (seanceSelectionnee.coach?.name || 'votre coach') : 'Contacter le coach'"
+          [ngClass]="{'disabled': !hasCoachEmail()}"
+          [attr.aria-disabled]="!hasCoachEmail()"
+        >
           Contacter le coach
-        </button>
+          <span *ngIf="!hasCoachEmail()" class="ms-1">(Email non disponible)</span>
+        </a>
       </div>
     </div>
   </div>

@@ -610,6 +610,39 @@
   color: #6c757d;
 }
 
+.coach-email-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  background-color: var(--neutral-100);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.coach-email-btn:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+.coach-email-unavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  background-color: var(--neutral-100);
+  color: var(--neutral-500);
+  border: 1px solid var(--neutral-300);
+}
+
 .seance-actions {
   display: flex;
   gap: 15px;

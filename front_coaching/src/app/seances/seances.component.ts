@@ -55,6 +55,19 @@ export class SeancesComponent implements OnInit {
         this.seances = seances;
         this.seancesFiltrees = [...this.seances];
         this.loading = false;
+        
+        // Log pour vérifier les détails des séances
+        console.log('Séances récupérées:', this.seances);
+        this.seances.forEach((seance, index) => {
+          console.log(`Séance ${index + 1} - ID: ${seance.id}`, {
+            titre: seance.titre,
+            theme: seance.theme || seance.themeSeance || seance.theme_seance,
+            niveau: seance.niveau || seance.niveauSeance || seance.niveau_seance,
+            type: seance.type || seance.typeSeance || seance.type_seance,
+            image: seance.image,
+            photo: seance.photo
+          });
+        });
       },
       error: (error) => {
         console.error('Erreur lors du chargement des séances:', error);
@@ -162,5 +175,19 @@ export class SeancesComponent implements OnInit {
       format: this.filtreFormatActif,
       résultats: this.seancesFiltrees.length
     });
+  }
+
+  // Méthode pour obtenir le lien mailto vers l'email du coach
+  getCoachEmailLink(): string {
+    console.log('seanceSelectionnee', this.seanceSelectionnee?.coach?.email);
+    if (!this.seanceSelectionnee || !this.seanceSelectionnee.coach || !this.seanceSelectionnee.coach.email) {
+      return '#';
+    }
+    return `mailto:${this.seanceSelectionnee.coach.email}`;
+  }
+
+  // Méthode pour vérifier si le coach a un email
+  hasCoachEmail(): boolean {
+    return !!this.seanceSelectionnee?.coach?.email;
   }
 }

@@ -40,9 +40,9 @@ export class AuthService {
   private mockUsers: User[] = [
     {
       '@context': '/api/contexts/Sportif',
-      '@id': '/api/sportifs/01959416-b8e3-70d3-9a18-6c69a270c0bc',
+      '@id': '/api/sportifs/0195a89b-1506-7729-a98c-e4f3ec855abf',
       '@type': 'Sportif',
-      id: '01959416-b8e3-70d3-9a18-6c69a270c0bc',
+      id: '0195a89b-1506-7729-a98c-e4f3ec855abf',
       nom: 'Marin',
       prenom: 'Franck',
       email: 'sportif1@example.com',
@@ -52,97 +52,92 @@ export class AuthService {
       niveau_sportif: 'debutant',
       seances: [
         {
-          '@id': '/api/seances/01959416-f1b2-7d9b-b6d3-5e54c30b7593',
-          '@type': 'Seance',
-          id: '01959416-f1b2-7d9b-b6d3-5e54c30b7593',
-          date_heure: '2025-04-05T22:54:31+00:00',
-          type_seance: 'trio',
-          theme_seance: 'crossfit',
-          coach: {
-            '@id': '/api/coaches/01959416-b07c-77c2-9c21-b9ca8760f05a',
-            '@type': 'Coach',
-            id: '01959416-b07c-77c2-9c21-b9ca8760f05a',
-            email: 'coach3@example.com',
-            nom: 'Mace',
-            prenom: 'Alex'
+          "@id": "/api/seances/0195a89b-303f-798c-863e-04c10c674a7b",
+          "@type": "Seance",
+          "id": "0195a89b-303f-798c-863e-04c10c674a7b",
+          "date_heure": "2025-05-03T17:05:46+00:00",
+          "type_seance": "trio",
+          "theme_seance": "cardio",
+          "coach": {
+            "@id": "/api/coaches/0195a89b-107a-7dba-8ab3-744eab018ed4",
+            "@type": "Coach",
+            "id": "0195a89b-107a-7dba-8ab3-744eab018ed4",
+            "email": "coach4@example.com",
+            "nom": "Toussaint",
+            "prenom": "Christelle"
           },
-          statut: 'validee',
-          niveau_seance: 'intermediaire',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b5895ab30e8',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5896080cb9',
-            '/api/exercices/01959416-a55a-71de-acd5-2b589806263e',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
+          "statut": "annulee",
+          "niveau_seance": "avance",
+          "exercices": [
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa03a8de5d",
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa05d74dda"
           ]
         },
         {
-          '@id': '/api/seances/01959416-f1b3-7163-8770-efc50d40f6d9',
-          '@type': 'Seance',
-          id: '01959416-f1b3-7163-8770-efc50d40f6d9',
-          date_heure: '2025-04-19T11:09:01+00:00',
-          type_seance: 'trio',
-          theme_seance: 'musculation',
-          coach: {
-            '@id': '/api/coaches/01959416-b07c-77c2-9c21-b9ca8760f05a',
-            '@type': 'Coach',
-            id: '01959416-b07c-77c2-9c21-b9ca8760f05a',
-            email: 'coach3@example.com',
-            nom: 'Mace',
-            prenom: 'Alex'
+          "@id": "/api/seances/0195a89b-303f-798c-863e-04c10f4009e7",
+          "@type": "Seance",
+          "id": "0195a89b-303f-798c-863e-04c10f4009e7",
+          "date_heure": "2025-03-25T06:24:49+00:00",
+          "type_seance": "solo",
+          "theme_seance": "musculation",
+          "coach": {
+            "@id": "/api/coaches/0195a89b-0ef5-75b7-a286-c53f920fe7af",
+            "@type": "Coach",
+            "id": "0195a89b-0ef5-75b7-a286-c53f920fe7af",
+            "email": "coach3@example.com",
+            "nom": "Royer",
+            "prenom": "Valentine"
           },
-          statut: 'validee',
-          niveau_seance: 'avance',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b58910a2d60',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5894b064e6',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
+          "statut": "annulee",
+          "niveau_seance": "avance",
+          "exercices": [
+            "/api/exercices/0195a89b-08d5-726b-aba6-99f9ff206c1e",
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa05d74dda",
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa06c35401"
           ]
         },
         {
-          '@id': '/api/seances/01959416-f1b4-7eda-8c17-29821734c3ea',
-          '@type': 'Seance',
-          id: '01959416-f1b4-7eda-8c17-29821734c3ea',
-          date_heure: '2025-04-06T07:08:05+00:00',
-          type_seance: 'trio',
-          theme_seance: 'crossfit',
-          coach: {
-            '@id': '/api/coaches/01959416-b35f-732d-bb24-ca77d2a3f7c8',
-            '@type': 'Coach',
-            id: '01959416-b35f-732d-bb24-ca77d2a3f7c8',
-            email: 'coach4@example.com',
-            nom: 'Monnier',
-            prenom: 'Charles'
+          "@id": "/api/seances/0195a89b-303f-798c-863e-04c1108dd462",
+          "@type": "Seance",
+          "id": "0195a89b-303f-798c-863e-04c1108dd462",
+          "date_heure": "2025-03-25T22:05:50+00:00",
+          "type_seance": "trio",
+          "theme_seance": "cardio",
+          "coach": {
+            "@id": "/api/coaches/0195a89b-0bf1-7454-ae37-390d07bf3c7e",
+            "@type": "Coach",
+            "id": "0195a89b-0bf1-7454-ae37-390d07bf3c7e",
+            "email": "coach1@example.com",
+            "nom": "Grenier",
+            "prenom": "Nicole"
           },
-          statut: 'annulee',
-          niveau_seance: 'avance',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b58941e9cc9',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5894b064e6',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5895ab30e8',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5897222699',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
+          "statut": "annulee",
+          "niveau_seance": "intermediaire",
+          "exercices": [
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa03129382",
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa067212d8"
           ]
         },
         {
-          '@id': '/api/seances/01959416-f1b4-7eda-8c17-29821a844a11',
-          '@type': 'Seance',
-          id: '01959416-f1b4-7eda-8c17-29821a844a11',
-          date_heure: '2025-04-19T15:47:03+00:00',
-          type_seance: 'duo',
-          theme_seance: 'musculation',
-          coach: {
-            '@id': '/api/coaches/01959416-adbd-78b3-9de0-ae14588f85d5',
-            '@type': 'Coach',
-            id: '01959416-adbd-78b3-9de0-ae14588f85d5',
-            email: 'coach2@example.com',
-            nom: 'Pineau',
-            prenom: 'Robert'
+          "@id": "/api/seances/0195a89b-303f-798c-863e-04c114126e22",
+          "@type": "Seance",
+          "id": "0195a89b-303f-798c-863e-04c114126e22",
+          "date_heure": "2025-04-10T03:58:17+00:00",
+          "type_seance": "trio",
+          "theme_seance": "cardio",
+          "coach": {
+            "@id": "/api/coaches/0195a89b-0ef5-75b7-a286-c53f920fe7af",
+            "@type": "Coach",
+            "id": "0195a89b-0ef5-75b7-a286-c53f920fe7af",
+            "email": "coach3@example.com",
+            "nom": "Royer",
+            "prenom": "Valentine"
           },
-          statut: 'annulee',
-          niveau_seance: 'intermediaire',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b5892eb0b96',
-            '/api/exercices/01959416-a55a-71de-acd5-2b589513c963'
+          "statut": "prevue",
+          "niveau_seance": "debutant",
+          "exercices": [
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa0161745a",
+            "/api/exercices/0195a89b-08d5-726b-aba6-99fa0847c408"
           ]
         }
       ]

@@ -77,4 +77,38 @@ export class CoachService {
       })
     );
   }
+
+  /**
+   * Récupère un coach spécifique par son ID
+   * @param id Identifiant du coach à récupérer
+   * @returns Observable contenant les données du coach
+   */
+  getCoachById(id: string): Observable<Coach> {
+    const url = `https://127.0.0.1:8000/api/coaches/${id}`;
+    
+    return this.http.get<ApiCoach>(url, this.httpOptions).pipe(
+      map((coach) => {
+        // Gestion de l'image du coach
+        let imagePath = this.defaultImage; // Image par défaut
+
+        // Si le coach a une photo, utiliser l'URL de l'image depuis le back-end
+        if (coach.photo) {
+          imagePath = `${this.baseImageUrl}${coach.photo}`;
+        }
+
+        return {
+          id: coach.id,
+          nom: `${coach.prenom} ${coach.nom}`,
+          email: coach.email,
+          specialite: coach.specialites.join(', '),
+          disponibilite: 'Disponible sur rendez-vous',
+          description:
+            coach.description ||
+            `Spécialiste en ${coach.specialites[0] || 'coaching'}`,
+          image: imagePath,
+          tarifHoraire: coach.tarif_horaire,
+        };
+      })
+    );
+  }
 }

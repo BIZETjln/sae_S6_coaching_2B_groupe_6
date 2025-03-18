@@ -189,6 +189,37 @@
   background-color: var(--color-secondary);
 }
 
+.seance-format {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  z-index: 1;
+  text-transform: capitalize;
+}
+
+/* Couleurs spécifiques pour chaque format */
+.seance-format.solo {
+  background-color: #9C27B0; /* violet */
+}
+
+.seance-format.duo {
+  background-color: #2196F3; /* bleu */
+}
+
+.seance-format.trio {
+  background-color: #FF9800; /* orange */
+}
+
+/* Format par défaut si aucun des formats spécifiques n'est trouvé */
+.seance-format:not(.solo):not(.duo):not(.trio) {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 .seance-niveau {
   position: absolute;
   bottom: 15px;
@@ -242,6 +273,30 @@
 }
 
 .seance-meta-item i {
+  color: var(--color-primary);
+}
+
+/* Section date et heure */
+.seance-datetime {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  background-color: var(--color-bg-light);
+  border-radius: 8px;
+  padding: 10px;
+  margin-left: -10px;
+}
+
+.seance-datetime .seance-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.seance-datetime .seance-meta-item i {
   color: var(--color-primary);
 }
 
@@ -312,6 +367,18 @@
 .details-meta-item i {
   font-size: 1.2rem;
   color: var(--color-primary);
+}
+
+.details-meta-item i.format-solo {
+  color: #9C27B0; /* violet */
+}
+
+.details-meta-item i.format-duo {
+  color: #2196F3; /* bleu */
+}
+
+.details-meta-item i.format-trio {
+  color: #FF9800; /* orange */
 }
 
 .seance-details-body {
