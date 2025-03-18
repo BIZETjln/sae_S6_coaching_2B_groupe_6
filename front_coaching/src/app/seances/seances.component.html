@@ -12,7 +12,7 @@
 <!-- Section principale -->
 <section class="seances-section">
   <div class="container">
-    <!-- Filtres (à implémenter ultérieurement) -->
+    <!-- Filtres -->
     <div class="seances-filters">
       <div class="filter-group">
         <label>Type d'entraînement</label>
@@ -26,31 +26,31 @@
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreTypeActif === 'Musculation'"
-            (click)="filtrerParType('Musculation')"
+            [class.active]="filtreTypeActif === 'musculation'"
+            (click)="filtrerParType('musculation')"
           >
             Musculation
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreTypeActif === 'Cardio'"
-            (click)="filtrerParType('Cardio')"
+            [class.active]="filtreTypeActif === 'cardio'"
+            (click)="filtrerParType('cardio')"
           >
             Cardio
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreTypeActif === 'HIIT'"
-            (click)="filtrerParType('HIIT')"
+            [class.active]="filtreTypeActif === 'crossfit'"
+            (click)="filtrerParType('crossfit')"
           >
-            HIIT
+            Crossfit
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreTypeActif === 'Mixte'"
-            (click)="filtrerParType('Mixte')"
+            [class.active]="filtreTypeActif === 'fitness'"
+            (click)="filtrerParType('fitness')"
           >
-            Mixte
+            Fitness
           </button>
         </div>
       </div>
@@ -66,47 +66,88 @@
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreNiveauActif === 'Débutant'"
-            (click)="filtrerParNiveau('Débutant')"
+            [class.active]="filtreNiveauActif === 'debutant'"
+            (click)="filtrerParNiveau('debutant')"
           >
             Débutant
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreNiveauActif === 'Intermédiaire'"
-            (click)="filtrerParNiveau('Intermédiaire')"
+            [class.active]="filtreNiveauActif === 'intermediaire'"
+            (click)="filtrerParNiveau('intermediaire')"
           >
             Intermédiaire
           </button>
           <button
             class="filter-btn"
-            [class.active]="filtreNiveauActif === 'Avancé'"
-            (click)="filtrerParNiveau('Avancé')"
+            [class.active]="filtreNiveauActif === 'avance'"
+            (click)="filtrerParNiveau('avance')"
           >
             Avancé
           </button>
         </div>
       </div>
+      <div class="filter-group">
+        <label>Format</label>
+        <div class="filter-buttons">
+          <button
+            class="filter-btn"
+            [class.active]="filtreFormatActif === 'Tous'"
+            (click)="filtrerParFormat('Tous')"
+          >
+            Tous
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreFormatActif === 'solo'"
+            (click)="filtrerParFormat('solo')"
+          >
+            Solo
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreFormatActif === 'duo'"
+            (click)="filtrerParFormat('duo')"
+          >
+            Duo
+          </button>
+          <button
+            class="filter-btn"
+            [class.active]="filtreFormatActif === 'trio'"
+            (click)="filtrerParFormat('trio')"
+          >
+            Trio
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicateur de chargement -->
+    <div class="loading-container" *ngIf="loading">
+      <div class="spinner">
+        <i class="bi bi-arrow-repeat"></i>
+      </div>
+      <p>Chargement des séances...</p>
     </div>
 
     <!-- Liste des séances -->
-    <div class="seances-grid">
+    <div class="seances-grid" *ngIf="!loading">
       <div
         class="seance-card"
         *ngFor="let seance of seancesFiltrees"
-        [class.selected]="seance.selected"
+        [class.selected]="seance === seanceSelectionnee"
         (click)="selectionnerSeance(seance)"
       >
         <div class="seance-image">
           <img
-            [src]="seance.image"
+            [src]="seance.image || 'assets/images/default-seance.jpg'"
             [alt]="seance.titre"
             onerror="this.src='assets/images/default-seance.jpg'"
           />
-          <div class="seance-badge" [ngClass]="seance.type.toLowerCase()">
-            {{ seance.type }}
+          <div class="seance-badge" [ngClass]="(seance.theme || seance.themeSeance || seance.theme_seance || 'default').toLowerCase()">
+            {{ seance.theme || seance.themeSeance || seance.theme_seance || 'Général' }}
           </div>
-          <div class="seance-niveau">{{ seance.niveau }}</div>
+          <div class="seance-niveau">{{ seance.niveau || seance.niveauSeance || seance.niveau_seance || 'Tous niveaux' }}</div>
         </div>
         <div class="seance-content">
           <h3 class="seance-title">{{ seance.titre }}</h3>
@@ -114,21 +155,21 @@
           <div class="seance-meta">
             <div class="seance-meta-item">
               <i class="bi bi-clock"></i>
-              <span>{{ seance.duree }}</span>
+              <span>{{ seance.duree || '60 min' }}</span>
             </div>
-            <div class="seance-meta-item">
+            <div class="seance-meta-item" *ngIf="seance.theme || seance.themeSeance || seance.theme_seance">
               <i class="bi bi-lightning-charge"></i>
-              <span>{{ seance.objectif }}</span>
+              <span>{{ seance.theme || seance.themeSeance || seance.theme_seance }}</span>
             </div>
           </div>
           <div class="seance-footer">
             <div class="seance-coach">
               <i class="bi bi-person-circle"></i>
-              <span>{{ seance.coach }}</span>
+              <span>{{ seance.coach?.name || (seance.coach?.prenom + ' ' + seance.coach?.nom) || 'Coach' }}</span>
             </div>
-            <div class="seance-exercises">
+            <div class="seance-exercises" *ngIf="seance.exercices">
               <i class="bi bi-list-check"></i>
-              <span>{{ seance.nombreExercices }} exercices</span>
+              <span>{{ seance.exercices.length || 0 }} exercices</span>
             </div>
           </div>
         </div>
@@ -136,13 +177,13 @@
     </div>
 
     <!-- Message si aucune séance ne correspond aux filtres -->
-    <div class="no-results" *ngIf="seancesFiltrees.length === 0">
+    <div class="no-results" *ngIf="!loading && seancesFiltrees.length === 0">
       <i class="bi bi-search"></i>
       <h3>Aucune séance ne correspond à vos critères</h3>
       <p>Essayez de modifier vos filtres pour voir plus de résultats</p>
       <button
         class="btn btn-primary"
-        (click)="filtrerParType('Tous'); filtrerParNiveau('Tous')"
+        (click)="filtrerParType('Tous'); filtrerParNiveau('Tous'); filtrerParFormat('Tous')"
       >
         Réinitialiser les filtres
       </button>
@@ -159,19 +200,19 @@
         <div class="details-meta">
           <div class="details-meta-item">
             <i class="bi bi-clock"></i>
-            <span>{{ seanceSelectionnee.duree }}</span>
+            <span>{{ seanceSelectionnee.duree || '60 min' }}</span>
           </div>
-          <div class="details-meta-item">
+          <div class="details-meta-item" *ngIf="seanceSelectionnee.theme || seanceSelectionnee.themeSeance || seanceSelectionnee.theme_seance">
             <i class="bi bi-lightning-charge"></i>
-            <span>{{ seanceSelectionnee.objectif }}</span>
+            <span>{{ seanceSelectionnee.theme || seanceSelectionnee.themeSeance || seanceSelectionnee.theme_seance }}</span>
           </div>
           <div class="details-meta-item">
             <i class="bi bi-trophy"></i>
-            <span>{{ seanceSelectionnee.niveau }}</span>
+            <span>{{ seanceSelectionnee.niveau || seanceSelectionnee.niveauSeance || seanceSelectionnee.niveau_seance || 'Tous niveaux' }}</span>
           </div>
           <div class="details-meta-item">
             <i class="bi bi-person-circle"></i>
-            <span>{{ seanceSelectionnee.coach }}</span>
+            <span>{{ seanceSelectionnee.coach?.name || (seanceSelectionnee.coach?.prenom + ' ' + seanceSelectionnee.coach?.nom) || 'Coach' }}</span>
           </div>
         </div>
       </div>
@@ -182,7 +223,7 @@
           <p>{{ seanceSelectionnee.description }}</p>
         </div>
 
-        <div class="details-muscles">
+        <div class="details-muscles" *ngIf="seanceSelectionnee.groupesMusculaires && seanceSelectionnee.groupesMusculaires.length > 0">
           <h3>Groupes musculaires ciblés</h3>
           <div class="muscle-tags">
             <span
@@ -194,7 +235,7 @@
           </div>
         </div>
 
-        <div class="details-exercises">
+        <div class="details-exercises" *ngIf="seanceSelectionnee.exercices && seanceSelectionnee.exercices.length > 0">
           <h3>Programme d'exercices</h3>
           <div class="exercise-list">
             <div
@@ -210,9 +251,9 @@
               >
                 <div class="exercise-number">{{ i + 1 }}</div>
                 <div class="exercise-name">{{ exercice.nom }}</div>
-                <div class="exercise-sets">{{ exercice.series }} séries</div>
-                <div class="exercise-reps">{{ exercice.repetitions }}</div>
-                <div class="exercise-rest">{{ exercice.repos }}</div>
+                <div class="exercise-sets" *ngIf="exercice.series">{{ exercice.series }} séries</div>
+                <div class="exercise-reps" *ngIf="exercice.repetitions">{{ exercice.repetitions }}</div>
+                <div class="exercise-rest" *ngIf="exercice.repos">{{ exercice.repos }}</div>
                 <div class="exercise-toggle">
                   <i
                     class="bi"
