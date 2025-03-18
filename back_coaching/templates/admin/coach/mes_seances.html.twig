@@ -3,39 +3,216 @@
 
 {% block content_title %}Mes séances à venir{% endblock %}
 
+{% block head_stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        #calendar {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2b3035;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+        
+        /* Style général du calendrier */
+        .fc-theme-standard .fc-scrollgrid,
+        .fc-theme-standard td, 
+        .fc-theme-standard th {
+            border-color: #444;
+        }
+        
+        .fc-theme-standard .fc-toolbar-title {
+            color: #fff;
+        }
+        
+        .fc .fc-button-primary {
+            background-color: #3c4045;
+            border-color: #555;
+        }
+        
+        .fc .fc-button-primary:hover {
+            background-color: #4b5055;
+        }
+        
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background-color: #565c65;
+        }
+        
+        /* Style des cellules */
+        .fc-daygrid-day {
+            background-color: #343a40;
+        }
+        
+        .fc-col-header-cell {
+            background-color: #2c3137;
+        }
+        
+        .fc-day-today {
+            background-color: rgba(82, 118, 156, 0.15) !important;
+        }
+        
+        .fc-daygrid-day-number,
+        .fc-col-header-cell-cushion {
+            color: #fff;
+        }
+        
+        /* Style des événements */
+        .fc-event {
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #4e5359 !important;
+            border-color: #3e4349 !important;
+            color: white !important;
+        }
+        
+        .fc-event-title {
+            font-weight: bold;
+        }
+        
+        /* Style du popup */
+        .seance-details {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #343a40;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            min-width: 300px;
+        }
+        
+        .seance-details h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+        
+        .backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+        
+        .close-details {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #fff;
+        }
+    </style>
+{% endblock %}
+
 {% block main %}
     <div class="content">
-        {% if seances|length > 0 %}
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Date et heure</th>
-                            <th>Type</th>
-                            <th>Thème</th>
-                            <th>Niveau</th>
-                            <th>Statut</th>
-                            <th>Coach</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for seance in seances %}
-                            <tr>
-                                <td>{{ seance.dateHeure|date('d/m/Y H:i') }}</td>
-                                <td>{{ seance.typeSeance.value }}</td>
-                                <td>{{ seance.themeSeance.value }}</td>
-                                <td>{{ seance.niveauSeance.value }}</td>
-                                <td>{{ seance.statut.value }}</td>
-                                <td>{{ seance.coach }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Vous n'avez aucune séance à venir.
-            </div>
-        {% endif %}
+        <div id="calendar"></div>
+        
+        <div class="backdrop"></div>
+        <div class="seance-details">
+            <span class="close-details">&times;</span>
+            <h3 id="seance-title"></h3>
+            <div id="seance-info"></div>
+        </div>
     </div>
+{% endblock %}
+
+{% block body_javascript %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                nowIndicator: true,
+                navLinks: true,
+                dayMaxEvents: true,
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+                events: [
+                    {% for seance in seances %}
+                    {
+                        id: '{{ seance.id }}',
+                        title: '{{ seance.typeSeance.value }} - {{ seance.themeSeance.value }}',
+                        start: '{{ seance.dateHeure|date('Y-m-d\\TH:i:s') }}',
+                        end: '{{ seance.dateHeure|date_modify('+1 hour')|date('Y-m-d\\TH:i:s') }}',
+                        allDay: false,
+                        extendedProps: {
+                            type: '{{ seance.typeSeance.value }}',
+                            theme: '{{ seance.themeSeance.value }}',
+                            niveau: '{{ seance.niveauSeance.value }}',
+                            statut: '{{ seance.statut.value }}',
+                            coach: '{{ seance.coach }}'
+                        }
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                eventClick: function(info) {
+                    const event = info.event;
+                    const props = event.extendedProps;
+                    
+                    document.getElementById('seance-title').textContent = event.title;
+                    
+                    let infoHtml = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Date:</strong> ${new Date(event.start).toLocaleDateString('fr-FR')}</p>
+                                <p><strong>Heure:</strong> ${new Date(event.start).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</p>
+                                <p><strong>Type:</strong> ${props.type}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Thème:</strong> ${props.theme}</p>
+                                <p><strong>Niveau:</strong> ${props.niveau}</p>
+                                <p><strong>Statut:</strong> ${props.statut}</p>
+                                <p><strong>Coach:</strong> ${props.coach}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('seance-info').innerHTML = infoHtml;
+                    
+                    document.querySelector('.seance-details').style.display = 'block';
+                    document.querySelector('.backdrop').style.display = 'block';
+                }
+            });
+            
+            calendar.render();
+            
+            // Fermer le popup de détails
+            document.querySelector('.close-details').addEventListener('click', function() {
+                document.querySelector('.seance-details').style.display = 'none';
+                document.querySelector('.backdrop').style.display = 'none';
+            });
+            
+            document.querySelector('.backdrop').addEventListener('click', function() {
+                document.querySelector('.seance-details').style.display = 'none';
+                document.querySelector('.backdrop').style.display = 'none';
+            });
+        });
+    </script>
 {% endblock %}
