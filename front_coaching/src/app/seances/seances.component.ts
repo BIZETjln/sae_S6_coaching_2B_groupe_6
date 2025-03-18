@@ -15,6 +15,15 @@ interface Exercice {
   expanded?: boolean;
 }
 
+// Interface pour les coachs (pour le filtrage)
+interface Coach {
+  id: string | number;
+  nom: string;
+  prenom: string;
+  name?: string;
+  email?: string;
+}
+
 @Component({
   selector: 'app-seances',
   templateUrl: './seances.component.html',
@@ -28,6 +37,9 @@ export class SeancesComponent implements OnInit {
   // Liste des séances
   seances: Seance[] = [];
 
+  // Liste des coachs pour le filtrage
+  coachs: Coach[] = [];
+
   // Séance sélectionnée pour afficher les détails
   seanceSelectionnee: Seance | null = null;
 
@@ -35,6 +47,7 @@ export class SeancesComponent implements OnInit {
   filtreTypeActif: string = 'Tous';
   filtreNiveauActif: string = 'Tous';
   filtreFormatActif: string = 'Tous';
+  filtreCoachActif: string = 'Tous';
 
   // Séances filtrées à afficher
   seancesFiltrees: Seance[] = [];
@@ -55,12 +68,55 @@ export class SeancesComponent implements OnInit {
         this.seances = seances;
         this.seancesFiltrees = [...this.seances];
         this.loading = false;
+        
+        // Log pour vérifier les détails des séances
+        console.log('Séances récupérées:', this.seances);
+        this.seances.forEach((seance, index) => {
+          console.log(`Séance ${index + 1} - ID: ${seance.id}`, {
+            titre: seance.titre,
+            theme: seance.theme || seance.themeSeance || seance.theme_seance,
+            niveau: seance.niveau || seance.niveauSeance || seance.niveau_seance,
+            type: seance.type || seance.typeSeance || seance.type_seance,
+            image: seance.image,
+            photo: seance.photo
+          });
+        });
+        
+        // Extraire la liste unique des coachs à partir des séances
+        this.extraireCoachs();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des séances:', error);
         this.loading = false;
       }
     });
+  }
+
+  // Méthode pour extraire la liste unique des coachs à partir des séances
+  private extraireCoachs(): void {
+    const coachsMap = new Map<string, Coach>();
+    
+    this.seances.forEach(seance => {
+      if (seance.coach) {
+        const coach = seance.coach;
+        // Créer un identifiant unique pour le coach
+        const coachId = coach.id || `${coach.nom}_${coach.prenom}`;
+        
+        if (!coachsMap.has(String(coachId))) {
+          coachsMap.set(String(coachId), {
+            id: coach.id || coachId,
+            nom: coach.nom || '',
+            prenom: coach.prenom || '',
+            name: coach.name || `${coach.prenom || ''} ${coach.nom || ''}`.trim(),
+            email: coach.email
+          });
+        }
+      }
+    });
+    
+    // Convertir la Map en tableau
+    this.coachs = Array.from(coachsMap.values());
+    console.log('Liste des coachs extraite:', this.coachs);
   }
 
   // Méthode pour vérifier si l'utilisateur est un client connecté
@@ -123,6 +179,12 @@ export class SeancesComponent implements OnInit {
     this.appliquerFiltres();
   }
 
+  // Méthode pour filtrer par coach
+  filtrerParCoach(coachId: string): void {
+    this.filtreCoachActif = coachId;
+    this.appliquerFiltres();
+  }
+
   // Méthode pour appliquer les filtres
   private appliquerFiltres(): void {
     // Réinitialiser la séance sélectionnée
@@ -151,8 +213,14 @@ export class SeancesComponent implements OnInit {
         (seance.typeSeance && seance.typeSeance.toLowerCase() === this.filtreFormatActif.toLowerCase()) ||
         (seance.type_seance && seance.type_seance.toLowerCase() === this.filtreFormatActif.toLowerCase());
 
+      // Vérifier le filtre de coach
+      const coachMatch =
+        this.filtreCoachActif === 'Tous' ||
+        (seance.coach && seance.coach.id && seance.coach.id.toString() === this.filtreCoachActif) ||
+        (seance.coach && !seance.coach.id && `${seance.coach.nom}_${seance.coach.prenom}` === this.filtreCoachActif);
+
       // Retourner true si tous les filtres correspondent
-      return typeMatch && niveauMatch && formatMatch;
+      return typeMatch && niveauMatch && formatMatch && coachMatch;
     });
 
     // Afficher un message de débogage
@@ -160,7 +228,28 @@ export class SeancesComponent implements OnInit {
       type: this.filtreTypeActif,
       niveau: this.filtreNiveauActif,
       format: this.filtreFormatActif,
+      coach: this.filtreCoachActif,
       résultats: this.seancesFiltrees.length
     });
+  }
+
+  // Méthode pour obtenir le lien mailto vers l'email du coach
+  getCoachEmailLink(): string {
+    console.log('seanceSelectionnee', this.seanceSelectionnee?.coach?.email);
+    if (!this.seanceSelectionnee || !this.seanceSelectionnee.coach || !this.seanceSelectionnee.coach.email) {
+      return '#';
+    }
+    return `mailto:${this.seanceSelectionnee.coach.email}`;
+  }
+
+  // Méthode pour vérifier si le coach a un email
+  hasCoachEmail(): boolean {
+    return !!this.seanceSelectionnee?.coach?.email;
+  }
+  
+  // Méthode pour obtenir le nom complet du coach
+  getCoachName(coach: Coach): string {
+    if (coach.name) return coach.name;
+    return `${coach.prenom || ''} ${coach.nom || ''}`.trim() || 'Coach';
   }
 }

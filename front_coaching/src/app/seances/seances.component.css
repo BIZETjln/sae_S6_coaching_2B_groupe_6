@@ -107,6 +107,31 @@
   color: white;
 }
 
+/* Style pour les boutons de filtre de coachs */
+.filter-group:last-child .filter-buttons {
+  max-height: 135px; /* Hauteur max pour éviter un défilement trop grand */
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar {
+  width: 5px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar-track {
+  background: var(--color-bg-light);
+  border-radius: 10px;
+}
+
+.filter-group:last-child .filter-buttons::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: 10px;
+}
+
+.filter-group:last-child .filter-btn {
+  white-space: nowrap;
+}
+
 /* Grille des séances */
 .seances-grid {
   display: grid;
@@ -189,6 +214,37 @@
   background-color: var(--color-secondary);
 }
 
+.seance-format {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  z-index: 1;
+  text-transform: capitalize;
+}
+
+/* Couleurs spécifiques pour chaque format */
+.seance-format.solo {
+  background-color: #9C27B0; /* violet */
+}
+
+.seance-format.duo {
+  background-color: #2196F3; /* bleu */
+}
+
+.seance-format.trio {
+  background-color: #FF9800; /* orange */
+}
+
+/* Format par défaut si aucun des formats spécifiques n'est trouvé */
+.seance-format:not(.solo):not(.duo):not(.trio) {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 .seance-niveau {
   position: absolute;
   bottom: 15px;
@@ -245,6 +301,30 @@
   color: var(--color-primary);
 }
 
+/* Section date et heure */
+.seance-datetime {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  background-color: var(--color-bg-light);
+  border-radius: 8px;
+  padding: 10px;
+  margin-left: -10px;
+}
+
+.seance-datetime .seance-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.seance-datetime .seance-meta-item i {
+  color: var(--color-primary);
+}
+
 .seance-footer {
   display: flex;
   justify-content: space-between;
@@ -282,6 +362,15 @@
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .seance-details-header {
   margin-bottom: 30px;
   padding-bottom: 20px;
@@ -312,6 +401,18 @@
 .details-meta-item i {
   font-size: 1.2rem;
   color: var(--color-primary);
+}
+
+.details-meta-item i.format-solo {
+  color: #9C27B0; /* violet */
+}
+
+.details-meta-item i.format-duo {
+  color: #2196F3; /* bleu */
+}
+
+.details-meta-item i.format-trio {
+  color: #FF9800; /* orange */
 }
 
 .seance-details-body {
@@ -591,5 +692,27 @@
 
   .login-buttons .btn {
     width: 100%;
+  }
+}
+
+/* Ajustements responsifs pour les filtres */
+@media (max-width: 992px) {
+  .filter-group {
+    min-width: calc(50% - 10px);
+  }
+}
+
+@media (max-width: 768px) {
+  .seances-filters {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .filter-group {
+    min-width: 100%;
+  }
+  
+  .filter-group:last-child .filter-buttons {
+    max-height: 110px;
   }
 }

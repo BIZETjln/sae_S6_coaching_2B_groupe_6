@@ -32,6 +32,10 @@ class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
 
+        if ($this->isGranted('ROLE_ADMIN')) {
+            yield MenuItem::section('Statistiques');
+            yield MenuItem::linkToRoute('Tableau de bord', 'fa fa-chart-bar', 'admin_stats')->setPermission('ROLE_ADMIN');
+        }
         // Menu pour les coachs
         if ($this->isGranted('ROLE_COACH')) {
             yield MenuItem::section('Mon espace coach');

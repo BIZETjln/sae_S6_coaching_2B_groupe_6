@@ -6,6 +6,7 @@ use App\Entity\Seance;
 use App\Entity\Coach;
 use App\Entity\Sportif;
 use App\Entity\Exercice;
+use App\Entity\Participation;
 use App\Enum\TypeSeance;
 use App\Enum\StatutSeance;
 use App\Enum\Niveau;
@@ -46,21 +47,36 @@ class SeanceFixtures extends Fixture implements DependentFixtureInterface
                 TypeSeance::TRIO => 3,
             };
 
-            $sportifIds = $faker->randomElements(range(0, 19), $maxSportifs);
-            foreach ($sportifIds as $sportifId) {
-                $seance->addSportif($this->getReference('sportif-' . $sportifId, Sportif::class));
-            }
-
             $seance->setStatut($faker->randomElement($statuts));
             $seance->setNiveauSeance($faker->randomElement($niveaux));
+
+            // Persistence de la séance avant d'ajouter les participations
+            $manager->persist($seance);
+
+            // Ajouter les sportifs via participations avec 70% de présence
+            $sportifIds = $faker->randomElements(range(0, 19), $maxSportifs);
+            foreach ($sportifIds as $sportifId) {
+                $participation = new Participation();
+                $sportif = $this->getReference('sportif-' . $sportifId, Sportif::class);
+
+                $participation->setSportif($sportif);
+                $participation->setSeance($seance);
+
+                // 70% de chance d'être présent si la séance est validée
+                if ($seance->getStatut() === StatutSeance::VALIDEE) {
+                    $participation->setPresence($faker->boolean(70)); // 70% true, 30% false
+                } else {
+                    $participation->setPresence(false);
+                }
+
+                $manager->persist($participation);
+            }
 
             // Attribution de 2 à 5 exercices aléatoires
             $exerciceIds = $faker->randomElements(range(0, 19), $faker->numberBetween(2, 5));
             foreach ($exerciceIds as $exerciceId) {
                 $seance->addExercice($this->getReference('exercice-' . $exerciceId, Exercice::class));
             }
-
-            $manager->persist($seance);
         }
 
         $manager->flush();

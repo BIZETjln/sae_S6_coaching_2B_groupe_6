@@ -6,6 +6,7 @@ use App\Entity\Coach;
 use App\Entity\Seance;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<Seance>
@@ -22,30 +23,64 @@ class SeanceRepository extends ServiceEntityRepository
      * 
      * @param Coach $coach Le coach concerné
      * @param \DateTime $dateTime La date et l'heure à vérifier
-     * @return bool true si le coach est disponible, false sinon
+     * @param Uuid|null $currentSeanceId L'ID de la séance en cours d'édition (à exclure de la vérification)
+     * @return bool true si le coach a un conflit, false sinon
      */
-    public function hasConflictingSession(Coach $coach, \DateTime $dateTime): bool
+    public function hasConflictingSession(Coach $coach, \DateTime $dateTime, ?Uuid $currentSeanceId = null): bool
     {
-        $startCheck = clone $dateTime;
-        $startCheck->modify('-90 minutes');
-
-        $endCheck = clone $dateTime;
-        $endCheck->modify('+90 minutes');
-
-        $qb = $this->createQueryBuilder('s');
-        $qb->select('COUNT(s.id)')
-            ->where('s.coach = :coach')
-            ->andWhere(
-                $qb->expr()->orX(
-                    $qb->expr()->between('s.date_heure', ':start_check', ':date_time'),
-                    $qb->expr()->between(':date_time', 's.date_heure', 'DATE_ADD(s.date_heure, INTERVAL 90 MINUTE)')
+        // Définir les limites de temps pour cette séance
+        $seanceDebut = clone $dateTime;
+        $seanceFin = clone $dateTime;
+        $seanceFin->modify('+90 minutes');
+        
+        // Convertir l'UUID du coach au format sans tirets pour la requête SQL
+        $coachIdHex = str_replace('-', '', $coach->getId()->__toString());
+        
+        // Convertir l'ID de la séance actuelle
+        $currentIdHex = $currentSeanceId ? str_replace('-', '', $currentSeanceId->__toString()) : null;
+        
+        // Utiliser une requête SQL native pour éviter les problèmes avec les UUID
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = "
+            SELECT COUNT(*) as conflict_count
+            FROM seance
+            WHERE HEX(coach_id) = :coachIdHex
+            " . ($currentIdHex ? "AND HEX(id) != :currentIdHex" : "") . "
+            AND (
+                -- Vérifier si une séance existante chevauche la nouvelle séance
+                -- La condition garantit que les séances qui se suivent exactement sont autorisées
+                (
+                    -- Soit la séance existante commence avant la fin de la nouvelle
+                    date_heure < :seanceFin
+                    AND
+                    -- ET la séance existante finit après le début de la nouvelle
+                    DATE_ADD(date_heure, INTERVAL 90 MINUTE) > :seanceDebut
+                    AND
+                    -- MAIS on exclut le cas où la séance existante commence exactement à la fin de la nouvelle
+                    date_heure != :seanceFin
+                    AND
+                    -- ET on exclut le cas où la séance existante finit exactement au début de la nouvelle
+                    DATE_ADD(date_heure, INTERVAL 90 MINUTE) != :seanceDebut
                 )
             )
-            ->setParameter('coach', $coach)
-            ->setParameter('date_time', $dateTime)
-            ->setParameter('start_check', $startCheck);
-
-        return $qb->getQuery()->getSingleScalarResult() > 0;
+        ";
+        
+        $params = [
+            'coachIdHex' => $coachIdHex,
+            'seanceDebut' => $seanceDebut->format('Y-m-d H:i:s'),
+            'seanceFin' => $seanceFin->format('Y-m-d H:i:s')
+        ];
+        
+        if ($currentIdHex) {
+            $params['currentIdHex'] = $currentIdHex;
+        }
+        
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery($params);
+        
+        $result = $resultSet->fetchAssociative();
+        
+        return $result['conflict_count'] > 0;
     }
 
     //    /**

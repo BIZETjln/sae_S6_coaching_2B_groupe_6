@@ -1,0 +1,391 @@
+{# templates/admin/stats/index.html.twig #}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block head_stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+    <style>
+        .stats-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats-card h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+        }
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #3288f3;
+        }
+        .stats-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .stats-table th, .stats-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .stats-table th {
+            background-color: #f5f5f5;
+        }
+        .percentage-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .percentage-value {
+            height: 100%;
+            background-color: #3288f3;
+            border-radius: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content_title %}Tableau de bord statistique{% endblock %}
+
+{% block main %}
+    <div class="row">
+        {# Statistiques de présence #}
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h2><i class="fa fa-user-check"></i> Taux de présence global</h2>
+                <div class="stats-number">{{ attendanceStats.global_rate }}%</div>
+                <div class="stats-info">Pourcentage de sportifs présents aux séances validées</div>
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        {# Taux de remplissage #}
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h2><i class="fa fa-fill"></i> Taux de remplissage des séances</h2>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Type de séance</th>
+                            <th>Taux de remplissage</th>
+                            <th>Participants / Capacité</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rate in fillRateStats.by_type %}
+                            <tr>
+                                <td>{{ rate.type }}</td>
+                                <td>
+                                    {{ rate.fill_rate }}%
+                                    <div class="percentage-bar">
+                                        <div class="percentage-value" style="width: {{ rate.fill_rate }}%"></div>
+                                    </div>
+                                </td>
+                                <td>{{ rate.participant_count }} / {{ rate.total_capacity }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {# Popularité des thèmes #}
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h2><i class="fa fa-star"></i> Popularité des thèmes d'entraînement</h2>
+                <div class="chart-container">
+                    <canvas id="themePopularityChart"></canvas>
+                </div>
+                <h4 class="mt-4">Taux de présence par thème</h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Thème</th>
+                            <th>Taux de présence</th>
+                            <th>Présents / Inscrits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for theme in themeStats.attendance %}
+                            <tr>
+                                <td>{{ theme.theme }}</td>
+                                <td>
+                                    {{ theme.attendance_rate }}%
+                                    <div class="percentage-bar">
+                                        <div class="percentage-value" style="width: {{ theme.attendance_rate }}%"></div>
+                                    </div>
+                                </td>
+                                <td>{{ theme.present_count }} / {{ theme.total_count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {# Performance des coachs #}
+        <div class="col-md-6">
+            <div class="stats-card">
+                <h2><i class="fa fa-medal"></i> Performance des coachs</h2>
+                <div class="chart-container">
+                    <canvas id="coachPerformanceChart"></canvas>
+                </div>
+                <h4 class="mt-4">Nombre de séances par coach</h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Coach</th>
+                            <th>Nombre de séances</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coach in coachStats.sessions %}
+                            <tr>
+                                <td>{{ coach.coach_name }}</td>
+                                <td>{{ coach.session_count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {# Évolution des inscriptions #}
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h2><i class="fa fa-user-plus"></i> Évolution des inscriptions de sportifs</h2>
+                <div class="chart-container">
+                    <canvas id="registrationChart"></canvas>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Répartition par niveau</h4>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="levelDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body_javascript %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Couleurs pour les graphiques
+            const colors = [
+                '#4285F4', '#34A853', '#FBBC05', '#EA4335', 
+                '#8E24AA', '#D81B60', '#00ACC1', '#43A047',
+                '#6D4C41', '#546E7A', '#F4511E', '#6200EA'
+            ];
+            
+            // 1. Graphique de taux de présence mensuel
+            const attendanceData = {{ attendanceStats.monthly|json_encode|raw }};
+            const attendanceMonths = attendanceData.map(item => item.month);
+            const attendanceRates = attendanceData.map(item => {
+                return item.total_count > 0 ? Math.round((item.present_count / item.total_count) * 100) : 0;
+            });
+            
+            new Chart(document.getElementById('attendanceChart'), {
+                type: 'line',
+                data: {
+                    labels: attendanceMonths,
+                    datasets: [{
+                        label: 'Taux de présence (%)',
+                        data: attendanceRates,
+                        borderColor: colors[0],
+                        backgroundColor: colors[0] + '33',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 3. Graphique de popularité des thèmes
+            const themeData = {{ themeStats.popularity|json_encode|raw }};
+            const themes = themeData.map(item => item.theme_seance);
+            const participantCounts = themeData.map(item => item.participant_count);
+            
+            new Chart(document.getElementById('themePopularityChart'), {
+                type: 'bar',
+                data: {
+                    labels: themes,
+                    datasets: [{
+                        label: 'Nombre de participants',
+                        data: participantCounts,
+                        backgroundColor: themes.map((_, i) => colors[i % colors.length])
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 4. Graphique de performance des coachs
+            const coachData = {{ coachStats.performance|json_encode|raw }};
+            const coaches = coachData.map(item => item.coach);
+            const attendanceRatesByCoach = coachData.map(item => item.attendance_rate);
+            
+            new Chart(document.getElementById('coachPerformanceChart'), {
+                type: 'bar',
+                data: {
+                    labels: coaches,
+                    datasets: [{
+                        label: 'Taux de présence (%)',
+                        data: attendanceRatesByCoach,
+                        backgroundColor: coaches.map((_, i) => colors[i % colors.length])
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 5. Graphique d'évolution des inscriptions
+            const registrationData = {{ registrationStats.monthly|json_encode|raw }};
+            const registrationMonths = registrationData.map(item => item.month);
+            const registrationCounts = registrationData.map(item => item.registration_count);
+            
+            new Chart(document.getElementById('registrationChart'), {
+                type: 'line',
+                data: {
+                    labels: registrationMonths,
+                    datasets: [{
+                        label: 'Nouvelles inscriptions',
+                        data: registrationCounts,
+                        borderColor: colors[2],
+                        backgroundColor: colors[2] + '33',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 6. Graphique de distribution par niveau
+            const levelData = {{ registrationStats.by_level|json_encode|raw }};
+            const levels = levelData.map(item => item.niveau_sportif);
+            const levelCounts = levelData.map(item => item.sportif_count);
+            
+            new Chart(document.getElementById('levelDistributionChart'), {
+                type: 'pie',
+                data: {
+                    labels: levels,
+                    datasets: [{
+                        data: levelCounts,
+                        backgroundColor: levels.map((_, i) => colors[i % colors.length]),
+                        borderColor: 'white',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return context.label + ': ' + context.raw + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
