@@ -24,6 +24,8 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class SportifCrudController extends AbstractCrudController
 {
@@ -114,7 +116,7 @@ class SportifCrudController extends AbstractCrudController
                 ->setFormTypeOption('attr', ['placeholder' => 'Date d\'inscription'])
                 ->setColumns(6)
                 ->setRequired(true),
-            
+
             ChoiceField::new('niveauSportif', 'Niveau sportif')
                 ->setChoices($niveaux)
                 ->renderExpanded()
@@ -124,6 +126,13 @@ class SportifCrudController extends AbstractCrudController
 
             AssociationField::new('seances', 'Séances')
                 ->onlyOnDetail(),
+
+            ImageField::new('photo', 'Photo')
+                ->setBasePath('images/sportifs')
+                ->setUploadDir('public/images/sportifs')
+                ->setUploadedFileNamePattern('[randomhash].[extension]')
+                ->setRequired(false)
+                ->setColumns(12),
         ];
     }
 
@@ -131,13 +140,17 @@ class SportifCrudController extends AbstractCrudController
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createNewFormBuilder($entityDto, $formOptions, $context);
-        return $this->addPasswordEventListener($formBuilder);
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword())
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
     }
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
-        return $this->addPasswordEventListener($formBuilder);
+        return $formBuilder
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->hashPassword())
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload());
     }
 
     private function addPasswordEventListener(FormBuilderInterface $formBuilder): FormBuilderInterface
@@ -169,5 +182,47 @@ class SportifCrudController extends AbstractCrudController
         $sportif->setDateInscription(new \DateTime());
         $sportif->setRoles(['ROLE_USER']);
         return $sportif;
+    }
+
+    private function handleImageUpload()
+    {
+        return function ($event) {
+            $form = $event->getForm();
+            if (!$form->isValid()) {
+                return;
+            }
+
+            $sportif = $form->getData();
+            if (!$sportif instanceof Sportif) {
+                return;
+            }
+
+            $uploadedFile = $sportif->getPhoto();
+
+            // Si on a une nouvelle image
+            if ($uploadedFile instanceof UploadedFile) {
+                // Supprimer l'ancienne photo si elle existe
+                $oldPhotoPath = $sportif->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                }
+
+                // Upload la nouvelle photo
+                $newFilename = uniqid() . '.' . $uploadedFile->guessExtension();
+                $uploadedFile->move(
+                    'public/images/sportifs',
+                    $newFilename
+                );
+                $sportif->setPhoto('images/sportifs/' . $newFilename);
+            }
+            // Si la photo a été supprimée (champ vidé)
+            elseif ($uploadedFile === null) {
+                $oldPhotoPath = $sportif->getPhoto();
+                if ($oldPhotoPath && file_exists('public/' . $oldPhotoPath)) {
+                    unlink('public/' . $oldPhotoPath);
+                    $sportif->setPhoto(null);
+                }
+            }
+        };
     }
 }
