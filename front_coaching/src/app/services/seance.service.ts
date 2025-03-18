@@ -200,6 +200,29 @@ export class SeanceService {
     );
   }
   
+  // Récupérer toutes les séances disponibles
+  getAllSeances(): Observable<Seance[]> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/ld+json'
+    });
+    
+    return this.http.get<any>(`${this.apiUrl}/seances`, { headers }).pipe(
+      map(response => {
+        if (response && response['hydra:member'] && response['hydra:member'].length > 0) {
+          console.log('Toutes les séances récupérées depuis l\'API:', response['hydra:member']);
+          return response['hydra:member'].map((seance: any) => this.mapApiSeanceToModel(seance));
+        } else {
+          console.warn('Aucune séance trouvée dans l\'API, utilisation des données fictives');
+          return this.seances;
+        }
+      }),
+      catchError(error => {
+        console.error('Erreur lors de la récupération des séances:', error);
+        return of(this.seances);
+      })
+    );
+  }
+  
   // Annuler une séance
   cancelSeance(seanceId: string): Observable<any> {
     //return this.http.post<any>(`${this.apiUrl}/seances/${seanceId}/annuler`, {})

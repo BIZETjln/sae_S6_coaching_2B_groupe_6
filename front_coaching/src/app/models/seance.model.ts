@@ -29,7 +29,7 @@ export interface Seance {
   typeSeance?: string; // Format API alternative
   capaciteMax?: number;
   participantsActuels?: number;
-  statut: string; // 'prevue', 'validee', 'annulee', 'terminée', 'à venir'
+  statut?: string; // 'prevue', 'validee', 'annulee', 'terminée', 'à venir'
   couleur?: string; // Pour l'affichage dans le calendrier
   theme?: string; // thème de la séance: 'fitness', 'musculation', 'cardio', 'crossfit', etc.
   theme_seance?: string; // Format API
@@ -37,6 +37,9 @@ export interface Seance {
   niveau?: string; // niveau de la séance: 'debutant', 'intermediaire', 'avance'
   niveau_seance?: string; // Format API
   niveauSeance?: string; // Format API alternative
-  exercices?: string[]; // Liste des IDs d'exercices
+  exercices?: any[]; // Liste des IDs d'exercices
   sportifs?: string[]; // Liste des IDs de sportifs
+  image?: string;
+  groupesMusculaires?: string[];
+  selected?: boolean;
 } 
