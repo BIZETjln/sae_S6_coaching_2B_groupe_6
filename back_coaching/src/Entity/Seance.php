@@ -27,7 +27,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Patch(
             controller: 'App\Controller\Api\SeanceInscriptionController::toggleInscription',
             denormalizationContext: ['groups' => ['seance:write:sportifs']],
-            security: "is_granted('ROLE_SPORTIF')", 
+            security: "is_granted('ROLE_SPORTIF')",
         ),
     ]
 )]
@@ -57,13 +57,6 @@ class Seance
     #[ORM\JoinColumn(nullable: false)]
     private ?Coach $coach = null;
 
-    /**
-     * @var Collection<int, Sportif>
-     */
-    #[Groups(['seance:read', 'coach:read', 'seance:write:sportifs'])]
-    #[ORM\ManyToMany(targetEntity: Sportif::class, inversedBy: 'seances')]
-    private Collection $sportifs;
-
     #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     #[ORM\Column(enumType: StatutSeance::class)]
     private ?StatutSeance $statut = null;
@@ -83,10 +76,13 @@ class Seance
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $photo = null;
 
+    #[ORM\OneToMany(mappedBy: "seance", targetEntity: Participation::class, cascade: ["persist", "remove"])]
+    private Collection $participations;
+
     public function __construct()
     {
-        $this->sportifs = new ArrayCollection();
         $this->exercices = new ArrayCollection();
+        $this->participations = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -147,29 +143,86 @@ class Seance
     }
 
     /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        return $this->participations;
+    }
+
+    /**
      * @return Collection<int, Sportif>
      */
     public function getSportifs(): Collection
     {
-        return $this->sportifs;
+        return new ArrayCollection(
+            $this->participations->map(fn($p) => $p->getSportif())->toArray()
+        );
+    }
+
+    public function addParticipation(Participation $participation): static
+    {
+        // Vérifier si le sportif existe déjà dans les participations
+        if ($participation->getSportif() !== null) {
+            foreach ($this->participations as $existingParticipation) {
+                if (
+                    $existingParticipation !== $participation &&
+                    $existingParticipation->getSportif() !== null &&
+                    $existingParticipation->getSportif()->getId() === $participation->getSportif()->getId()
+                ) {
+                    // Au lieu de retourner silencieusement, lancer une exception
+                    throw new \LogicException("Le sportif " . $participation->getSportif()->getNom() . " " .
+                        $participation->getSportif()->getPrenom() . " participe déjà à cette séance");
+                }
+            }
+        }
+
+        if (!$this->participations->contains($participation)) {
+            $this->participations->add($participation);
+            // Maintenir la relation bidirectionnelle
+            if ($participation->getSeance() !== $this) {
+                $participation->setSeance($this);
+            }
+        }
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): static
+    {
+        if ($this->participations->contains($participation)) {
+            $this->participations->removeElement($participation);
+            // Ne pas définir seance à null pour éviter l'erreur de contrainte
+            // Nous supprimerons plutôt l'entité Participation elle-même dans le contrôleur
+        }
+        return $this;
     }
 
     public function addSportif(Sportif $sportif): static
     {
-        if ($this->sportifs->count() >= 3) {
-            throw new \InvalidArgumentException('Uniquement 3 sportifs maximum par séance');
+        // Vérifie si le sportif participe déjà à la séance
+        foreach ($this->participations as $participation) {
+            if ($participation->getSportif() === $sportif) {
+                return $this;
+            }
         }
 
-        if (!$this->sportifs->contains($sportif)) {
-            $this->sportifs->add($sportif);
-        }
+        // Crée une nouvelle participation et l'ajoute
+        $participation = new Participation();
+        $participation->setSportif($sportif);
+        $participation->setSeance($this);
+        $this->addParticipation($participation);
 
         return $this;
     }
 
     public function removeSportif(Sportif $sportif): static
     {
-        $this->sportifs->removeElement($sportif);
+        foreach ($this->participations as $participation) {
+            if ($participation->getSportif() === $sportif) {
+                $this->removeParticipation($participation);
+                break;
+            }
+        }
 
         return $this;
     }
@@ -236,11 +289,11 @@ class Seance
         if ($this->statut === StatutSeance::VALIDEE) {
             return false;
         }
-        
+
         $now = new \DateTime();
         $limit = new \DateTime($this->date_heure->format('Y-m-d H:i:s'));
         $limit->modify('-24 hours');
-        
+
         return $now < $limit;
     }
 
@@ -260,9 +313,9 @@ class Seance
         if ($this->statut === StatutSeance::VALIDEE) {
             throw new \LogicException('Une séance validée ne peut pas être annulée');
         }
-        
+
         $this->statut = StatutSeance::ANNULEE;
-        
+
         return $this;
     }
 
