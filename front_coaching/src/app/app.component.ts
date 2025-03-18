@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     // S'abonner aux changements d'utilisateur
     this.authService.currentUser.subscribe((user) => {
+      console.log('Utilisateur connecté:', user);
       this.currentUser = user;
     });
 
@@ -77,6 +78,21 @@ export class AppComponent implements OnInit {
   // Méthode de déconnexion
   logout(): void {
     this.authService.logout();
+  }
+
+  getAvatarUrl(): string {
+    return this.currentUser?.avatar || 'assets/images/default-avatar.png';
+  }
+
+  getUserDisplayName(): string {
+    if (this.currentUser?.nom && this.currentUser?.prenom) {
+      return `${this.currentUser.prenom} ${this.currentUser.nom}`;
+    } else if (this.currentUser?.nom) {
+      return this.currentUser.nom;
+    } else if (this.currentUser?.name) {
+      return this.currentUser.name;
+    }
+    return 'Utilisateur';
   }
 
   private initMobileMenu(): void {
