@@ -25,10 +25,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Get(normalizationContext: ['groups' => ['seance:read']]),
         new GetCollection(normalizationContext: ['groups' => ['seance:read']]),
         new Patch(
+            controller: 'App\Controller\Api\SeanceInscriptionController::toggleInscription',
             denormalizationContext: ['groups' => ['seance:write:sportifs']],
-            // TODO A décommenter lorsque la sécurité sera implémentée
-            // security: "is_granted('ROLE_USER')"
-        )
+            security: "is_granted('ROLE_SPORTIF')", 
+        ),
     ]
 )]
 class Seance
