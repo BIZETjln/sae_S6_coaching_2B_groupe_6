@@ -19,7 +19,7 @@ class SeanceInscriptionController extends AbstractController
         private EntityManagerInterface $entityManager,
     ) {}
 
-    public function toggleInscription(Request $request, Seance $seance): JsonResponse
+    public function toggleInscription(Seance $seance): JsonResponse
     {
         // Vérifier que l'utilisateur est un sportif
         $user = $this->getUser();
@@ -30,16 +30,23 @@ class SeanceInscriptionController extends AbstractController
         // On ignore les données de la requête et on utilise uniquement l'utilisateur courant
         // Cela garantit que seul l'utilisateur courant peut s'inscrire/désinscrire
 
+        // Rechercher une participation existante
+        $participationRepository = $this->entityManager->getRepository(\App\Entity\Participation::class);
+        $participation = $participationRepository->findOneBy([
+            'sportif' => $user,
+            'seance' => $seance
+        ]);
+
         // Si le sportif est déjà inscrit, on le désinscrit
-        if ($seance->getSportifs()->contains($user)) {
-            $seance->removeSportif($user);
+        if ($participation) {
+            $this->entityManager->remove($participation);
             $this->entityManager->flush();
             return $this->json(['message' => 'Désinscription réussie'], Response::HTTP_OK);
         } 
         // Sinon, on l'inscrit
         else {
             // Vérifier la capacité de la séance selon son type
-            $nombreSportifs = $seance->getSportifs()->count();
+            $nombreSportifs = count($seance->getParticipations());
             $limitesSportifs = [
                 TypeSeance::SOLO->value => 1,
                 TypeSeance::DUO->value => 2,
@@ -55,10 +62,16 @@ class SeanceInscriptionController extends AbstractController
             }
 
             try {
-                $seance->addSportif($user);
+                // Créer une nouvelle participation
+                $newParticipation = new \App\Entity\Participation();
+                $newParticipation->setSportif($user);
+                $newParticipation->setSeance($seance);
+                
+                $this->entityManager->persist($newParticipation);
                 $this->entityManager->flush();
+                
                 return $this->json(['message' => 'Inscription réussie'], Response::HTTP_OK);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\Exception $e) {
                 return $this->json(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
             }
         }

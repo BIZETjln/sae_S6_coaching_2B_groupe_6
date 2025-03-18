@@ -53,15 +53,15 @@ class Sportif extends Utilisateur
     private ?Niveau $niveau_sportif = null;
 
     /**
-     * @var Collection<int, Seance>
+     * @var Collection<int, Participation>
      */
     #[Groups(['sportif:read'])]
-    #[ORM\ManyToMany(targetEntity: Seance::class, mappedBy: 'sportifs')]
-    private Collection $seances;
+    #[ORM\OneToMany(mappedBy: 'sportif', targetEntity: Participation::class)]
+    private Collection $participations;
 
     public function __construct()
     {
-        $this->seances = new ArrayCollection();
+        $this->participations = new ArrayCollection();
     }
 
     public function getDateInscription(): ?\DateTimeInterface
@@ -97,25 +97,68 @@ class Sportif extends Utilisateur
      */
     public function getSeances(): Collection
     {
-        return $this->seances;
+        return new ArrayCollection(
+            $this->participations->map(fn(Participation $participation) => $participation->getSeance())->toArray()
+        );
     }
 
     public function addSeance(Seance $seance): static
     {
-        if (!$this->seances->contains($seance)) {
-            $this->seances->add($seance);
-            $seance->addSportif($this);
+        foreach ($this->participations as $participation) {
+            if ($participation->getSeance() === $seance) {
+                return $this; // La séance est déjà ajoutée
+            }
         }
+
+        // Crée une nouvelle participation
+        $participation = new Participation();
+        $participation->setSportif($this);
+        $participation->setSeance($seance);
+
+        // Ajoute la participation à la collection
+        $this->participations->add($participation);
 
         return $this;
     }
 
     public function removeSeance(Seance $seance): static
     {
-        if ($this->seances->removeElement($seance)) {
-            $seance->removeSportif($this);
+        foreach ($this->participations as $participation) {
+            if ($participation->getSeance() === $seance) {
+                $this->participations->removeElement($participation);
+                return $this;
+            }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): static
+    {
+        if (!$this->participations->contains($participation)) {
+            $this->participations->add($participation);
+            // Maintenir la relation bidirectionnelle
+            if ($participation->getSportif() !== $this) {
+                $participation->setSportif($this);
+            }
+        }
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): static
+    {
+        if ($this->participations->removeElement($participation)) {
+            // Ne pas définir sportif à null pour éviter l'erreur de contrainte
+            // Nous supprimerons plutôt l'entité Participation elle-même dans le contrôleur
+        }
         return $this;
     }
 
