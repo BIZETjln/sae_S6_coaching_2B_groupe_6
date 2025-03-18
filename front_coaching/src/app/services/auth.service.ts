@@ -179,14 +179,18 @@ export class AuthService {
             );
           }
 
-          // Utilisez l'email pour récupérer les informations du sportif
+          // Créer les headers avec le token
           const headers = new HttpHeaders().set(
             'Authorization',
             `Bearer ${token}`
           );
 
+          // D'abord, on cherche l'utilisateur par son email pour obtenir son ID
           return this.http
-            .get<ApiResponse>(`${this.apiUrl}/sportifs`, { headers })
+            .get<ApiResponse>(`${this.apiUrl}/sportifs`, {
+              headers,
+              params: { email: decodedToken.username }, // Filtrer par email pour limiter les résultats
+            })
             .pipe(
               switchMap((response) => {
                 // Recherchez le sportif correspondant à l'email
@@ -199,31 +203,46 @@ export class AuthService {
                   return throwError(() => new Error('Utilisateur non trouvé'));
                 }
 
-                // Déterminer le rôle de l'utilisateur
-                let role = UserRole.CLIENT; // Par défaut pour un sportif
+                // Récupérer l'ID du sportif depuis son @id
+                const sportifId =
+                  sportif.id ||
+                  (sportif['@id'] ? sportif['@id'].split('/').pop() : '');
 
-                // Construire l'objet utilisateur
-                const user: User = {
-                  '@context': sportif['@context'],
-                  '@id': sportif['@id'],
-                  '@type': sportif['@type'],
-                  id: sportif.id || sportif['@id'],
-                  nom: sportif.nom,
-                  prenom: sportif.prenom,
-                  email: sportif.email,
-                  date_inscription: sportif.date_inscription,
-                  niveau_sportif: sportif.niveau_sportif,
-                  role: role,
-                  token: token,
-                  photo: sportif.photo,
-                  seances: sportif.seances,
-                };
+                // Maintenant, on récupère les détails complets avec l'ID
+                return this.http
+                  .get<any>(`${this.apiUrl}/sportifs/${sportifId}`, { headers })
+                  .pipe(
+                    map((sportifDetails) => {
+                      // Déterminer le rôle de l'utilisateur
+                      let role = UserRole.CLIENT; // Par défaut pour un sportif
 
-                console.log('Utilisateur connecté avec photo:', user.photo);
+                      // Construire l'objet utilisateur
+                      const user: User = {
+                        '@context': sportifDetails['@context'],
+                        '@id': sportifDetails['@id'],
+                        '@type': sportifDetails['@type'],
+                        id: sportifDetails.id || sportifId,
+                        nom: sportifDetails.nom,
+                        prenom: sportifDetails.prenom,
+                        email: sportifDetails.email,
+                        date_inscription: sportifDetails.date_inscription,
+                        niveau_sportif: sportifDetails.niveau_sportif,
+                        role: role,
+                        token: token,
+                        photo: sportifDetails.photo,
+                        seances: sportifDetails.seances,
+                      };
 
-                // Stockez l'utilisateur dans le localStorage
-                this.updateCurrentUser(user);
-                return of(user);
+                      console.log(
+                        'Utilisateur connecté avec photo:',
+                        user.photo
+                      );
+
+                      // Stockez l'utilisateur dans le localStorage
+                      this.updateCurrentUser(user);
+                      return user;
+                    })
+                  );
               }),
               catchError((err) => {
                 console.error(
