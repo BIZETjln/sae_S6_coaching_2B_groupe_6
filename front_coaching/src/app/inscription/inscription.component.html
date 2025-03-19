@@ -107,44 +107,57 @@
 
       <!-- Niveau -->
       <div class="form-group">
-        <label for="niveau">Niveau sportif</label>
+        <label for="niveau_sportif">Niveau sportif</label>
         <div class="input-container">
           <i class="bi bi-trophy"></i>
           <select
-            id="niveau"
-            formControlName="niveau"
-            [ngClass]="{ 'is-invalid': submitted && f['niveau'].errors }"
+            id="niveau_sportif"
+            formControlName="niveau_sportif"
+            [ngClass]="{
+              'is-invalid': submitted && f['niveau_sportif'].errors
+            }"
           >
             <option *ngFor="let niveau of niveaux" [value]="niveau">
-              {{ niveau }}
+              {{
+                niveau === "debutant"
+                  ? "Débutant"
+                  : niveau === "intermediaire"
+                  ? "Intermédiaire"
+                  : niveau === "avance"
+                  ? "Avancé"
+                  : niveau
+              }}
             </option>
           </select>
         </div>
-        <div *ngIf="submitted && f['niveau'].errors" class="error-message">
-          <span *ngIf="f['niveau'].errors['required']"
+        <div
+          *ngIf="submitted && f['niveau_sportif'].errors"
+          class="error-message"
+        >
+          <span *ngIf="f['niveau_sportif'].errors['required']"
             >Le niveau est requis</span
           >
         </div>
       </div>
 
-      <!-- Rôle (invisible) -->
+      <!-- Photo (caché car doit être null) -->
       <div class="form-group hidden">
-        <label for="role">Rôle</label>
+        <label for="photo">Photo</label>
         <div class="input-container">
-          <i class="bi bi-person-badge"></i>
-          <input type="text" id="role" formControlName="role" />
+          <i class="bi bi-image"></i>
+          <input type="text" id="photo" formControlName="photo" />
         </div>
       </div>
 
       <!-- Date d'inscription -->
       <div class="form-group">
-        <label for="dateInscription">Date d'inscription</label>
+        <label for="date_inscription">Date d'inscription</label>
         <div class="input-container">
           <i class="bi bi-calendar"></i>
           <input
-            type="date"
-            id="dateInscription"
-            formControlName="dateInscription"
+            type="text"
+            id="date_inscription"
+            formControlName="date_inscription"
             readonly
           />
         </div>
@@ -163,6 +176,11 @@
       <!-- Message d'erreur -->
       <div *ngIf="error" class="alert-error">
         {{ error }}
+      </div>
+
+      <!-- Message de succès -->
+      <div *ngIf="showSuccess" class="alert-success">
+        <i class="bi bi-check-circle-fill"></i> {{ successMessage }}
       </div>
     </form>
 
