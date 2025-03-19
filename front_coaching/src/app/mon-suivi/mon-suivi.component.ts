@@ -121,158 +121,145 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
     // Récupérer les données du localStorage via AuthService
     const userData = this.authService.currentUserValue;
+    console.log('UserData récupéré:', userData);
 
     if (userData) {
       // Construire l'objet sportif à partir des données du localStorage
       this.sportif = {
         id: userData.id,
-        nom: userData.nom || 'Nom par défaut',
-        prenom: userData.prenom || 'Prénom par défaut',
+        nom: userData.nom || '',
+        prenom: userData.prenom || '',
         email: userData.email,
-        niveau_sportif: userData.niveau_sportif || 'débutant',
-        participations: [], // Sera rempli avec les séances de l'utilisateur
+        niveau_sportif: userData.niveau_sportif || '',
+        participations: [],
       };
 
-      // Si l'utilisateur a des séances, les convertir en participations
-      if (userData.seances && userData.seances.length > 0) {
-        // Convertir les séances en participations
-        this.sportif.participations = this.convertirSeancesEnParticipations(
-          userData.seances
+      // Vérifier si l'utilisateur a des participations
+      // Utilisation de as any pour éviter les erreurs de type
+      const userDataAny = userData as any;
+      console.log(
+        'Vérification des participations:',
+        userDataAny.participations
+      );
+
+      if (
+        userDataAny.participations &&
+        Array.isArray(userDataAny.participations) &&
+        userDataAny.participations.length > 0
+      ) {
+        console.log(
+          'Nombre de participations trouvées:',
+          userDataAny.participations.length
+        );
+        this.sportif.participations = this.preparerParticipations(
+          userDataAny.participations
+        );
+        console.log(
+          'Participations après préparation:',
+          this.sportif.participations
         );
       } else {
-        // Si pas de séances, utiliser des données fictives pour la démonstration
-        this.sportif = this.creerSportifFictif();
+        console.log('Aucune participation trouvée ou format invalide');
       }
 
       this.calculerStatistiques();
       this.isLoading = false;
       setTimeout(() => this.initialiserGraphiques(), 300);
     } else {
-      // Si pas d'utilisateur connecté, utiliser des données fictives
-      this.sportif = this.creerSportifFictif();
-      this.calculerStatistiques();
+      // Si pas d'utilisateur connecté, afficher un message
+      this.sportif = null;
       this.isLoading = false;
-      setTimeout(() => this.initialiserGraphiques(), 300);
     }
   }
 
-  // Convertir les séances du format stocké dans userData en participations pour l'affichage
-  convertirSeancesEnParticipations(seances: any[]): Participation[] {
-    return seances.map((seance, index) => {
+  // Méthode pour préparer les participations de l'utilisateur
+  preparerParticipations(participations: any[]): Participation[] {
+    console.log(
+      'Préparation des participations brutes:',
+      JSON.stringify(participations.slice(0, 2))
+    );
+
+    return participations.map((participation, index) => {
+      const seance = participation.seance;
       const maintenant = new Date();
-      const dateSeance = new Date(seance.date_heure || seance.dateHeure);
+      const dateSeance = new Date(seance.date_heure);
       const estPassee = dateSeance < maintenant;
 
-      // Convertir le format des exercices si nécessaire
-      let exercices = seance.exercices || [];
-      // Si les exercices ne sont pas dans le format d'URL attendu, les convertir
-      if (exercices.length > 0 && typeof exercices[0] !== 'string') {
-        exercices = exercices.map(
-          (ex: any) =>
-            `https://example.com/exercices/${
-              ex.nom ? ex.nom.toLowerCase() : 'exercice'
-            }`
-        );
-      }
+      // Vérifier si la presence est explicitement définie
+      const presence = participation.presence === true;
+      console.log(
+        `Participation ${index} - presence originale:`,
+        participation.presence,
+        ', après conversion:',
+        presence
+      );
 
       return {
-        id: index,
+        id: participation.id,
         seance: {
           id: seance.id,
-          date_heure: seance.date_heure || seance.dateHeure,
-          type_seance: seance.type_seance || seance.typeSeance || 'solo',
-          theme_seance: seance.theme_seance || seance.themeSeance || 'fitness',
-          statut: estPassee ? 'terminee' : 'prevue',
-          niveau_seance:
-            seance.niveau_seance || seance.niveauSeance || 'debutant',
-          exercices: exercices,
-          coach: seance.coach || {
-            id: 'coach-default',
-            nom: 'Nom Coach',
-            prenom: 'Prénom Coach',
-          },
+          date_heure: seance.date_heure,
+          type_seance: seance.type_seance || 'non spécifié',
+          theme_seance: seance.theme_seance || 'non spécifié',
+          statut: seance.statut || (estPassee ? 'terminee' : 'prevue'),
+          niveau_seance: seance.niveau_seance || 'non spécifié',
+          exercices: seance.exercices || [],
+          coach: seance.coach
+            ? {
+                id: seance.coach.id || '',
+                nom: seance.coach.nom || '',
+                prenom: seance.coach.prenom || '',
+                email: seance.coach.email || '',
+              }
+            : undefined,
         },
-        presence: estPassee, // On considère que l'utilisateur a participé aux séances passées
+        presence: presence,
       };
     });
   }
 
-  creerSportifFictif(): Sportif {
-    // Types d'exercices possibles
-    const themes = ['Fitness', 'Musculation', 'Cardio', 'Yoga', 'CrossFit'];
-    const coachs = [
-      { id: 'coach-1', nom: 'Martin', prenom: 'Sophie' },
-      { id: 'coach-2', nom: 'Durand', prenom: 'Thomas' },
-      { id: 'coach-3', nom: 'Coach', prenom: 'Marie' },
-    ];
-    const exercices = [
-      'Burpees',
-      'Squats',
-      'Pompes',
-      'Abdominaux',
-      'Course',
-      'Tractions',
-      'Gainage',
-      'Fentes',
-      'Jumping Jacks',
-      'Mountain Climbers',
-    ];
+  extraireNomExercice(exerciceUrl: string): string {
+    try {
+      // Pour les URLs de type "/api/exercices/0195ad6b-1c48-7563-bf02-c1d7661256ae"
+      const parties = exerciceUrl.split('/');
+      const idExercice = parties[parties.length - 1];
 
-    const participations: Participation[] = [];
+      // Cas réel: On devrait avoir un service pour récupérer le nom de l'exercice à partir de son ID
+      // Comme ce service n'est pas implémenté, on utilise une méthode temporaire
 
-    // Créer des participations fictives
-    for (let i = 0; i < 10; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i * 7); // Répartir sur les dernières semaines
+      // Extraction de la partie finale de l'ID pour créer un nom d'exercice "anonymisé"
+      const shortId = idExercice.substring(idExercice.length - 8);
 
-      const theme = themes[Math.floor(Math.random() * themes.length)];
-      const coach = coachs[Math.floor(Math.random() * coachs.length)];
-
-      // Ajouter des exercices aléatoires
-      const seanceExercices = [];
-      const numExercices = Math.floor(Math.random() * 4) + 1; // 1 à 4 exercices
-      for (let j = 0; j < numExercices; j++) {
-        const exercice =
-          exercices[Math.floor(Math.random() * exercices.length)];
-        seanceExercices.push(
-          `https://example.com/exercices/${exercice.toLowerCase()}`
-        );
-      }
-
-      // Créer la séance
-      const seance: SeanceParticipation = {
-        id: `seance-${i}`,
-        date_heure: date.toISOString(),
-        type_seance: i % 3 === 0 ? 'solo' : i % 3 === 1 ? 'duo' : 'groupe',
-        theme_seance: theme.toLowerCase(),
-        niveau_seance: i % 2 === 0 ? 'debutant' : 'intermediaire',
-        statut: i < 5 ? 'terminee' : 'prevue',
-        exercices: seanceExercices,
-        coach: {
-          id: coach.id,
-          nom: coach.nom,
-          prenom: coach.prenom,
-        },
+      // Mapping des derniers caractères vers des exercices connus
+      const exerciceMap: { [key: string]: string } = {
+        '4058': 'Squats',
+        '255c6': 'Burpees',
+        '816af': 'Gainage',
+        '256ae': 'Course',
+        '5657': 'Tractions',
+        '952c2': 'Pompes',
+        '315c': 'Abdominaux',
+        '19cd': 'Jumping Jacks',
+        '9e65': 'Fentes',
+        '4494': 'Mountain Climbers',
       };
 
-      participations.push({
-        id: i,
-        seance: seance,
-        presence: i < 5, // Les 5 premières sont des séances passées avec présence
-      });
-    }
+      // Chercher une correspondance ou générer un nom par défaut
+      for (const [key, value] of Object.entries(exerciceMap)) {
+        if (idExercice.endsWith(key)) {
+          return value;
+        }
+      }
 
-    return {
-      id: 'sportif-demo',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      email: 'jean.dupont@example.com',
-      niveau_sportif: 'intermediaire',
-      participations: participations,
-    };
+      return `Exercice ${shortId}`;
+    } catch (error) {
+      return 'Exercice non identifié';
+    }
   }
 
   calculerStatistiques(): void {
+    console.log('Début du calcul des statistiques');
+
     // Réinitialiser les statistiques
     this.stats = {
       seancesSuivies: 0,
@@ -289,24 +276,43 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       !this.sportif.participations ||
       this.sportif.participations.length === 0
     ) {
-      this.sportif = this.creerSportifFictif();
+      console.log('Pas de sportif ou pas de participations à traiter');
+      return; // Pas de données à traiter
     }
 
+    console.log(
+      'Nombre de participations à traiter:',
+      this.sportif.participations.length
+    );
+
     // Calculer les statistiques à partir des participations
-    this.sportif.participations?.forEach((participation) => {
+    this.sportif.participations.forEach((participation, index) => {
       const seance = participation.seance;
 
-      // Compter les séances suivies (participation avec présence) et inscrites (à venir)
+      // Compter les séances suivies (participation avec présence)
       if (participation.presence) {
         this.stats.seancesSuivies++;
+        console.log(
+          `Participation ${index} a presence=true, séances suivies: ${this.stats.seancesSuivies}`
+        );
+      } else {
+        console.log(`Participation ${index} a presence=false`);
       }
 
+      // Compter les séances inscrites (statut prévu ou à venir)
       if (
         seance.statut === 'prevue' ||
         seance.statut === 'validee' ||
         seance.statut === 'à venir'
       ) {
         this.stats.seancesInscrites++;
+        console.log(
+          `Séance ${index} a statut=${seance.statut}, séances inscrites: ${this.stats.seancesInscrites}`
+        );
+      } else {
+        console.log(
+          `Séance ${index} a statut=${seance.statut}, non comptée comme inscrite`
+        );
       }
 
       // Thèmes des séances
@@ -367,25 +373,6 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       [...this.stats.activitesParMois.entries()].sort()
     );
     this.stats.activitesParMois = activitesParMoisTriees;
-
-    // S'assurer d'avoir des données minimales pour l'affichage
-    this.garantirDonneesMinimales();
-  }
-
-  extraireNomExercice(exerciceUrl: string): string {
-    try {
-      // Exemple: "https://example.com/exercices/burpees" -> "Burpees"
-      const parties = exerciceUrl.split('/');
-      const nom = parties[parties.length - 1];
-      return this.capitaliserPremiereLetter(nom);
-    } catch (error) {
-      return 'Exercice non identifié';
-    }
-  }
-
-  // Méthode pour extraire le nom de l'exercice pour l'affichage dans le template
-  extractExerciseName(exerciceUrl: string): string {
-    return this.extraireNomExercice(exerciceUrl);
   }
 
   capitaliserPremiereLetter(texte: string): string {
@@ -393,55 +380,38 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     return texte.charAt(0).toUpperCase() + texte.slice(1);
   }
 
-  garantirDonneesMinimales(): void {
-    // Si aucun exercice, en ajouter des fictifs
-    if (this.stats.typesExercices.size === 0) {
-      this.stats.typesExercices.set('Burpees', 3);
-      this.stats.typesExercices.set('Squats', 5);
-      this.stats.typesExercices.set('Pompes', 4);
-      this.stats.typesExercices.set('Abdominaux', 2);
-    }
-
-    // Si aucun thème de séance, en ajouter des fictifs
-    if (this.stats.themesSeances.size === 0) {
-      this.stats.themesSeances.set('Fitness', 3);
-      this.stats.themesSeances.set('Musculation', 2);
-      this.stats.themesSeances.set('Cardio', 1);
-    }
-
-    // Si aucun coach, en ajouter un fictif
-    if (this.stats.statistiquesCoachs.size === 0) {
-      this.stats.statistiquesCoachs.set('Sophie Martin', 3);
-      this.stats.statistiquesCoachs.set('Thomas Durand', 2);
-      this.stats.statistiquesCoachs.set('Marie Coach', 1);
-    }
-
-    // Si aucune activité par mois, ajouter des mois fictifs
-    if (this.stats.activitesParMois.size === 0) {
-      const currentDate = new Date();
-      for (let i = 2; i >= 0; i--) {
-        const date = new Date(currentDate);
-        date.setMonth(date.getMonth() - i);
-        const moisStr = `${date.getFullYear()}-${(date.getMonth() + 1)
-          .toString()
-          .padStart(2, '0')}`;
-        this.stats.activitesParMois.set(
-          moisStr,
-          Math.floor(Math.random() * 5) + 1
-        );
-      }
-    }
+  // Méthode pour extraire le nom de l'exercice pour l'affichage dans le template
+  extractExerciseName(exerciceUrl: string): string {
+    return this.extraireNomExercice(exerciceUrl);
   }
 
   initialiserGraphiques(): void {
+    if (
+      !this.sportif ||
+      !this.sportif.participations ||
+      this.sportif.participations.length === 0
+    ) {
+      return; // Ne pas initialiser les graphiques s'il n'y a pas de données
+    }
+
     if (
       this.typesExercicesChart &&
       this.activitesParMoisChart &&
       this.coachsChart
     ) {
-      this.creerGraphiqueTypesExercices();
-      this.creerGraphiqueActivitesParMois();
-      this.creerGraphiqueCoachs();
+      // Vérifier si nous avons des données pour chaque graphique
+      if (this.stats.typesExercices.size > 0) {
+        this.creerGraphiqueTypesExercices();
+      }
+
+      if (this.stats.statistiquesCoachs.size > 0) {
+        this.creerGraphiqueCoachs();
+      }
+
+      if (this.stats.activitesParMois.size > 0) {
+        this.creerGraphiqueActivitesParMois();
+      }
+
       this.chartsInitialized = true;
     }
   }
@@ -676,5 +646,20 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
         },
       },
     });
+  }
+
+  // Méthode pour récupérer les participations filtrées par présence
+  getFilteredParticipations(presence: boolean = true): Participation[] {
+    if (
+      !this.sportif ||
+      !this.sportif.participations ||
+      this.sportif.participations.length === 0
+    ) {
+      return [];
+    }
+
+    return this.sportif.participations.filter(
+      (participation) => participation.presence === presence
+    );
   }
 }

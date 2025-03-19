@@ -233,6 +233,16 @@ export class AuthService {
                         seances: sportifDetails.seances,
                       };
 
+                      // Ajouter les participations à l'objet utilisateur
+                      if (sportifDetails.participations) {
+                        (user as any).participations =
+                          sportifDetails.participations;
+                        console.log(
+                          'Participations récupérées:',
+                          sportifDetails.participations.length
+                        );
+                      }
+
                       console.log(
                         'Utilisateur connecté avec photo:',
                         user.photo
@@ -258,6 +268,16 @@ export class AuthService {
                         token: token,
                         photo: sportif.photo || null,
                       };
+
+                      // Ajouter les participations si elles sont présentes dans le sportif d'origine
+                      if (sportif.participations) {
+                        (basicUser as any).participations =
+                          sportif.participations;
+                        console.log(
+                          'Participations récupérées (fallback):',
+                          sportif.participations.length
+                        );
+                      }
 
                       // Stockez l'utilisateur dans le localStorage
                       this.updateCurrentUser(basicUser);
