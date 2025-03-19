@@ -6,13 +6,21 @@
       <span>SportCoach</span>
     </div>
     <button class="toggle-sidebar" (click)="toggleSidebar()">
-      <i class="bi" [ngClass]="sidebarMini ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+      <i
+        class="bi"
+        [ngClass]="sidebarMini ? 'bi-chevron-right' : 'bi-chevron-left'"
+      ></i>
     </button>
   </div>
 
   <nav class="sidebar-nav">
     <!-- Liens communs à tous les utilisateurs -->
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-item"
+    >
       <i class="bi bi-house-door"></i>
       <span>Accueil</span>
     </a>
@@ -68,7 +76,11 @@
 
     <!-- Liens pour les agents -->
     <ng-container *ngIf="isAgent()">
-      <a routerLink="/gestion-clients" routerLinkActive="active" class="nav-item">
+      <a
+        routerLink="/gestion-clients"
+        routerLinkActive="active"
+        class="nav-item"
+      >
         <i class="bi bi-person-lines-fill"></i>
         <span>Gestion Clients</span>
       </a>
@@ -86,7 +98,11 @@
         <span>Dashboard</span>
       </a>
 
-      <a routerLink="/gestion-personnel" routerLinkActive="active" class="nav-item">
+      <a
+        routerLink="/gestion-personnel"
+        routerLinkActive="active"
+        class="nav-item"
+      >
         <i class="bi bi-people-fill"></i>
         <span>Personnel</span>
       </a>
@@ -113,12 +129,12 @@
 
   <!-- Profil utilisateur (visible uniquement si connecté) -->
   <div class="user-profile" *ngIf="currentUser">
-    <div class="user-profile-header">   
-    <img [src]="currentUser.avatar || 'assets/images/default-avatar.png'" alt="Photo de profil" class="avatar" >
-    <div class="user-info">
-      <div class="user-name text-truncate">{{ currentUser.nom }} {{ currentUser.prenom }}</div>
-      <div class="user-email text-truncate">{{ currentUser.email }}</div>
-    </div>
+    <div class="user-profile-header">
+      <img [src]="getAvatarUrl()" alt="Photo de profil" class="avatar" />
+      <div class="user-info">
+        <div class="user-name text-truncate">{{ getUserDisplayName() }}</div>
+        <div class="user-email text-truncate">{{ currentUser.email }}</div>
+      </div>
     </div>
     <a (click)="logout()" class="logout-btn">
       <i class="bi bi-box-arrow-left"></i>
@@ -145,7 +161,9 @@
           </p>
           <div class="footer-social">
             <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" aria-label="Instagram"
+              ><i class="bi bi-instagram"></i
+            ></a>
             <a href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
             <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
           </div>
@@ -163,10 +181,16 @@
         <div class="footer-section">
           <h3 class="footer-title">Compte</h3>
           <ul class="footer-links">
-            <li *ngIf="!currentUser"><a routerLink="/connexion">Connexion</a></li>
-            <li *ngIf="!currentUser"><a routerLink="/inscription">Inscription</a></li>
+            <li *ngIf="!currentUser">
+              <a routerLink="/connexion">Connexion</a>
+            </li>
+            <li *ngIf="!currentUser">
+              <a routerLink="/inscription">Inscription</a>
+            </li>
             <li *ngIf="currentUser"><a routerLink="/profil">Mon Profil</a></li>
-            <li *ngIf="currentUser"><a (click)="logout()" style="cursor: pointer;">Déconnexion</a></li>
+            <li *ngIf="currentUser">
+              <a (click)="logout()" style="cursor: pointer">Déconnexion</a>
+            </li>
           </ul>
         </div>
 

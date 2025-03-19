@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { map, delay, tap } from 'rxjs/operators';
+import { map, delay, tap, switchMap, catchError } from 'rxjs/operators';
 import { Seance } from '../models/seance.model';
+import { jwtDecode } from 'jwt-decode';
 
 export enum UserRole {
   RESPONSABLE = 'RESPONSABLE',
   COACH = 'COACH',
   AGENT = 'AGENT',
-  CLIENT = 'CLIENT'
+  CLIENT = 'CLIENT',
 }
 
 export interface User {
@@ -24,149 +25,41 @@ export interface User {
   role: UserRole;
   token?: string;
   avatar?: string;
+  photo?: string; // Nom du fichier image
   date_inscription?: string;
   niveau_sportif?: string;
   seances?: Seance[];
 }
 
+interface ApiResponse {
+  '@context': string;
+  '@id': string;
+  '@type': string;
+  totalItems: number;
+  member: any[];
+}
+
+interface DecodedToken {
+  username: string;
+  roles: string[];
+  exp: number;
+  iat: number;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
-
-  // Utilisateurs fictifs pour les tests
-  private mockUsers: User[] = [
-    {
-      '@context': '/api/contexts/Sportif',
-      '@id': '/api/sportifs/01959416-b8e3-70d3-9a18-6c69a270c0bc',
-      '@type': 'Sportif',
-      id: '01959416-b8e3-70d3-9a18-6c69a270c0bc',
-      nom: 'Marin',
-      prenom: 'Franck',
-      email: 'sportif1@example.com',
-      role: UserRole.CLIENT,
-      avatar: '/assets/images/coach1.jpg',
-      date_inscription: '2025-03-11T02:27:40+00:00',
-      niveau_sportif: 'debutant',
-      seances: [
-        {
-          '@id': '/api/seances/01959416-f1b2-7d9b-b6d3-5e54c30b7593',
-          '@type': 'Seance',
-          id: '01959416-f1b2-7d9b-b6d3-5e54c30b7593',
-          date_heure: '2025-04-05T22:54:31+00:00',
-          type_seance: 'trio',
-          theme_seance: 'crossfit',
-          coach: {
-            '@id': '/api/coaches/01959416-b07c-77c2-9c21-b9ca8760f05a',
-            '@type': 'Coach',
-            id: '01959416-b07c-77c2-9c21-b9ca8760f05a',
-            email: 'coach3@example.com',
-            nom: 'Mace',
-            prenom: 'Alex'
-          },
-          statut: 'validee',
-          niveau_seance: 'intermediaire',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b5895ab30e8',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5896080cb9',
-            '/api/exercices/01959416-a55a-71de-acd5-2b589806263e',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
-          ]
-        },
-        {
-          '@id': '/api/seances/01959416-f1b3-7163-8770-efc50d40f6d9',
-          '@type': 'Seance',
-          id: '01959416-f1b3-7163-8770-efc50d40f6d9',
-          date_heure: '2025-04-19T11:09:01+00:00',
-          type_seance: 'trio',
-          theme_seance: 'musculation',
-          coach: {
-            '@id': '/api/coaches/01959416-b07c-77c2-9c21-b9ca8760f05a',
-            '@type': 'Coach',
-            id: '01959416-b07c-77c2-9c21-b9ca8760f05a',
-            email: 'coach3@example.com',
-            nom: 'Mace',
-            prenom: 'Alex'
-          },
-          statut: 'validee',
-          niveau_seance: 'avance',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b58910a2d60',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5894b064e6',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
-          ]
-        },
-        {
-          '@id': '/api/seances/01959416-f1b4-7eda-8c17-29821734c3ea',
-          '@type': 'Seance',
-          id: '01959416-f1b4-7eda-8c17-29821734c3ea',
-          date_heure: '2025-04-06T07:08:05+00:00',
-          type_seance: 'trio',
-          theme_seance: 'crossfit',
-          coach: {
-            '@id': '/api/coaches/01959416-b35f-732d-bb24-ca77d2a3f7c8',
-            '@type': 'Coach',
-            id: '01959416-b35f-732d-bb24-ca77d2a3f7c8',
-            email: 'coach4@example.com',
-            nom: 'Monnier',
-            prenom: 'Charles'
-          },
-          statut: 'annulee',
-          niveau_seance: 'avance',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b58941e9cc9',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5894b064e6',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5895ab30e8',
-            '/api/exercices/01959416-a55a-71de-acd5-2b5897222699',
-            '/api/exercices/01959416-a55b-7338-8dad-030d2c331988'
-          ]
-        },
-        {
-          '@id': '/api/seances/01959416-f1b4-7eda-8c17-29821a844a11',
-          '@type': 'Seance',
-          id: '01959416-f1b4-7eda-8c17-29821a844a11',
-          date_heure: '2025-04-19T15:47:03+00:00',
-          type_seance: 'duo',
-          theme_seance: 'musculation',
-          coach: {
-            '@id': '/api/coaches/01959416-adbd-78b3-9de0-ae14588f85d5',
-            '@type': 'Coach',
-            id: '01959416-adbd-78b3-9de0-ae14588f85d5',
-            email: 'coach2@example.com',
-            nom: 'Pineau',
-            prenom: 'Robert'
-          },
-          statut: 'annulee',
-          niveau_seance: 'intermediaire',
-          exercices: [
-            '/api/exercices/01959416-a55a-71de-acd5-2b5892eb0b96',
-            '/api/exercices/01959416-a55a-71de-acd5-2b589513c963'
-          ]
-        }
-      ]
-    },
-    {
-      id: '/api/sportifs/01959416-d52e-704b-9cbc-18dac5c26aa7',
-      name: 'Marie Coach',
-      email: 'coach@example.com',
-      role: UserRole.COACH,
-      avatar: 'assets/images/default-avatar.png'
-    },
-    {
-      id: '/api/sportifs/01959416-d52e-704b-9cbc-18dac5c26aa7',
-      name: 'Sophie Responsable',
-      email: 'responsable@example.com',
-      role: UserRole.RESPONSABLE,
-      avatar: 'assets/images/default-avatar.png'
-    }
-  ];
+  private apiUrl = 'https://127.0.0.1:8000/api';
+  private apiBaseUrl = 'https://127.0.0.1:8000';
 
   constructor(private http: HttpClient, private router: Router) {
-    // Récupérer l'utilisateur du localStorage au démarrage
     const storedUser = localStorage.getItem('currentUser');
-    this.currentUserSubject = new BehaviorSubject<User | null>(storedUser ? JSON.parse(storedUser) : null);
+    this.currentUserSubject = new BehaviorSubject<User | null>(
+      storedUser ? JSON.parse(storedUser) : null
+    );
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
@@ -183,7 +76,47 @@ export class AuthService {
   }
 
   public hasAnyRole(roles: UserRole[]): boolean {
-    return this.currentUserValue ? roles.includes(this.currentUserValue.role) : false;
+    return this.currentUserValue
+      ? roles.includes(this.currentUserValue.role)
+      : false;
+  }
+
+  private decodeToken(token: string): DecodedToken | null {
+    try {
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error('Erreur lors du décodage du token JWT', error);
+      return null;
+    }
+  }
+
+  /**
+   * Génère l'URL complète pour l'avatar de l'utilisateur
+   * @returns L'URL de l'avatar ou l'URL de l'image par défaut
+   */
+  public getUserAvatarUrl(): string {
+    const user = this.currentUserValue;
+    if (!user) {
+      return 'assets/images/default-avatar.png';
+    }
+
+    // Si l'utilisateur a un champ photo, on utilise le chemin vers /images/sportifs/
+    if (user.photo) {
+      return `${this.apiBaseUrl}/images/sportifs/${user.photo}`;
+    }
+
+    // Si l'utilisateur a un avatar déjà défini (URL complète ou relative)
+    if (user.avatar) {
+      // Vérifier si c'est une URL relative commençant par "assets/"
+      if (user.avatar.startsWith('assets/')) {
+        return user.avatar;
+      }
+      // Sinon, c'est peut-être une URL complète ou une autre forme
+      return user.avatar;
+    }
+
+    // Par défaut, retourner l'avatar par défaut
+    return 'assets/images/default-avatar.png';
   }
 
   /**
@@ -192,100 +125,217 @@ export class AuthService {
    */
   public getUserSeances(): Observable<Seance[]> {
     const user = this.currentUserValue;
-    
+
     if (!user) {
       return of([]);
     }
-    
-    // Si l'utilisateur a des séances, on les retourne
-    if (user.seances && user.seances.length > 0) {
-      return of(user.seances);
+
+    // Si l'utilisateur a des participations, extraire les séances de ces participations
+    if (
+      (user as any).participations &&
+      (user as any).participations.length > 0
+    ) {
+      const seances = (user as any).participations.map(
+        (participation: any) => participation.seance
+      );
+      return of(seances);
     }
-    
-    // Si l'utilisateur est un client mais n'a pas de séances chargées
-    // Dans un environnement réel, on pourrait faire un appel API ici
+
     if (user.role === UserRole.CLIENT) {
-      // Simuler un délai réseau
-      return of([]).pipe(
-        delay(500),
-        map(() => {
-          // Rechercher l'utilisateur dans les mockUsers pour obtenir ses séances
-          const mockUser = this.mockUsers.find(u => u.id === user.id);
-          return mockUser?.seances || [];
+      // Extrait l'ID du sportif de l'URL '@id'
+      const sportifId = user.id.includes('/')
+        ? user.id.split('/').pop()
+        : user.id;
+
+      return this.http.get<any>(`${this.apiUrl}/sportifs/${sportifId}`).pipe(
+        map((sportifDetails) => {
+          // Extraire les séances des participations
+          const seances = sportifDetails.participations
+            ? sportifDetails.participations.map(
+                (participation: any) => participation.seance
+              )
+            : [];
+
+          // Mettre à jour l'utilisateur avec les participations
+          (user as any).participations = sportifDetails.participations;
+
+          // Stocker aussi les séances pour compatibilité avec le code existant
+          user.seances = seances;
+
+          this.updateCurrentUser(user);
+          return seances;
+        }),
+        catchError((error) => {
+          console.error(
+            "Erreur lors de la récupération des séances de l'utilisateur",
+            error
+          );
+          return of([]);
         })
       );
     }
-    
-    // Pour les autres rôles, retourner un tableau vide
+
     return of([]);
   }
 
-  // Méthode de connexion simulée pour les tests
+  // Méthode pour mettre à jour l'utilisateur courant dans le localStorage et dans le BehaviorSubject
+  private updateCurrentUser(user: User): void {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
   login(email: string, password: string): Observable<User> {
-    // Pour les tests, on accepte n'importe quel mot de passe
-    const user = this.mockUsers.find(u => u.email === email);
-    
-    if (!user) {
-      return throwError(() => new Error('Email ou mot de passe incorrect'));
-    }
-
-    // Simuler un délai réseau
-    return of({
-      ...user,
-      token: 'fake-jwt-token.' + Math.random().toString(36).substring(2, 15)
-    }).pipe(
-      delay(800),
-      tap(userData => {
-        // Stocker les détails de l'utilisateur et le token JWT dans le localStorage
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        this.currentUserSubject.next(userData);
+    return this.http
+      .post<{ token: string }>(`${this.apiUrl}/login`, {
+        email,
+        password,
       })
-    );
-  }
+      .pipe(
+        switchMap((response) => {
+          const token = response.token;
+          localStorage.setItem('jwt_token', token);
 
-  // Méthode pour se connecter directement avec un rôle spécifique (pour les tests)
-  loginAs(role: UserRole): Observable<User> {
-    const user = this.mockUsers.find(u => u.role === role);
-    
-    if (!user) {
-      return throwError(() => new Error(`Aucun utilisateur avec le rôle ${role} trouvé`));
-    }
+          // Décodez le token pour obtenir l'email de l'utilisateur
+          const decodedToken = this.decodeToken(token);
+          if (!decodedToken) {
+            return throwError(
+              () => new Error('Impossible de décoder le token')
+            );
+          }
 
-    // Simuler un délai réseau
-    return of({
-      ...user,
-      token: 'fake-jwt-token.' + Math.random().toString(36).substring(2, 15)
-    }).pipe(
-      delay(500),
-      tap(userData => {
-        // Stocker les détails de l'utilisateur
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        this.currentUserSubject.next(userData);
-      })
-    );
-  }
+          // Créer les headers avec le token
+          const headers = new HttpHeaders().set(
+            'Authorization',
+            `Bearer ${token}`
+          );
 
-  // Méthode de connexion réelle (à implémenter avec l'API)
-  loginReal(email: string, password: string): Observable<User> {
-    // À remplacer par un appel HTTP réel à l'API
-    // return this.http.post<any>(`${environment.apiUrl}/auth/login`, { email, password })
-    //   .pipe(
-    //     map(response => {
-    //       // Stocker les détails de l'utilisateur et le token JWT dans le localStorage
-    //       localStorage.setItem('currentUser', JSON.stringify(response));
-    //       this.currentUserSubject.next(response);
-    //       return response;
-    //     })
-    //   );
-    
-    // Pour l'instant, on utilise la méthode simulée
-    return this.login(email, password);
+          // Tentative de récupération des informations de l'utilisateur
+          return this.http
+            .get<ApiResponse>(`${this.apiUrl}/sportifs`, {
+              headers,
+              params: { email: decodedToken.username }, // Filtrer par email pour limiter les résultats
+            })
+            .pipe(
+              switchMap((response) => {
+                // Recherchez le sportif correspondant à l'email
+                const sportifs = response.member || [];
+                const sportif = sportifs.find(
+                  (s) => s.email === decodedToken.username
+                );
+
+                if (!sportif) {
+                  return throwError(() => new Error('Utilisateur non trouvé'));
+                }
+
+                // Récupérer l'ID du sportif depuis son @id
+                const sportifId =
+                  sportif.id ||
+                  (sportif['@id'] ? sportif['@id'].split('/').pop() : '');
+
+                // Maintenant, on récupère les détails complets avec l'ID
+                return this.http
+                  .get<any>(`${this.apiUrl}/sportifs/${sportifId}`, { headers })
+                  .pipe(
+                    map((sportifDetails) => {
+                      // Déterminer le rôle de l'utilisateur
+                      let role = UserRole.CLIENT; // Par défaut pour un sportif
+
+                      // Construire l'objet utilisateur
+                      const user: User = {
+                        '@context': sportifDetails['@context'],
+                        '@id': sportifDetails['@id'],
+                        '@type': sportifDetails['@type'],
+                        id: sportifDetails.id || sportifId,
+                        nom: sportifDetails.nom,
+                        prenom: sportifDetails.prenom,
+                        email: sportifDetails.email,
+                        date_inscription: sportifDetails.date_inscription,
+                        niveau_sportif: sportifDetails.niveau_sportif,
+                        role: role,
+                        token: token,
+                        photo: sportifDetails.photo,
+                        seances: sportifDetails.seances,
+                      };
+
+                      // Ajouter les participations à l'objet utilisateur
+                      if (sportifDetails.participations) {
+                        (user as any).participations =
+                          sportifDetails.participations;
+                        console.log(
+                          'Participations récupérées:',
+                          sportifDetails.participations.length
+                        );
+                      }
+
+                      console.log(
+                        'Utilisateur connecté avec photo:',
+                        user.photo
+                      );
+
+                      // Stockez l'utilisateur dans le localStorage
+                      this.updateCurrentUser(user);
+                      return user;
+                    }),
+                    catchError((err) => {
+                      console.warn(
+                        "Erreur lors de la récupération des détails du sportif. Création d'un utilisateur basique.",
+                        err
+                      );
+
+                      // Créer un utilisateur basique à partir des données limitées
+                      const basicUser: User = {
+                        id: sportifId || 'unknown-id',
+                        nom: sportif.nom || '',
+                        prenom: sportif.prenom || '',
+                        email: decodedToken.username,
+                        role: UserRole.CLIENT,
+                        token: token,
+                        photo: sportif.photo || null,
+                      };
+
+                      // Ajouter les participations si elles sont présentes dans le sportif d'origine
+                      if (sportif.participations) {
+                        (basicUser as any).participations =
+                          sportif.participations;
+                        console.log(
+                          'Participations récupérées (fallback):',
+                          sportif.participations.length
+                        );
+                      }
+
+                      // Stockez l'utilisateur dans le localStorage
+                      this.updateCurrentUser(basicUser);
+                      return of(basicUser);
+                    })
+                  );
+              }),
+              catchError((err) => {
+                console.warn(
+                  "Erreur lors de la récupération de la liste des sportifs. Création d'un utilisateur basique.",
+                  err
+                );
+
+                // Si nous ne pouvons pas récupérer la liste des sportifs, créez un utilisateur basique
+                const fallbackUser: User = {
+                  id: 'unknown-id',
+                  email: decodedToken.username,
+                  role: UserRole.CLIENT,
+                  token: token,
+                };
+
+                // Stockez l'utilisateur dans le localStorage
+                this.updateCurrentUser(fallbackUser);
+                return of(fallbackUser);
+              })
+            );
+        })
+      );
   }
 
   logout(): void {
-    // Supprimer l'utilisateur du localStorage
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('jwt_token');
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }
-} 
+}

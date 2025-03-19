@@ -310,4 +310,84 @@ export class MesSceancesComponent implements OnInit {
       setTimeout(() => this.notification = null, 100);
     }, 300);
   }
+
+  // Formater le nom du coach
+  formatCoachName(coach: any): string {
+    if (!coach) return 'Coach';
+    
+    if (coach.name) return coach.name;
+    
+    if (coach.prenom && coach.nom) {
+      return `${coach.prenom} ${coach.nom}`;
+    } else if (coach.nom) {
+      return coach.nom;
+    } else if (coach.prenom) {
+      return coach.prenom;
+    }
+    
+    return 'Coach';
+  }
+
+  // Formater l'URL de l'image du coach
+  getCoachImage(coach: any): string {
+    if (!coach) return 'assets/images/default-coach.png';
+    
+    // Image par défaut
+    const defaultImage = 'assets/images/default-coach.png';
+    const baseImageUrl = 'https://127.0.0.1:8000/images/coaches/';
+    
+    // Si le coach a une image via la propriété avatar
+    if (coach.avatar) {
+      // Si l'avatar est déjà une URL complète ou chemin relatif des assets
+      if (coach.avatar.startsWith('http') || coach.avatar.startsWith('assets/')) {
+        return coach.avatar;
+      }
+      // Sinon, c'est juste le nom du fichier, on ajoute le chemin complet
+      return `${baseImageUrl}${coach.avatar}`;
+    }
+    
+    // Si le coach a une image via la propriété image
+    if (coach.image) {
+      // Si l'image est déjà une URL complète ou chemin relatif des assets
+      if (coach.image.startsWith('http') || coach.image.startsWith('assets/')) {
+        return coach.image;
+      }
+      // Sinon, c'est juste le nom du fichier, on ajoute le chemin complet
+      return `${baseImageUrl}${coach.image}`;
+    }
+    
+    // Fallback: image par défaut
+    return defaultImage;
+  }
+
+  // Créer un lien mailto pour contacter le coach
+  createMailtoLink(coach: any, seance: any): string {
+    if (!coach || !coach.email) return '';
+    
+    const coachName = this.formatCoachName(coach);
+    const seanceTitre = seance.titre || 'la séance';
+    
+    // Construction du corps du mail
+    let bodyText = `Bonjour ${coachName},\n\n`;
+    bodyText += `Je vous contacte au sujet de "${seanceTitre}"`;
+    
+    // Ajout des informations de date si disponibles
+    if (seance.date) {
+      const dateFormatted = this.formatDateFr(new Date(seance.date));
+      bodyText += ` prévue le ${dateFormatted}`;
+      
+      // Ajout de l'heure si disponible
+      if (seance.heureDebut) {
+        bodyText += ` à ${seance.heureDebut}`;
+      }
+    }
+    
+    bodyText += `.\n\n`;
+    bodyText += `Cordialement,\n`;
+    
+    const subject = encodeURIComponent(`À propos de : ${seanceTitre}`);
+    const body = encodeURIComponent(bodyText);
+    
+    return `mailto:${coach.email}?subject=${subject}&body=${body}`;
+  }
 }

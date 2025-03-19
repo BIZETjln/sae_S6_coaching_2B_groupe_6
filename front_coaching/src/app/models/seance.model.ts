@@ -40,6 +40,7 @@ export interface Seance {
   exercices?: any[]; // Liste des IDs d'exercices
   sportifs?: string[]; // Liste des IDs de sportifs
   image?: string;
+  photo?: string; // Format API alternative pour l'image
   groupesMusculaires?: string[];
   selected?: boolean;
 } 

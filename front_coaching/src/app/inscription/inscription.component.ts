@@ -1,23 +1,31 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { SportifService } from '../services/sportif.service';
+import { Sportif } from '../models/sportif.model';
 
 @Component({
   selector: 'app-inscription',
   templateUrl: './inscription.component.html',
   styleUrl: './inscription.component.css',
-  standalone: false
+  standalone: false,
 })
 export class InscriptionComponent implements OnInit {
   inscriptionForm!: FormGroup;
   loading = false;
   submitted = false;
   error = '';
+  successMessage = '';
+  showSuccess = false;
   showPassword = false;
-  niveaux = ['Débutant', 'Intermédiaire', 'Avancé'];
+  niveaux = ['debutant', 'intermediaire', 'avance']; // Niveaux adaptés au format de l'API
   dateInscription: Date = new Date();
 
-  constructor(private formBuilder: FormBuilder, private router: Router) {}
+  constructor(
+    private formBuilder: FormBuilder,
+    private router: Router,
+    private sportifService: SportifService
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -30,20 +38,28 @@ export class InscriptionComponent implements OnInit {
       prenom: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      niveau: ['Débutant', Validators.required],
-      role: [{ value: 'sportif', disabled: true }],
-      dateInscription: [
-        { value: this.formatDate(this.dateInscription), disabled: true },
+      niveau_sportif: ['debutant', Validators.required],
+      photo: [null], // La photo doit être null
+      date_inscription: [
+        { value: this.formatDateFrench(this.dateInscription), disabled: true },
       ],
     });
   }
 
-  // Formater la date au format YYYY-MM-DD
-  private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  // Formater la date au format ISO (YYYY-MM-DDTHH:MM:SS.sssZ) pour l'API
+  private formatDateISO(date: Date): string {
+    return date.toISOString();
+  }
+
+  // Formater la date au format français (JJ/MM/YYYY HH:MM) pour l'affichage
+  private formatDateFrench(date: Date): string {
     const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
   // Getter pour accéder facilement aux champs du formulaire
@@ -67,27 +83,32 @@ export class InscriptionComponent implements OnInit {
 
     this.loading = true;
     this.error = '';
+    this.showSuccess = false;
 
     // Récupérer les valeurs du formulaire, y compris les champs désactivés
     const formValues = {
       ...this.inscriptionForm.getRawValue(),
-      dateInscription: this.dateInscription,
-    };
+      date_inscription: this.formatDateISO(this.dateInscription),
+      photo: null, // S'assurer que la photo est forcément null
+    } as Sportif;
 
-    // Simulation d'une inscription (à remplacer par un vrai appel API)
-    setTimeout(() => {
-      try {
-        // Ici, vous feriez normalement un appel API pour enregistrer l'utilisateur
-        console.log("Données d'inscription:", formValues);
+    this.sportifService.inscrire(formValues).subscribe({
+      next: (response) => {
+        console.log('Inscription réussie:', response);
+        this.successMessage = 'Compte créé avec succès!';
+        this.showSuccess = true;
 
-        // Inscription réussie
-        this.router.navigate(['/connexion']);
-      } catch (err) {
-        // Échec de l'inscription
+        // Redirection avec délai pour laisser le temps à l'utilisateur de voir le message de succès
+        setTimeout(() => {
+          this.router.navigate(['/connexion']);
+        }, 2000);
+      },
+      error: (err) => {
+        console.error("Erreur d'inscription:", err);
         this.error =
           "Une erreur est survenue lors de l'inscription. Veuillez réessayer.";
         this.loading = false;
-      }
-    }, 1500); // Délai simulé pour montrer le chargement
+      },
+    });
   }
 }
