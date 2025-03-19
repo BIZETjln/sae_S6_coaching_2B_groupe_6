@@ -331,7 +331,16 @@
       </div>
 
       <div class="seance-details-footer">
-        <button class="btn btn-primary btn-lg">Réserver cette séance</button>
+        <button 
+          class="btn btn-primary btn-lg"
+          [disabled]="reservationEnCours || (estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee))"
+          (click)="toggleReservation(seanceSelectionnee)"
+          [title]="estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee) ? 'Cette séance est complète' : ''"
+        >
+          <i class="bi" [ngClass]="estInscritASeance(seanceSelectionnee) ? 'bi-calendar-x' : 'bi-calendar-plus'"></i>
+          {{ estInscritASeance(seanceSelectionnee) ? 'Annuler ma réservation' : 'Réserver cette séance' }}
+          <span *ngIf="reservationEnCours"><i class="bi bi-hourglass-split spinner"></i></span>
+        </button>
         <a 
           [href]="getCoachEmailLink()"
           class="btn btn-outline-primary btn-lg"
@@ -343,6 +352,35 @@
           <span *ngIf="!hasCoachEmail()" class="ms-1">(Email non disponible)</span>
         </a>
       </div>
+      
+      <!-- Indicateur de capacité -->
+      <div class="seance-capacity-indicator" *ngIf="seanceSelectionnee">
+        <div class="capacity-progress">
+          <div class="capacity-bar" 
+               [style.width]="((seanceSelectionnee.sportifs?.length || 0) / (seanceSelectionnee.capaciteMax || getCapaciteMaxFromType(seanceSelectionnee)) * 100) + '%'"
+               [ngClass]="{
+                 'capacity-low': (seanceSelectionnee.sportifs?.length || 0) < (seanceSelectionnee.capaciteMax || getCapaciteMaxFromType(seanceSelectionnee)) * 0.5,
+                 'capacity-medium': (seanceSelectionnee.sportifs?.length || 0) >= (seanceSelectionnee.capaciteMax || getCapaciteMaxFromType(seanceSelectionnee)) * 0.5 && (seanceSelectionnee.sportifs?.length || 0) < (seanceSelectionnee.capaciteMax || getCapaciteMaxFromType(seanceSelectionnee)),
+                 'capacity-full': estSeancePleine(seanceSelectionnee)
+               }">
+          </div>
+        </div>
+        <div class="capacity-text">
+          <span>Places : {{ getCapaciteMessage(seanceSelectionnee) }}</span>
+          <span *ngIf="estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee)" class="capacity-full-text">Séance complète</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- Notification pour les messages de réservation -->
+<div class="notification" *ngIf="afficherNotification" [ngClass]="typeNotification">
+  <div class="notification-content">
+    <i class="bi" [ngClass]="typeNotification === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'"></i>
+    <span>{{ messageNotification }}</span>
+    <button class="notification-close" (click)="afficherNotification = false">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+</div>

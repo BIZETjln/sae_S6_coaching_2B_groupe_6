@@ -8,12 +8,13 @@ import {
 import { SeanceService } from '../services/seance.service';
 import { AuthService } from '../services/auth.service';
 import { Seance } from '../models/seance.model';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
+import { map, catchError } from 'rxjs/operators';
 
 // Enregistrer tous les composants de Chart.js
 Chart.register(...registerables);
- 
+
 // Interface pour représenter un sportif et ses participations
 interface Sportif {
   id: string;
@@ -56,6 +57,11 @@ interface StatistiquesSeances {
   statistiquesCoachs: Map<string, number>; // Statistiques par coach
 }
 
+// Interface pour les noms des exercices en cache
+interface ExerciceCache {
+  [id: string]: string;
+}
+
 @Component({
   selector: 'app-mon-suivi',
   templateUrl: './mon-suivi.component.html',
@@ -76,6 +82,9 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     activitesParMois: new Map<string, number>(),
     statistiquesCoachs: new Map<string, number>(),
   };
+
+  // Cache pour stocker les noms des exercices déjà récupérés
+  exerciceCache: ExerciceCache = {};
 
   chartsInitialized: boolean = false;
   isLoading: boolean = true;
@@ -158,6 +167,9 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
           'Participations après préparation:',
           this.sportif.participations
         );
+
+        // Charger tous les noms d'exercices depuis l'API
+        this.chargerNomsExercices();
       } else {
         console.log('Aucune participation trouvée ou format invalide');
       }
@@ -218,42 +230,119 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     });
   }
 
-  extraireNomExercice(exerciceUrl: string): string {
+  /**
+   * Récupère le nom d'un exercice à partir de son ID ou URL
+   * @param exerciceUrl L'URL ou l'ID de l'exercice
+   * @returns Un Observable contenant le nom de l'exercice
+   */
+  getExerciceName(exerciceUrl: string): Observable<string> {
     try {
-      // Pour les URLs de type "/api/exercices/0195ad6b-1c48-7563-bf02-c1d7661256ae"
+      // Extraire l'ID de l'exercice de l'URL
       const parties = exerciceUrl.split('/');
       const idExercice = parties[parties.length - 1];
 
-      // Cas réel: On devrait avoir un service pour récupérer le nom de l'exercice à partir de son ID
-      // Comme ce service n'est pas implémenté, on utilise une méthode temporaire
-
-      // Extraction de la partie finale de l'ID pour créer un nom d'exercice "anonymisé"
-      const shortId = idExercice.substring(idExercice.length - 8);
-
-      // Mapping des derniers caractères vers des exercices connus
-      const exerciceMap: { [key: string]: string } = {
-        '4058': 'Squats',
-        '255c6': 'Burpees',
-        '816af': 'Gainage',
-        '256ae': 'Course',
-        '5657': 'Tractions',
-        '952c2': 'Pompes',
-        '315c': 'Abdominaux',
-        '19cd': 'Jumping Jacks',
-        '9e65': 'Fentes',
-        '4494': 'Mountain Climbers',
-      };
-
-      // Chercher une correspondance ou générer un nom par défaut
-      for (const [key, value] of Object.entries(exerciceMap)) {
-        if (idExercice.endsWith(key)) {
-          return value;
-        }
+      // Vérifier si l'exercice est déjà dans le cache
+      if (this.exerciceCache[idExercice]) {
+        return of(this.exerciceCache[idExercice]);
       }
 
-      return `Exercice ${shortId}`;
+      // Sinon, faire un appel à l'API
+      return this.seanceService.getExerciceById(idExercice).pipe(
+        map((response) => {
+          // Stocker le nom dans le cache
+          const nomExercice = response.nom || 'Exercice sans nom';
+          this.exerciceCache[idExercice] = nomExercice;
+          return nomExercice;
+        }),
+        catchError((error) => {
+          console.error(
+            `Erreur lors de la récupération de l'exercice ${idExercice}:`,
+            error
+          );
+          return of('Exercice inconnu');
+        })
+      );
     } catch (error) {
-      return 'Exercice non identifié';
+      console.error(
+        "Erreur lors de l'extraction de l'ID de l'exercice:",
+        error
+      );
+      return of('Exercice non disponible');
+    }
+  }
+
+  /**
+   * Version synchrone pour obtenir le nom depuis le cache
+   * @param exerciceUrl
+   * @returns Le nom de l'exercice s'il est dans le cache, sinon "Chargement..."
+   */
+  extractExerciseName(exerciceUrl: string): string {
+    try {
+      const parties = exerciceUrl.split('/');
+      const idExercice = parties[parties.length - 1];
+
+      return this.exerciceCache[idExercice] || 'Chargement...';
+    } catch (error) {
+      return 'Exercice non disponible';
+    }
+  }
+
+  /**
+   * Charge les noms de tous les exercices dans le cache
+   */
+  chargerNomsExercices(): void {
+    if (!this.sportif || !this.sportif.participations) {
+      return;
+    }
+
+    // Collecter tous les IDs d'exercices uniques
+    const exerciceIds = new Set<string>();
+
+    this.sportif.participations.forEach((participation) => {
+      if (participation.seance.exercices) {
+        participation.seance.exercices.forEach((exerciceUrl) => {
+          const parties = exerciceUrl.split('/');
+          const idExercice = parties[parties.length - 1];
+          exerciceIds.add(idExercice);
+        });
+      }
+    });
+
+    // Faire des appels API pour chaque exercice unique
+    const requests: Observable<any>[] = [];
+
+    exerciceIds.forEach((id) => {
+      // Éviter de refaire des appels pour les exercices déjà en cache
+      if (!this.exerciceCache[id]) {
+        requests.push(
+          this.seanceService.getExerciceById(id).pipe(
+            map((response) => {
+              this.exerciceCache[id] = response.nom || 'Exercice sans nom';
+              return response;
+            }),
+            catchError((error) => {
+              console.error(
+                `Erreur lors de la récupération de l'exercice ${id}:`,
+                error
+              );
+              this.exerciceCache[id] = 'Exercice inconnu';
+              return of(null);
+            })
+          )
+        );
+      }
+    });
+
+    // Exécuter tous les appels en parallèle
+    if (requests.length > 0) {
+      forkJoin(requests).subscribe({
+        complete: () => {
+          // Recalculer les statistiques avec les nouveaux noms
+          this.calculerStatistiques();
+          // Réinitialiser les graphiques
+          setTimeout(() => this.initialiserGraphiques(), 300);
+        },
+      });
     }
   }
 
@@ -331,12 +420,16 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
         seance.exercices.length > 0
       ) {
         seance.exercices.forEach((exerciceUrl) => {
-          // Extraire le nom de l'exercice de l'URL
-          const exercice = this.extraireNomExercice(exerciceUrl);
-          if (exercice) {
+          // Utiliser le nom d'exercice depuis le cache
+          const parties = exerciceUrl.split('/');
+          const idExercice = parties[parties.length - 1];
+          const nomExercice =
+            this.exerciceCache[idExercice] || 'Exercice inconnu';
+
+          if (nomExercice) {
             this.stats.typesExercices.set(
-              exercice,
-              (this.stats.typesExercices.get(exercice) || 0) + 1
+              nomExercice,
+              (this.stats.typesExercices.get(nomExercice) || 0) + 1
             );
           }
         });
@@ -378,11 +471,6 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
   capitaliserPremiereLetter(texte: string): string {
     if (!texte) return 'Non spécifié';
     return texte.charAt(0).toUpperCase() + texte.slice(1);
-  }
-
-  // Méthode pour extraire le nom de l'exercice pour l'affichage dans le template
-  extractExerciseName(exerciceUrl: string): string {
-    return this.extraireNomExercice(exerciceUrl);
   }
 
   initialiserGraphiques(): void {
@@ -658,8 +746,22 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       return [];
     }
 
-    return this.sportif.participations.filter(
-      (participation) => participation.presence === presence
-    );
+    const maintenant = new Date();
+
+    return this.sportif.participations.filter((participation) => {
+      // Vérifier d'abord si la présence correspond
+      if (participation.presence !== presence) {
+        return false;
+      }
+
+      // Si on demande des séances avec présence (séances passées),
+      // on vérifie que la date de la séance est antérieure à la date actuelle
+      if (presence && participation.seance.date_heure) {
+        const dateSeance = new Date(participation.seance.date_heure);
+        return dateSeance < maintenant;
+      }
+
+      return true;
+    });
   }
 }
