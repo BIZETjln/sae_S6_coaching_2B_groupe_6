@@ -61,6 +61,18 @@ class SeanceInscriptionController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
 
+            // Vérifier si le sportif a déjà une séance à un horaire conflictuel
+            $seanceRepository = $this->entityManager->getRepository(Seance::class);
+            if ($seanceRepository instanceof \App\Repository\SeanceRepository) {
+                $hasConflict = $seanceRepository->hasSportifSessionConflict($user, $seance->getDateHeure(), $seance->getId());
+                if ($hasConflict) {
+                    return $this->json([
+                        'message' => 'Vous avez déjà une séance programmée à un horaire conflictuel. ' .
+                        'Il doit y avoir au moins 1h30 entre deux séances.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            }
+
             try {
                 // Créer une nouvelle participation
                 $newParticipation = new \App\Entity\Participation();

@@ -27,7 +27,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Form\ParticipationType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 
 class SeanceCrudController extends AbstractCrudController
@@ -60,10 +59,11 @@ class SeanceCrudController extends AbstractCrudController
                     ],
                     'mapped' => false,
                     'data' => $pageName === Crud::PAGE_EDIT && $this->getContext()->getEntity()->getInstance()->getDateHeure() 
-                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('Y-m-d') 
+                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()
                         : null
                 ])
-                ->setColumns(6),
+                ->setColumns(6)
+                ->hideOnIndex(),
             
             ChoiceField::new('timeOnly', 'Heure')
                 ->setChoices(function() {
@@ -83,11 +83,14 @@ class SeanceCrudController extends AbstractCrudController
                         ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('H:i:s')
                         : '10:00:00'
                 ])
-                ->setColumns(6),
+                ->setColumns(6)
+                ->hideOnIndex(),
                 
             // Champ caché pour stocker la valeur combinée
             DateTimeField::new('date_heure')
-                ->hideOnForm(),
+                ->hideOnForm()
+                ->setLabel('Date et heure')
+                ->setFormat('dd/MM/yyyy à HH:mm'),
 
             FormField::addPanel('Caractéristiques de la séance')
                 ->setIcon('fa fa-list')
@@ -134,7 +137,8 @@ class SeanceCrudController extends AbstractCrudController
                 // ->setTemplatePath('admin/field/participation_collection.html.twig')
                 ->setLabel('Sportifs participants')
                 ->setHelp('Le nombre maximum de sportifs dépend du type de séance : Solo (1), Duo (2), Trio (3)')
-                ->setColumns(12),
+                ->setColumns(12)
+                ->hideOnIndex(),
 
             AssociationField::new('exercices', 'Exercices')
                 ->setFormTypeOptions([
@@ -146,14 +150,16 @@ class SeanceCrudController extends AbstractCrudController
                         ]),
                     ],
                 ])
-                ->setColumns(12),
+                ->setColumns(12)
+                ->hideOnIndex(),
 
             ImageField::new('photo', 'Photo')
                 ->setBasePath('images/seances')
                 ->setUploadDir('public/images/seances')
                 ->setUploadedFileNamePattern('[randomhash].[extension]')
                 ->setRequired(false)
-                ->setColumns(12),
+                ->setColumns(12)
+                ->hideOnIndex(),
         ];
 
         // Ajouter le champ statut uniquement en mode édition
@@ -181,7 +187,8 @@ class SeanceCrudController extends AbstractCrudController
             ->setPageTitle('index', 'Liste des séances')
             ->setPageTitle('new', 'Créer une séance')
             ->setPageTitle('edit', 'Modifier la séance')
-            ->setPageTitle('detail', 'Détails de la séance');
+            ->setPageTitle('detail', 'Détails de la séance')
+            ->setDefaultSort(['date_heure' => 'DESC']);
     }
 
     public function createEntity(string $entityFqcn)
@@ -232,6 +239,15 @@ class SeanceCrudController extends AbstractCrudController
                 
                 // Vérifier les conflits de séances pour le coach
                 $this->checkCoachAvailability($form, $seance, $dateTime);
+                
+                // Vérifier les conflits d'horaires pour les sportifs
+                // Nous ne vérifions les sportifs que s'il y a au moins une participation
+                if (!$seance->getParticipations()->isEmpty()) {
+                    $conflicts = $this->checkSportifsAvailability($seance);
+                    foreach ($conflicts as $conflict) {
+                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
+                    }
+                }
             }
         };
     }
@@ -258,6 +274,32 @@ class SeanceCrudController extends AbstractCrudController
                 ));
             }
         }
+    }
+
+    /**
+     * Vérifie si les sportifs inscrits ont des conflits d'horaires avec d'autres séances
+     */
+    private function checkSportifsAvailability(Seance $seance): array
+    {
+        $conflicts = [];
+        $repository = $this->entityManager->getRepository(Seance::class);
+        
+        if ($repository instanceof \App\Repository\SeanceRepository && $seance->getDateHeure()) {
+            foreach ($seance->getParticipations() as $participation) {
+                $sportif = $participation->getSportif();
+                if ($sportif) {
+                    $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
+                    if ($hasConflict) {
+                        $conflicts[] = sprintf(
+                            'Le sportif %s a déjà une séance programmée à un horaire conflictuel.',
+                            $sportif->__toString()
+                        );
+                    }
+                }
+            }
+        }
+        
+        return $conflicts;
     }
 
     private function handleImageUpload()
@@ -334,6 +376,14 @@ class SeanceCrudController extends AbstractCrudController
                     )
                 ));
             }
+            
+            // Vérifier les conflits d'horaires pour les sportifs
+            if ($seance->getDateHeure()) {
+                $conflicts = $this->checkSportifsAvailability($seance);
+                foreach ($conflicts as $conflict) {
+                    $form->addError(new \Symfony\Component\Form\FormError($conflict));
+                }
+            }
         };
     }
 
@@ -351,6 +401,12 @@ class SeanceCrudController extends AbstractCrudController
                             'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
                             'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
+                    }
+                    
+                    // Vérifier les conflits pour les sportifs
+                    $conflicts = $this->checkSportifsAvailability($entityInstance);
+                    if (!empty($conflicts)) {
+                        throw new \LogicException(implode("\n", $conflicts));
                     }
                 }
             }
@@ -386,6 +442,12 @@ class SeanceCrudController extends AbstractCrudController
                             'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
                             'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
+                    }
+                    
+                    // Vérifier les conflits pour les sportifs
+                    $conflicts = $this->checkSportifsAvailability($entityInstance);
+                    if (!empty($conflicts)) {
+                        throw new \LogicException(implode("\n", $conflicts));
                     }
                 }
             }
