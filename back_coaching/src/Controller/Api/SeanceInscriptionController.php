@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Seance;
 use App\Entity\Sportif;
+use App\Entity\HistoriqueAnnulation;
 use App\Enum\TypeSeance;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -39,12 +40,64 @@ class SeanceInscriptionController extends AbstractController
 
         // Si le sportif est déjà inscrit, on le désinscrit
         if ($participation) {
-            $this->entityManager->remove($participation);
-            $this->entityManager->flush();
-            return $this->json(['message' => 'Désinscription réussie'], Response::HTTP_OK);
+            // Vérifier si l'annulation est possible (24h avant)
+            if ($seance->canBeCancelledBySportif()) {
+                // Récupérer les informations nécessaires
+                $sportif = $participation->getSportif();
+                
+                // Récupérer l'historique d'annulation existant ou en créer un nouveau
+                $historiqueRepo = $this->entityManager->getRepository(HistoriqueAnnulation::class);
+                $historique = $historiqueRepo->findOneBy([
+                    'sportif' => $sportif,
+                    'seance' => $seance
+                ]);
+                
+                if (!$historique) {
+                    $historique = new HistoriqueAnnulation();
+                    $historique->setSportif($sportif);
+                    $historique->setSeance($seance);
+                    $historique->setNbAnnulation(1);
+                } else {
+                    // Incrémenter le compteur d'annulations existant
+                    $historique->setNbAnnulation($historique->getNbAnnulation() + 1);
+                }
+                
+                $historique->setDateAnnulation(new \DateTime());
+                $this->entityManager->persist($historique);
+                
+                // Supprimer la participation pour désinscrire le sportif
+                $this->entityManager->remove($participation);
+                $this->entityManager->flush();
+                
+                return $this->json([
+                    'message' => 'Désinscription réussie, annulation comptabilisée',
+                    'nbAnnulations' => $historique->getNbAnnulation()
+                ], Response::HTTP_OK);
+            } else {
+                // Annulation trop tardive, compter comme absence
+                $participation->setPresence(false);
+                $this->entityManager->flush();
+                
+                return $this->json([
+                    'message' => 'Désinscription acceptée mais comptabilisée comme absence car moins de 24h avant la séance',
+                ], Response::HTTP_OK);
+            }
         } 
         // Sinon, on l'inscrit
         else {
+            // Vérifier si le sportif a déjà annulé cette séance 2 fois
+            $historiqueRepo = $this->entityManager->getRepository(HistoriqueAnnulation::class);
+            $historique = $historiqueRepo->findOneBy([
+                'sportif' => $user,
+                'seance' => $seance
+            ]);
+            
+            if ($historique && $historique->getNbAnnulation() >= 2) {
+                return $this->json([
+                    'message' => 'Vous avez déjà annulé cette séance 2 fois, vous ne pouvez plus vous y inscrire.'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            
             // Vérifier la capacité de la séance selon son type
             $nombreSportifs = count($seance->getParticipations());
             $limitesSportifs = [
