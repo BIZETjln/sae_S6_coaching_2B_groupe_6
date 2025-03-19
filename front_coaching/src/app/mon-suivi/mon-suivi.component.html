@@ -1,0 +1,183 @@
+<div class="mon-suivi-container">
+  <div class="hero">
+    <div class="hero-content">
+      <h1><i class="fas fa-chart-line me-2"></i>Mon Suivi Sportif</h1>
+      <p>Visualisez vos progrès et analysez votre activité sportive</p>
+    </div>
+  </div>
+
+  <div class="container my-4">
+    <!-- Indicateur de chargement -->
+    <div *ngIf="isLoading" class="loading-container text-center my-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Chargement...</span>
+      </div>
+      <p class="mt-3 fs-5">Chargement de vos données...</p>
+    </div>
+
+    <div *ngIf="!isLoading">
+      <!-- Message si aucune séance -->
+      <div
+        *ngIf="
+          !sportif ||
+          !sportif.participations ||
+          sportif.participations.length === 0
+        "
+        class="alert alert-info"
+      >
+        <h5 class="mb-3">
+          <i class="fas fa-info-circle me-2"></i>Aucune séance enregistrée
+        </h5>
+        <p>
+          Vous n'avez pas encore participé à des séances ou réservé de futures
+          séances.
+        </p>
+        <a routerLink="/seances" class="btn btn-primary mt-2">
+          <i class="fas fa-search me-2"></i>Découvrir les séances disponibles
+        </a>
+      </div>
+
+      <!-- Contenu principal lorsque des participations existent -->
+      <div
+        *ngIf="
+          sportif && sportif.participations && sportif.participations.length > 0
+        "
+      >
+        <!-- Informations du sportif -->
+        <div class="sportif-info mb-4">
+          <h4 class="mb-3">
+            <i class="fas fa-user-circle me-2"></i>
+            {{ sportif.prenom }} {{ sportif.nom }}
+          </h4>
+          <p>Niveau sportif: {{ sportif.niveau_sportif | titlecase }}</p>
+        </div>
+
+        <!-- Statistiques globales -->
+        <div class="stats-section">
+          <div class="statistic-card">
+            <i
+              class="fas fa-check-circle mb-3"
+              style="font-size: 1.8rem; color: #ff9800"
+            ></i>
+            <div class="statistic-value">{{ stats.seancesSuivies }}</div>
+            <div class="statistic-label">Séances déjà suivies</div>
+          </div>
+
+          <div class="statistic-card">
+            <i
+              class="fas fa-calendar-alt mb-3"
+              style="font-size: 1.8rem; color: #ff9800"
+            ></i>
+            <div class="statistic-value">{{ stats.seancesInscrites }}</div>
+            <div class="statistic-label">Séances à venir</div>
+          </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="chart-grid">
+          <!-- Graphique de types d'exercices -->
+          <div class="chart-item">
+            <div class="chart-container exercises-chart">
+              <h3><i class="fas fa-dumbbell me-2"></i>Mes exercices</h3>
+              <div class="chart-wrapper">
+                <canvas #typesExercicesChart></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Graphique des coachs -->
+          <div class="chart-item">
+            <div class="chart-container coaches-chart">
+              <h3>
+                <i class="fas fa-user-friends me-2"></i>Mes coachs préférés
+              </h3>
+              <div class="chart-wrapper">
+                <canvas #coachsChart></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Graphique d'évolution de l'activité -->
+          <div class="chart-item-full">
+            <div class="chart-container activity-chart">
+              <h3>
+                <i class="fas fa-chart-line me-2"></i>Évolution de mon activité
+              </h3>
+              <div class="chart-wrapper">
+                <canvas #activitesParMoisChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des exercices récents - modernisée -->
+        <div class="exercises-container">
+          <h3>
+            <i class="fas fa-clipboard-list me-2"></i>Mes derniers exercices
+          </h3>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type de séance</th>
+                  <th>Thème</th>
+                  <th>Coach</th>
+                  <th>Exercices</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="
+                    let participation of sportif.participations | slice : 0 : 5
+                  "
+                >
+                  <td>
+                    {{ participation.seance.date_heure | date : "dd/MM/yyyy" }}
+                  </td>
+                  <td>
+                    {{ participation.seance.type_seance | titlecase }}
+                  </td>
+                  <td>
+                    {{ participation.seance.theme_seance | titlecase }}
+                  </td>
+                  <td>
+                    {{ participation.seance.coach?.prenom }}
+                    {{ participation.seance.coach?.nom }}
+                  </td>
+                  <td>
+                    <ng-container
+                      *ngIf="
+                        participation.seance.exercices &&
+                        participation.seance.exercices.length > 0
+                      "
+                    >
+                      <span
+                        *ngFor="
+                          let exercice of participation.seance.exercices;
+                          let isLast = last
+                        "
+                        class="badge bg-light"
+                      >
+                        {{ extractExerciseName(exercice) }}
+                      </span>
+                    </ng-container>
+                    <span
+                      *ngIf="
+                        !participation.seance.exercices ||
+                        participation.seance.exercices.length === 0
+                      "
+                    >
+                      -
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

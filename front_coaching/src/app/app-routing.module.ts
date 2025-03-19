@@ -9,6 +9,7 @@ import { ConnexionComponent } from './connexion/connexion.component';
 import { CoachsComponent } from './coachs/coachs.component';
 import { SeancesComponent } from './seances/seances.component';
 import { MesSceancesComponent } from './mes-sceances/mes-sceances.component';
+import { MonSuiviComponent } from './mon-suivi/mon-suivi.component';
 // Composant temporaire pour les routes non encore implémentées
 @Component({
   template: `<div class="container mt-5">
@@ -41,7 +42,7 @@ const routes: Routes = [
   },
   {
     path: 'mon-suivi',
-    component: PlaceholderComponent,
+    component: MonSuiviComponent,
     canActivate: [RoleGuard],
     data: { roles: [UserRole.CLIENT] },
   },
