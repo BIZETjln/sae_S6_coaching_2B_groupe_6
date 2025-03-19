@@ -13,7 +13,7 @@ import { Chart, registerables } from 'chart.js';
 
 // Enregistrer tous les composants de Chart.js
 Chart.register(...registerables);
-
+ 
 // Interface pour représenter un sportif et ses participations
 interface Sportif {
   id: string;

@@ -130,8 +130,10 @@ export class AuthService {
       return of([]);
     }
 
-    if (user.seances && user.seances.length > 0) {
-      return of(user.seances);
+    // Si l'utilisateur a des participations, extraire les séances de ces participations
+    if ((user as any).participations && (user as any).participations.length > 0) {
+      const seances = (user as any).participations.map((participation: any) => participation.seance);
+      return of(seances);
     }
 
     if (user.role === UserRole.CLIENT) {
@@ -141,12 +143,26 @@ export class AuthService {
         : user.id;
 
       return this.http
-        .get<Seance[]>(`${this.apiUrl}/sportifs/${sportifId}/seances`)
+        .get<any>(`${this.apiUrl}/sportifs/${sportifId}`)
         .pipe(
-          map((seances) => {
+          map((sportifDetails) => {
+            // Extraire les séances des participations
+            const seances = sportifDetails.participations 
+              ? sportifDetails.participations.map((participation: any) => participation.seance) 
+              : [];
+            
+            // Mettre à jour l'utilisateur avec les participations
+            (user as any).participations = sportifDetails.participations;
+            
+            // Stocker aussi les séances pour compatibilité avec le code existant
             user.seances = seances;
+            
             this.updateCurrentUser(user);
             return seances;
+          }),
+          catchError(error => {
+            console.error('Erreur lors de la récupération des séances de l\'utilisateur', error);
+            return of([]);
           })
         );
     }
