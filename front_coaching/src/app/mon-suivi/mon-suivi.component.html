@@ -165,7 +165,7 @@
         <div class="exercises-container">
           <h3>
             <i class="fas fa-clipboard-list me-2"></i>
-            <span *ngIf="stats.seancesSuivies > 0">Mes derniers exercices</span>
+            <span *ngIf="stats.seancesSuivies > 0">Mes dernières séances</span>
             <span *ngIf="stats.seancesSuivies === 0"
               >Mes séances programmées</span
             >
@@ -235,6 +235,17 @@
                   </tr>
                 </tbody>
               </table>
+
+              <!-- Message si aucune participation passée avec présence -->
+              <div
+                *ngIf="getFilteredParticipations(true).length === 0"
+                class="alert alert-info mt-3"
+              >
+                <p>
+                  <i class="fas fa-info-circle me-2"></i>Vous n'avez pas encore
+                  de séances passées avec présence confirmée.
+                </p>
+              </div>
             </div>
 
             <!-- Si l'utilisateur n'a pas de séances suivies mais a des séances programmées -->
