@@ -1,0 +1,313 @@
+<div class="mon-suivi-container">
+  <div class="hero">
+    <div class="hero-content">
+      <h1><i class="fas fa-chart-line me-2"></i>Mon Suivi Sportif</h1>
+      <p>Visualisez vos progrès et analysez votre activité sportive</p>
+    </div>
+  </div>
+
+  <div class="container my-4">
+    <!-- Indicateur de chargement -->
+    <div *ngIf="isLoading" class="loading-container text-center my-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Chargement...</span>
+      </div>
+      <p class="mt-3 fs-5">Chargement de vos données...</p>
+    </div>
+
+    <div *ngIf="!isLoading">
+      <!-- Message si aucune séance -->
+      <div
+        *ngIf="
+          !sportif ||
+          !sportif.participations ||
+          sportif.participations.length === 0
+        "
+        class="alert alert-info"
+      >
+        <h5 class="mb-3">
+          <i class="fas fa-info-circle me-2"></i>Aucune séance enregistrée
+        </h5>
+        <p>
+          Vous n'avez pas encore participé à des séances ou réservé de futures
+          séances.
+        </p>
+        <a routerLink="/seances" class="btn btn-primary mt-2">
+          <i class="fas fa-search me-2"></i>Découvrir les séances disponibles
+        </a>
+      </div>
+
+      <!-- Message si participations mais aucune présence -->
+      <div
+        *ngIf="
+          sportif &&
+          sportif.participations &&
+          sportif.participations.length > 0 &&
+          stats.seancesSuivies === 0 &&
+          stats.seancesInscrites > 0
+        "
+        class="alert alert-warning mb-4"
+      >
+        <h5 class="mb-2">
+          <i class="fas fa-calendar-check me-2"></i>Séances à venir
+        </h5>
+        <p>
+          Vous êtes inscrit à {{ stats.seancesInscrites }} séance(s) mais vous
+          n'avez pas encore participé à des cours. Vos statistiques détaillées
+          s'afficheront après votre participation.
+        </p>
+      </div>
+
+      <!-- Contenu principal lorsque des participations existent -->
+      <div
+        *ngIf="
+          sportif && sportif.participations && sportif.participations.length > 0
+        "
+      >
+        <!-- Informations du sportif -->
+        <div class="sportif-info mb-4">
+          <h4 class="mb-3">
+            <i class="fas fa-user-circle me-2"></i>
+            {{ sportif.prenom }} {{ sportif.nom }}
+          </h4>
+          <p>Niveau sportif: {{ sportif.niveau_sportif | titlecase }}</p>
+        </div>
+
+        <!-- Statistiques globales -->
+        <div class="stats-section">
+          <div class="statistic-card">
+            <i
+              class="fas fa-check-circle mb-3"
+              style="font-size: 1.8rem; color: #ff9800"
+            ></i>
+            <div class="statistic-value">{{ stats.seancesSuivies }}</div>
+            <div class="statistic-label">Séances déjà suivies</div>
+          </div>
+
+          <div class="statistic-card">
+            <i
+              class="fas fa-calendar-alt mb-3"
+              style="font-size: 1.8rem; color: #ff9800"
+            ></i>
+            <div class="statistic-value">{{ stats.seancesInscrites }}</div>
+            <div class="statistic-label">Séances à venir</div>
+          </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="chart-grid">
+          <!-- Graphique de types d'exercices -->
+          <div class="chart-item">
+            <div class="chart-container exercises-chart">
+              <h3><i class="fas fa-dumbbell me-2"></i>Mes exercices</h3>
+              <div *ngIf="stats.typesExercices.size > 0" class="chart-wrapper">
+                <canvas #typesExercicesChart></canvas>
+              </div>
+              <div
+                *ngIf="stats.typesExercices.size === 0"
+                class="text-center py-5 text-muted"
+              >
+                <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
+                <p>Aucun exercice effectué pour le moment.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Graphique des coachs -->
+          <div class="chart-item">
+            <div class="chart-container coaches-chart">
+              <h3>
+                <i class="fas fa-user-friends me-2"></i>Mes coachs préférés
+              </h3>
+              <div
+                *ngIf="stats.statistiquesCoachs.size > 0"
+                class="chart-wrapper"
+              >
+                <canvas #coachsChart></canvas>
+              </div>
+              <div
+                *ngIf="stats.statistiquesCoachs.size === 0"
+                class="text-center py-5 text-muted"
+              >
+                <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
+                <p>Aucune séance avec un coach pour le moment.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Graphique d'évolution de l'activité -->
+          <div class="chart-item-full">
+            <div class="chart-container activity-chart">
+              <h3>
+                <i class="fas fa-chart-line me-2"></i>Évolution de mon activité
+              </h3>
+              <div
+                *ngIf="stats.activitesParMois.size > 0"
+                class="chart-wrapper"
+              >
+                <canvas #activitesParMoisChart></canvas>
+              </div>
+              <div
+                *ngIf="stats.activitesParMois.size === 0"
+                class="text-center py-5 text-muted"
+              >
+                <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
+                <p>
+                  Pas encore suffisamment de données pour afficher l'évolution
+                  de votre activité.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des exercices récents - modernisée -->
+        <div class="exercises-container">
+          <h3>
+            <i class="fas fa-clipboard-list me-2"></i>
+            <span *ngIf="stats.seancesSuivies > 0">Mes derniers exercices</span>
+            <span *ngIf="stats.seancesSuivies === 0"
+              >Mes séances programmées</span
+            >
+          </h3>
+
+          <div *ngIf="sportif.participations.length > 0">
+            <!-- Si l'utilisateur a des séances suivies, afficher les exercices -->
+            <div *ngIf="stats.seancesSuivies > 0" class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type de séance</th>
+                    <th>Thème</th>
+                    <th>Coach</th>
+                    <th>Exercices</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let participation of getFilteredParticipations(true)
+                        | slice : 0 : 5
+                    "
+                  >
+                    <td>
+                      {{
+                        participation.seance.date_heure | date : "dd/MM/yyyy"
+                      }}
+                    </td>
+                    <td>
+                      {{ participation.seance.type_seance | titlecase }}
+                    </td>
+                    <td>
+                      {{ participation.seance.theme_seance | titlecase }}
+                    </td>
+                    <td>
+                      {{ participation.seance.coach?.prenom }}
+                      {{ participation.seance.coach?.nom }}
+                    </td>
+                    <td>
+                      <ng-container
+                        *ngIf="
+                          participation.seance.exercices &&
+                          participation.seance.exercices.length > 0
+                        "
+                      >
+                        <span
+                          *ngFor="
+                            let exercice of participation.seance.exercices;
+                            let isLast = last
+                          "
+                          class="badge bg-light"
+                        >
+                          {{ extractExerciseName(exercice) }}
+                        </span>
+                      </ng-container>
+                      <span
+                        *ngIf="
+                          !participation.seance.exercices ||
+                          participation.seance.exercices.length === 0
+                        "
+                      >
+                        -
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Si l'utilisateur n'a pas de séances suivies mais a des séances programmées -->
+            <div *ngIf="stats.seancesSuivies === 0" class="table-responsive">
+              <div class="alert alert-info mb-4">
+                <p>
+                  <i class="fas fa-info-circle me-2"></i>Vous n'avez pas encore
+                  participé à des séances. Voici les séances que vous avez
+                  réservées :
+                </p>
+              </div>
+
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type de séance</th>
+                    <th>Thème</th>
+                    <th>Coach</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="
+                      let participation of sportif.participations
+                        | slice : 0 : 5
+                    "
+                  >
+                    <td>
+                      {{
+                        participation.seance.date_heure | date : "dd/MM/yyyy"
+                      }}
+                    </td>
+                    <td>
+                      {{ participation.seance.type_seance | titlecase }}
+                    </td>
+                    <td>
+                      {{ participation.seance.theme_seance | titlecase }}
+                    </td>
+                    <td>
+                      {{ participation.seance.coach?.prenom }}
+                      {{ participation.seance.coach?.nom }}
+                    </td>
+                    <td>
+                      <span
+                        [ngClass]="{
+                          'text-success':
+                            participation.seance.statut === 'validee',
+                          'text-warning':
+                            participation.seance.statut === 'prevue',
+                          'text-danger':
+                            participation.seance.statut === 'annulee'
+                        }"
+                      >
+                        {{ participation.seance.statut | titlecase }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            *ngIf="sportif.participations.length === 0"
+            class="text-center py-5 text-muted"
+          >
+            <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
+            <p>Vous n'avez pas encore participé à des séances.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

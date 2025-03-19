@@ -1,0 +1,359 @@
+.mon-suivi-container {
+  margin-bottom: 50px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 30px;
+}
+
+.hero {
+  background: linear-gradient(135deg, #ff5722 0%, #e91e63 100%);
+  color: white;
+  padding: 50px 20px;
+  margin-bottom: 40px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ff9800, #ff5722, #e91e63, #ff9800);
+  border-radius: 0 0 10px 10px;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.hero p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Informations du sportif */
+.sportif-info {
+  margin-bottom: 2rem;
+  text-align: center;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.sportif-info h4 {
+  color: #333;
+  font-weight: 600;
+}
+
+.sportif-info p {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Section des statistiques - nouvelle version moderne */
+.stats-section {
+  margin-bottom: 35px;
+  display: flex;
+  gap: 20px;
+}
+
+/* Statistiques - cartes modernisées */
+.statistic-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  flex: 1;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.statistic-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff5722, #e91e63);
+}
+
+.statistic-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+.statistic-value {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #e91e63;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.statistic-label {
+  font-size: 1rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* Conteneurs de graphiques */
+.chart-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 35px;
+  position: relative;
+  min-height: 350px;
+  border-top: 3px solid #ff5722;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container h3 {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #333;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f1f1;
+  margin-top: 0;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  margin-top: 20px;
+}
+
+/* Disposition des graphiques en grille avec espacement */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.chart-grid .chart-item {
+  min-height: 400px;
+}
+
+.chart-grid .chart-item-full {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+/* Styles spécifiques pour différents types de graphiques */
+.chart-container.exercises-chart {
+  border-top-color: #ff5722; /* Orange pour les exercices */
+}
+
+.chart-container.coaches-chart {
+  border-top-color: #ff9800; /* Orange-jaune pour les coachs */
+}
+
+.chart-container.activity-chart {
+  border-top-color: #e91e63; /* Rose pour l'activité */
+}
+
+/* Graphique en pleine largeur */
+.full-width-chart {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+canvas {
+  width: 100% !important;
+  height: 300px !important;
+  max-height: 300px;
+}
+
+/* Tableau des exercices - modernisé */
+.exercises-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid #e91e63;
+}
+
+.exercises-container h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #333;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* Style du tableau modernisé */
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 15px 10px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody td {
+  padding: 15px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f1f1;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(255, 87, 34, 0.03);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges pour les exercices */
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  margin: 2px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.badge.bg-light {
+  background-color: #f0f0f0 !important;
+  color: #333 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Animation de chargement */
+.loading-container {
+  padding: 60px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin: 30px 0;
+}
+
+.spinner-border {
+  color: #ff5722 !important;
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Alert */
+.alert-info {
+  background-color: #fff3e0;
+  color: #e65100;
+  border-color: #ffcc80;
+  border-radius: 12px;
+  padding: 25px;
+  margin: 30px 0;
+}
+
+.alert-info .btn-primary {
+  background-color: #ff5722;
+  border-color: #ff5722;
+  padding: 10px 20px;
+  margin-top: 10px;
+}
+
+.alert-info .btn-primary:hover {
+  background-color: #e64a19;
+  border-color: #e64a19;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero {
+    padding: 40px 15px;
+    margin-bottom: 30px;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .stats-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .statistic-card {
+    width: 100%;
+    padding: 25px 15px;
+  }
+
+  .statistic-value {
+    font-size: 2.8rem;
+  }
+
+  /* Adaptation des graphiques pour mobile */
+  .chart-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .chart-item,
+  .chart-item-full {
+    min-height: 350px;
+  }
+
+  .chart-container,
+  .exercises-container {
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+
+  .chart-container h3 {
+    font-size: 1.3rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+
+  .badge {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+}
