@@ -131,8 +131,13 @@ export class AuthService {
     }
 
     // Si l'utilisateur a des participations, extraire les séances de ces participations
-    if ((user as any).participations && (user as any).participations.length > 0) {
-      const seances = (user as any).participations.map((participation: any) => participation.seance);
+    if (
+      (user as any).participations &&
+      (user as any).participations.length > 0
+    ) {
+      const seances = (user as any).participations.map(
+        (participation: any) => participation.seance
+      );
       return of(seances);
     }
 
@@ -142,29 +147,32 @@ export class AuthService {
         ? user.id.split('/').pop()
         : user.id;
 
-      return this.http
-        .get<any>(`${this.apiUrl}/sportifs/${sportifId}`)
-        .pipe(
-          map((sportifDetails) => {
-            // Extraire les séances des participations
-            const seances = sportifDetails.participations 
-              ? sportifDetails.participations.map((participation: any) => participation.seance) 
-              : [];
-            
-            // Mettre à jour l'utilisateur avec les participations
-            (user as any).participations = sportifDetails.participations;
-            
-            // Stocker aussi les séances pour compatibilité avec le code existant
-            user.seances = seances;
-            
-            this.updateCurrentUser(user);
-            return seances;
-          }),
-          catchError(error => {
-            console.error('Erreur lors de la récupération des séances de l\'utilisateur', error);
-            return of([]);
-          })
-        );
+      return this.http.get<any>(`${this.apiUrl}/sportifs/${sportifId}`).pipe(
+        map((sportifDetails) => {
+          // Extraire les séances des participations
+          const seances = sportifDetails.participations
+            ? sportifDetails.participations.map(
+                (participation: any) => participation.seance
+              )
+            : [];
+
+          // Mettre à jour l'utilisateur avec les participations
+          (user as any).participations = sportifDetails.participations;
+
+          // Stocker aussi les séances pour compatibilité avec le code existant
+          user.seances = seances;
+
+          this.updateCurrentUser(user);
+          return seances;
+        }),
+        catchError((error) => {
+          console.error(
+            "Erreur lors de la récupération des séances de l'utilisateur",
+            error
+          );
+          return of([]);
+        })
+      );
     }
 
     return of([]);
