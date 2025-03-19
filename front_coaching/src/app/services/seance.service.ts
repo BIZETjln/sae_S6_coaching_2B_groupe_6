@@ -121,23 +121,66 @@ export class SeanceService {
 
   // Récupérer les séances à venir
   getSeancesAVenir(): Observable<Seance[]> {
+    const maintenant = new Date();
+
     return this.getMesSeances().pipe(
       map((seances) =>
-        seances.filter(
-          (s) =>
+        seances.filter((s) => {
+          // Vérifier le statut de la séance
+          const statutValide =
             s.statut === 'à venir' ||
             s.statut === 'prevue' ||
-            s.statut === 'validee'
-        )
+            s.statut === 'validee';
+
+          // Vérifier si la date de la séance est dans le futur
+          let seanceDate: Date;
+          if (s.date) {
+            seanceDate = s.date instanceof Date ? s.date : new Date(s.date);
+          } else if (s.date_heure) {
+            seanceDate = new Date(s.date_heure);
+          } else if (s.dateHeure) {
+            seanceDate = new Date(s.dateHeure);
+          } else {
+            // Si aucune date n'est disponible, on considère uniquement le statut
+            return statutValide;
+          }
+
+          // La séance est à venir si sa date est supérieure ou égale à maintenant
+          // OU si elle a un statut valide pour les séances à venir
+          return statutValide && seanceDate >= maintenant;
+        })
       )
     );
   }
 
   // Récupérer les séances passées
   getSeancesPassees(): Observable<Seance[]> {
+    const maintenant = new Date();
+
     return this.getMesSeances().pipe(
       map((seances) =>
-        seances.filter((s) => s.statut === 'terminée' || s.statut === 'annulee')
+        seances.filter((s) => {
+          // Vérifier le statut de la séance
+          const statutValide =
+            s.statut === 'terminée' || s.statut === 'annulee';
+
+          // Vérifier si la date de la séance est dans le passé
+          let seanceDate: Date;
+          if (s.date) {
+            seanceDate = s.date instanceof Date ? s.date : new Date(s.date);
+          } else if (s.date_heure) {
+            seanceDate = new Date(s.date_heure);
+          } else if (s.dateHeure) {
+            seanceDate = new Date(s.dateHeure);
+          } else {
+            // Si aucune date n'est disponible, on considère uniquement le statut
+            return statutValide;
+          }
+
+          // La séance est passée si sa date est inférieure à maintenant
+          // OU si elle a un statut qui indique qu'elle est terminée ou annulée
+          return statutValide || seanceDate < maintenant;
+        })
       )
     );
   }
@@ -313,10 +356,8 @@ export class SeanceService {
     }
 
     // Extraire les IDs des sportifs
-    const sportifs = Array.isArray(apiSeance.sportifs)
-      ? apiSeance.sportifs.map((url: string) =>
-          typeof url === 'string' ? url.split('/').pop() : url
-        )
+    const sportifs = Array.isArray(apiSeance.sportifsIds)
+      ? apiSeance.sportifsIds.map((id: string) => id)
       : [];
 
     // Déterminer le statut de la séance
@@ -326,8 +367,10 @@ export class SeanceService {
     if (apiStatut === 'annulee') {
       statut = 'annulee';
     } else if (apiStatut === 'terminée') {
-      statut = 'terminée';
-    } else if (apiStatut === 'prevue' || apiStatut === 'validee') {
+      statut = 'passee';
+    } else if (apiStatut === 'validee') {
+      statut = 'passee';
+    } else if (apiStatut === 'prevue') {
       statut = 'à venir';
     }
 
@@ -394,7 +437,6 @@ export class SeanceService {
       niveauSeance: apiSeance.niveauSeance,
       exercices: apiSeance.exercices || [],
       sportifs: sportifs,
-      image: `${this.baseImageUrl}${apiSeance.image}` || '',
       photo: `${this.baseImageUrl}${apiSeance.photo}` || '',
     };
 
@@ -484,9 +526,9 @@ export class SeanceService {
       Accept: 'application/ld+json',
     });
 
-    // Exécuter la requête POST
+    // Exécuter la requête PATCH au lieu de POST
     // Pas besoin d'envoyer l'ID du sportif car l'API l'identifie via le token JWT
-    return this.http.post<any>(url, {}, { headers }).pipe(
+    return this.http.patch<any>(url, {}, { headers }).pipe(
       map((response) => {
         console.log("Réponse d'inscription/désinscription:", response);
 

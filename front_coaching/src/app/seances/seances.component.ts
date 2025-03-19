@@ -54,6 +54,14 @@ export class SeancesComponent implements OnInit {
 
   // Indicateur de chargement
   loading: boolean = true;
+  
+  // Nouvel indicateur pour les réservations en cours
+  reservationEnCours: boolean = false;
+  
+  // Message de notification
+  messageNotification: string = '';
+  typeNotification: 'success' | 'error' = 'success';
+  afficherNotification: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -66,19 +74,22 @@ export class SeancesComponent implements OnInit {
     // Charger les séances depuis le service
     this.seanceService.getAllSeances().subscribe({
       next: (seances) => {
-        this.seances = seances;
+        // Filtrer uniquement les séances avec le statut "prevue"
+        console.log('seances', seances);
+        this.seances = seances.filter(seance => seance.statut === 'à venir');
+        console.log('seances', this.seances);
         this.seancesFiltrees = [...this.seances];
         this.loading = false;
 
         // Log pour vérifier les détails des séances
-        console.log('Séances récupérées:', this.seances);
+        console.log('Séances récupérées (statut prevue uniquement):', this.seances);
         this.seances.forEach((seance, index) => {
           console.log(`Séance ${index + 1} - ID: ${seance.id}`, {
             titre: seance.titre,
             theme: seance.theme || seance.themeSeance || seance.theme_seance,
-            niveau:
-              seance.niveau || seance.niveauSeance || seance.niveau_seance,
+            niveau: seance.niveau || seance.niveauSeance || seance.niveau_seance,
             type: seance.type || seance.typeSeance || seance.type_seance,
+            statut: seance.statut,
             image: seance.image,
             photo: seance.photo,
           });
@@ -292,5 +303,127 @@ export class SeancesComponent implements OnInit {
   getCoachName(coach: Coach): string {
     if (coach.name) return coach.name;
     return `${coach.prenom || ''} ${coach.nom || ''}`.trim() || 'Coach';
+  }
+
+  // Méthode pour vérifier si l'utilisateur est inscrit à une séance
+  estInscritASeance(seance: Seance): boolean {
+    // Vérifier si l'utilisateur est connecté
+    const user = this.authService.currentUserValue;
+    if (!user || !user.id || !seance.sportifs) {
+      return false;
+    }
+    
+    // Vérifier si l'ID de l'utilisateur est dans la liste des sportifs de la séance
+    return seance.sportifs.includes(user.id);
+  }
+  
+  // Méthode pour vérifier si une séance est complète
+  estSeancePleine(seance: Seance): boolean {
+    // Si l'utilisateur est déjà inscrit, la séance n'est pas considérée comme pleine pour lui
+    if (this.estInscritASeance(seance)) {
+      return false;
+    }
+    
+    // Vérifier la capacité et le nombre actuel de participants
+    const nombreParticipants = seance.sportifs?.length || 0;
+    console.log('nombreParticipants', seance);
+    const capaciteMax = seance.capaciteMax || this.getCapaciteMaxFromType(seance);
+    
+    return nombreParticipants >= capaciteMax;
+  }
+  
+  // Méthode pour obtenir le message approprié concernant la capacité
+  getCapaciteMessage(seance: Seance): string {
+    if (!seance) return '';
+    
+    const nombreParticipants = seance.sportifs?.length || 0;
+    const capaciteMax = seance.capaciteMax || this.getCapaciteMaxFromType(seance);
+    
+    return `${nombreParticipants}/${capaciteMax} places`;
+  }
+  
+  // Méthode pour déterminer la capacité maximale en fonction du type
+  getCapaciteMaxFromType(seance: Seance): number {
+    const type = seance.type?.toLowerCase() || seance.typeSeance?.toLowerCase() || seance.type_seance?.toLowerCase() || '';
+    
+    switch (type) {
+      case 'solo': return 1;
+      case 'duo': return 2;
+      case 'trio': return 3;
+      default: return 1; // Par défaut
+    }
+  }
+  
+  // Méthode pour réserver ou annuler une réservation
+  toggleReservation(seance: Seance, event?: Event): void {
+    // Empêcher la propagation de l'événement pour ne pas déclencher l'affichage des détails
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!this.isClient()) {
+      this.router.navigate(['/connexion'], {
+        queryParams: {
+          returnUrl: '/seances',
+          message: 'Connectez-vous pour réserver une séance'
+        }
+      });
+      return;
+    }
+    
+    // Indiquer que la réservation est en cours
+    this.reservationEnCours = true;
+    
+    // Appeler le service pour réserver/annuler
+    this.seanceService.toggleReservationSeance(seance.id).subscribe({
+      next: (response) => {
+        console.log('Réponse de réservation:', response);
+        
+        // Afficher un message de succès
+        this.messageNotification = response.message;
+        this.typeNotification = 'success';
+        this.afficherNotification = true;
+        
+        // Mettre à jour la liste des séances pour refléter les changements
+        this.refreshSeances();
+        
+        // Fermer la notification après 3 secondes
+        setTimeout(() => {
+          this.afficherNotification = false;
+        }, 3000);
+        
+        this.reservationEnCours = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors de la réservation:', error);
+        
+        // Afficher un message d'erreur
+        this.messageNotification = error.message || 'Une erreur est survenue lors de la réservation';
+        this.typeNotification = 'error';
+        this.afficherNotification = true;
+        
+        // Fermer la notification après 3 secondes
+        setTimeout(() => {
+          this.afficherNotification = false;
+        }, 3000);
+        
+        this.reservationEnCours = false;
+      }
+    });
+  }
+  
+  // Méthode pour rafraîchir la liste des séances
+  private refreshSeances(): void {
+    this.seanceService.getAllSeances().subscribe({
+      next: (seances) => {
+        // Conserver uniquement les séances avec statut "prevue"
+        this.seances = seances.filter(seance => seance.statut === 'à venir');
+        this.appliquerFiltres(); // Réappliquer les filtres
+      },
+      error: (error) => {
+        console.error('Erreur lors du rafraîchissement des séances:', error);
+      }
+    });
   }
 }
