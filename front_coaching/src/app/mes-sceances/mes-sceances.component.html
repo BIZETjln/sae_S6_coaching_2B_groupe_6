@@ -90,6 +90,13 @@
       >
         Passées ({{ seancesPassees.length }})
       </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'annulees'"
+        (click)="switchTab('annulees')"
+      >
+        Annulées ({{ seancesAnnulees.length }})
+      </button>
     </div>
 
     <div class="seances-list">
@@ -111,7 +118,7 @@
               <span>{{ formatCoachName(seance.coach) }}</span>
             </div>
           </div>
-          <div class="seance-type" [style.background-color]="seance.couleur">
+          <div class="seance-type" [ngStyle]="{'background-color': seance.couleur || 'var(--primary)'}">
             {{ seance.type }}
           </div>
         </div>
@@ -141,7 +148,7 @@
               <span>{{ formatCoachName(seance.coach) }}</span>
             </div>
           </div>
-          <div class="seance-type" [style.background-color]="seance.couleur">
+          <div class="seance-type" [ngStyle]="{'background-color': seance.couleur || 'var(--primary)'}">
             {{ seance.type }}
           </div>
         </div>
@@ -149,6 +156,35 @@
         <div class="empty-state" *ngIf="seancesPassees.length === 0">
           <i class="bi bi-calendar-check"></i>
           <p>Vous n'avez pas de séances passées</p>
+        </div>
+      </div>
+
+      <!-- Séances annulées -->
+      <div *ngIf="activeTab === 'annulees'">
+        <div class="seance-card" *ngFor="let seance of seancesAnnulees" (click)="selectSeance(seance)">
+          <div class="seance-date">
+            <div class="date-day">{{ seance.date?.getDate() }}</div>
+            <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
+          </div>
+          <div class="seance-info">
+            <h3>{{ seance.titre }}</h3>
+            <div class="seance-details">
+              <span><i class="bi bi-clock"></i> {{ seance.heureDebut }} - {{ seance.heureFin }}</span>
+              <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            </div>
+            <div class="seance-coach">
+              <img [src]="getCoachImage(seance.coach)" alt="{{ formatCoachName(seance.coach) }}">
+              <span>{{ formatCoachName(seance.coach) }}</span>
+            </div>
+          </div>
+          <div class="seance-type annulee" [ngStyle]="{'background-color': seance.couleur || 'var(--neutral-600)'}">
+            {{ seance.type }}
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="seancesAnnulees.length === 0">
+          <i class="bi bi-calendar-x"></i>
+          <p>Vous n'avez pas de séances annulées</p>
         </div>
       </div>
     </div>
@@ -164,7 +200,8 @@
     </div>
 
     <div class="day-seances">
-      <div class="seance-card" *ngFor="let seance of seancesAVenir" (click)="selectSeance(seance)">
+      <!-- Séances à venir -->
+      <div *ngFor="let seance of seancesAVenir" class="seance-card" (click)="selectSeance(seance)">
         <div class="seance-time">
           <span>{{ seance.heureDebut }}</span>
           <div class="time-line"></div>
@@ -182,8 +219,50 @@
           </div>
         </div>
       </div>
+      
+      <!-- Séances passées -->
+      <div *ngFor="let seance of seancesPassees" class="seance-card seance-passee" (click)="selectSeance(seance)">
+        <div class="seance-time">
+          <span>{{ seance.heureDebut }}</span>
+          <div class="time-line"></div>
+          <span>{{ seance.heureFin }}</span>
+        </div>
+        <div class="seance-content" [style.border-left-color]="seance.couleur">
+          <div class="status-badge">Passée</div>
+          <h3>{{ seance.titre }}</h3>
+          <p>{{ seance.description }}</p>
+          <div class="seance-details">
+            <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            <span><i class="bi bi-person"></i> {{ formatCoachName(seance.coach) }}</span>
+            <span *ngIf="seance.type === 'groupe'">
+              <i class="bi bi-people"></i> {{ seance.participantsActuels }}/{{ seance.capaciteMax }} participants
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Séances annulées -->
+      <div *ngFor="let seance of seancesAnnulees" class="seance-card seance-annulee" (click)="selectSeance(seance)">
+        <div class="seance-time">
+          <span>{{ seance.heureDebut }}</span>
+          <div class="time-line"></div>
+          <span>{{ seance.heureFin }}</span>
+        </div>
+        <div class="seance-content" [style.border-left-color]="'var(--neutral-600)'">
+          <div class="status-badge annulee">Annulée</div>
+          <h3>{{ seance.titre }}</h3>
+          <p>{{ seance.description }}</p>
+          <div class="seance-details">
+            <span><i class="bi bi-geo-alt"></i> {{ seance.lieu }}</span>
+            <span><i class="bi bi-person"></i> {{ formatCoachName(seance.coach) }}</span>
+            <span *ngIf="seance.type === 'groupe'">
+              <i class="bi bi-people"></i> {{ seance.participantsActuels }}/{{ seance.capaciteMax }} participants
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <div class="empty-state" *ngIf="seancesAVenir.length === 0">
+      <div class="empty-state" *ngIf="seancesAVenir.length === 0 && seancesPassees.length === 0 && seancesAnnulees.length === 0">
         <i class="bi bi-calendar-x"></i>
         <p>Pas de séances prévues ce jour</p>
         <button class="btn-primary" (click)="redirectToSeances()">Réserver une séance</button>

@@ -14,6 +14,7 @@ export class MesSceancesComponent implements OnInit {
   seancesAVenir: Seance[] = [];
   seancesDuJour: Seance[] = [];
   seancesPassees: Seance[] = [];
+  seancesAnnulees: Seance[] = [];
   seancesParJour: { [date: string]: Seance[] } = {};
   
   // Pour le calendrier
@@ -28,8 +29,8 @@ export class MesSceancesComponent implements OnInit {
   viewMode: 'calendar' | 'list' | 'day' = 'calendar';
   selectedDate: Date | null = null;
   selectedSeance: Seance | null = null;
-  activeTab: 'avenir' | 'passees' = 'avenir'; // Onglet actif par défaut
-  showCancelConfirmation: boolean = false; // Pour afficher la confirmation d'annulation
+  activeTab: 'avenir' | 'passees' | 'annulees' = 'avenir';
+  showCancelConfirmation: boolean = false;
   
   // Pour les notifications
   notification: { message: string, type: 'success' | 'error' | 'info' } | null = null;
@@ -46,6 +47,12 @@ export class MesSceancesComponent implements OnInit {
     this.seanceService.getMesSeances().subscribe(seances => {
       this.seances = seances;
       this.organizeSeances();
+      
+      // Afficher des logs pour le débogage
+      console.log('Nombre total de séances chargées:', this.seances.length);
+      console.log('Nombre de séances à venir:', this.seancesAVenir.length);
+      console.log('Nombre de séances passées:', this.seancesPassees.length);
+      console.log('Nombre de séances annulées:', this.seancesAnnulees.length);
     });
   }
 
@@ -59,12 +66,17 @@ export class MesSceancesComponent implements OnInit {
     );
     
     this.seancesPassees = this.seances.filter(s => 
-      s.statut === 'terminée' || 
+      s.statut === 'passee'
+    );
+    
+    // Séances annulées
+    this.seancesAnnulees = this.seances.filter(s => 
       s.statut === 'annulee'
     );
     
     console.log('Séances à venir:', this.seancesAVenir);
     console.log('Séances passées:', this.seancesPassees);
+    console.log('Séances annulées:', this.seancesAnnulees);
     
     // Organiser les séances par jour pour le calendrier
     this.seancesParJour = {};
@@ -93,7 +105,7 @@ export class MesSceancesComponent implements OnInit {
   }
 
   // Méthode pour changer d'onglet dans la vue liste
-  switchTab(tab: 'avenir' | 'passees'): void {
+  switchTab(tab: 'avenir' | 'passees' | 'annulees'): void {
     this.activeTab = tab;
     // Recharger les séances appropriées
     if (tab === 'avenir') {
@@ -102,9 +114,12 @@ export class MesSceancesComponent implements OnInit {
         s.statut === 'validee' || 
         s.statut === 'prevue'
       );
-    } else {
+    } else if (tab === 'passees') {
       this.seancesPassees = this.seances.filter(s => 
-        s.statut === 'terminée' || 
+        s.statut === 'passee'
+      );
+    } else if (tab === 'annulees') {
+      this.seancesAnnulees = this.seances.filter(s => 
         s.statut === 'annulee'
       );
     }
@@ -156,7 +171,22 @@ export class MesSceancesComponent implements OnInit {
     
     // Charger les séances pour cette date
     this.seanceService.getSeancesByDate(this.selectedDate).subscribe(seances => {
-      this.seancesAVenir = seances;
+      this.seances = seances;
+      
+      // Filtrer les séances selon leur statut
+      this.seancesAVenir = this.seances.filter(s => 
+        s.statut === 'à venir' || 
+        s.statut === 'validee' || 
+        s.statut === 'prevue'
+      );
+      this.seancesPassees = this.seances.filter(s => 
+        s.statut === 'passee'
+      );
+      this.seancesAnnulees = this.seances.filter(s => 
+        s.statut === 'annulee'
+      );
+      
+      console.log(`Séances chargées pour le ${this.formatDateFr(this.selectedDate!)}:`, this.seances.length);
     });
   }
 
@@ -182,13 +212,17 @@ export class MesSceancesComponent implements OnInit {
   switchToListView(): void {
     this.viewMode = 'list';
     this.activeTab = 'avenir'; // Initialiser l'onglet actif à "à venir"
+    
+    // Filtrer les séances selon leur statut
     this.seancesAVenir = this.seances.filter(s => 
       s.statut === 'à venir' || 
       s.statut === 'validee' || 
       s.statut === 'prevue'
     );
     this.seancesPassees = this.seances.filter(s => 
-      s.statut === 'terminée' || 
+      s.statut === 'passee'
+    );
+    this.seancesAnnulees = this.seances.filter(s => 
       s.statut === 'annulee'
     );
     this.selectedDate = null;
