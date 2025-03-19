@@ -277,24 +277,39 @@ class SeanceCrudController extends AbstractCrudController
     }
 
     /**
-     * Vérifie si les sportifs inscrits ont des conflits d'horaires avec d'autres séances
+     * Vérifie si les sportifs peuvent être ajoutés à la séance
      */
     private function checkSportifsAvailability(Seance $seance): array
     {
         $conflicts = [];
         $repository = $this->entityManager->getRepository(Seance::class);
         
-        if ($repository instanceof \App\Repository\SeanceRepository && $seance->getDateHeure()) {
+        if ($repository instanceof \App\Repository\SeanceRepository) {
             foreach ($seance->getParticipations() as $participation) {
                 $sportif = $participation->getSportif();
-                if ($sportif) {
-                    $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
-                    if ($hasConflict) {
-                        $conflicts[] = sprintf(
-                            'Le sportif %s a déjà une séance programmée à un horaire conflictuel.',
-                            $sportif->__toString()
-                        );
-                    }
+                if (!$sportif) continue;
+                
+                // Vérifier les conflits d'horaires
+                $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
+                if ($hasConflict) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s a déjà une séance programmée, il doit y avoir au moins 1h30 entre deux séances',
+                        $sportif->__toString()
+                    );
+                }
+                
+                // Vérifier le nombre d'annulations
+                $historiqueRepo = $this->entityManager->getRepository(\App\Entity\HistoriqueAnnulation::class);
+                $historique = $historiqueRepo->findOneBy([
+                    'sportif' => $sportif,
+                    'seance' => $seance
+                ]);
+                
+                if ($historique && $historique->getNbAnnulation() >= 2) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s a déjà annulé cette séance 2 fois et ne peut plus y être inscrit',
+                        $sportif->__toString()
+                    );
                 }
             }
         }
@@ -377,7 +392,7 @@ class SeanceCrudController extends AbstractCrudController
                 ));
             }
             
-            // Vérifier les conflits d'horaires pour les sportifs
+            // Vérifier les conflits d'horaires et les annulations pour les sportifs
             if ($seance->getDateHeure()) {
                 $conflicts = $this->checkSportifsAvailability($seance);
                 foreach ($conflicts as $conflict) {
@@ -391,8 +406,26 @@ class SeanceCrudController extends AbstractCrudController
     {
         try {
             // Vérifier à nouveau les conflits de séances avant la persistance
-            // (en cas de modification directe du formulaire sans passer par l'événement)
             if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
+                // Vérification du nombre de sportifs selon le type de séance
+                $typeSeance = $entityInstance->getTypeSeance();
+                $maxSportifs = match ($typeSeance) {
+                    TypeSeance::SOLO => 1,
+                    TypeSeance::DUO => 2,
+                    TypeSeance::TRIO => 3,
+                    default => 3
+                };
+
+                if (count($entityInstance->getSportifs()) > $maxSportifs) {
+                    throw new \LogicException(
+                        sprintf(
+                            'Une séance %s ne peut avoir que %d sportif(s) maximum',
+                            $typeSeance->value,
+                            $maxSportifs
+                        )
+                    );
+                }
+                
                 $repository = $entityManager->getRepository(Seance::class);
                 if ($repository instanceof \App\Repository\SeanceRepository) {
                     $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
@@ -423,9 +456,7 @@ class SeanceCrudController extends AbstractCrudController
         } catch (\LogicException $e) {
             // Ajouter un flash message pour afficher l'erreur
             $this->addFlash('danger', $e->getMessage());
-
-            // Ne pas propager l'exception pour permettre à l'utilisateur de corriger l'erreur
-            // La transaction sera automatiquement annulée par Doctrine
+            throw $e;
         }
     }
 
