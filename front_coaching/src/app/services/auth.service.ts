@@ -40,7 +40,7 @@ interface ApiResponse {
 }
 
 interface DecodedToken {
-  username: string;
+  email: string;
   roles: string[];
   exp: number;
   iat: number;
@@ -85,7 +85,6 @@ export class AuthService {
     try {
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
-      console.error('Erreur lors du décodage du token JWT', error);
       return null;
     }
   }
@@ -166,10 +165,6 @@ export class AuthService {
           return seances;
         }),
         catchError((error) => {
-          console.error(
-            "Erreur lors de la récupération des séances de l'utilisateur",
-            error
-          );
           return of([]);
         })
       );
@@ -213,14 +208,14 @@ export class AuthService {
           return this.http
             .get<ApiResponse>(`${this.apiUrl}/sportifs`, {
               headers,
-              params: { email: decodedToken.username }, // Filtrer par email pour limiter les résultats
+              params: { email: decodedToken.email }, // Filtrer par email pour limiter les résultats
             })
             .pipe(
               switchMap((response) => {
                 // Recherchez le sportif correspondant à l'email
                 const sportifs = response.member || [];
                 const sportif = sportifs.find(
-                  (s) => s.email === decodedToken.username
+                  (s) => s.email === decodedToken.email
                 );
 
                 if (!sportif) {
@@ -261,33 +256,19 @@ export class AuthService {
                       if (sportifDetails.participations) {
                         (user as any).participations =
                           sportifDetails.participations;
-                        console.log(
-                          'Participations récupérées:',
-                          sportifDetails.participations.length
-                        );
                       }
-
-                      console.log(
-                        'Utilisateur connecté avec photo:',
-                        user.photo
-                      );
 
                       // Stockez l'utilisateur dans le localStorage
                       this.updateCurrentUser(user);
                       return user;
                     }),
                     catchError((err) => {
-                      console.warn(
-                        "Erreur lors de la récupération des détails du sportif. Création d'un utilisateur basique.",
-                        err
-                      );
-
                       // Créer un utilisateur basique à partir des données limitées
                       const basicUser: User = {
                         id: sportifId || 'unknown-id',
                         nom: sportif.nom || '',
                         prenom: sportif.prenom || '',
-                        email: decodedToken.username,
+                        email: decodedToken.email,
                         role: UserRole.CLIENT,
                         token: token,
                         photo: sportif.photo || null,
@@ -297,10 +278,6 @@ export class AuthService {
                       if (sportif.participations) {
                         (basicUser as any).participations =
                           sportif.participations;
-                        console.log(
-                          'Participations récupérées (fallback):',
-                          sportif.participations.length
-                        );
                       }
 
                       // Stockez l'utilisateur dans le localStorage
@@ -310,15 +287,10 @@ export class AuthService {
                   );
               }),
               catchError((err) => {
-                console.warn(
-                  "Erreur lors de la récupération de la liste des sportifs. Création d'un utilisateur basique.",
-                  err
-                );
-
                 // Si nous ne pouvons pas récupérer la liste des sportifs, créez un utilisateur basique
                 const fallbackUser: User = {
                   id: 'unknown-id',
-                  email: decodedToken.username,
+                  email: decodedToken.email,
                   role: UserRole.CLIENT,
                   token: token,
                 };
