@@ -1,4 +1,12 @@
 <div class="seances-container">
+  <!-- Indicateur de chargement -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Chargement des séances...</p>
+    </div>
+  </div>
+
   <!-- Notification -->
   <div class="notification" *ngIf="showNotification" [ngClass]="notification?.type">
     <div class="notification-content">
@@ -18,7 +26,7 @@
   <div class="seances-header">
     <h1>Mes Séances</h1>
     <div class="view-toggle">
-      <button [class.active]="viewMode === 'calendar'" (click)="viewMode = 'calendar'">
+      <button [class.active]="viewMode === 'calendar'" (click)="switchToCalendarView()">
         <i class="bi bi-calendar3"></i> Calendrier
       </button>
       <button [class.active]="viewMode === 'list'" (click)="switchToListView()">
