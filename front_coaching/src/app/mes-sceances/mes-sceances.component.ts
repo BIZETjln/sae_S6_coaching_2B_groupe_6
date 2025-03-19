@@ -14,7 +14,11 @@ export class MesSceancesComponent implements OnInit {
   seancesAVenir: Seance[] = [];
   seancesDuJour: Seance[] = [];
   seancesPassees: Seance[] = [];
+  seancesAnnulees: Seance[] = [];
   seancesParJour: { [date: string]: Seance[] } = {};
+  
+  // État de chargement
+  isLoading: boolean = false;
   
   // Pour le calendrier
   currentDate: Date = new Date();
@@ -28,8 +32,8 @@ export class MesSceancesComponent implements OnInit {
   viewMode: 'calendar' | 'list' | 'day' = 'calendar';
   selectedDate: Date | null = null;
   selectedSeance: Seance | null = null;
-  activeTab: 'avenir' | 'passees' = 'avenir'; // Onglet actif par défaut
-  showCancelConfirmation: boolean = false; // Pour afficher la confirmation d'annulation
+  activeTab: 'avenir' | 'passees' | 'annulees' = 'avenir';
+  showCancelConfirmation: boolean = false;
   
   // Pour les notifications
   notification: { message: string, type: 'success' | 'error' | 'info' } | null = null;
@@ -43,9 +47,25 @@ export class MesSceancesComponent implements OnInit {
   }
 
   loadSeances(): void {
-    this.seanceService.getMesSeances().subscribe(seances => {
-      this.seances = seances;
-      this.organizeSeances();
+    this.isLoading = true;
+    this.seanceService.getMesSeances().subscribe({
+      next: seances => {
+        this.seances = seances;
+        this.organizeSeances();
+        
+        // Afficher des logs pour le débogage
+        console.log('Nombre total de séances chargées:', this.seances.length);
+        console.log('Nombre de séances à venir:', this.seancesAVenir.length);
+        console.log('Nombre de séances passées:', this.seancesPassees.length);
+        console.log('Nombre de séances annulées:', this.seancesAnnulees.length);
+        
+        this.isLoading = false;
+      },
+      error: error => {
+        console.error('Erreur lors du chargement des séances:', error);
+        this.isLoading = false;
+        this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+      }
     });
   }
 
@@ -59,12 +79,17 @@ export class MesSceancesComponent implements OnInit {
     );
     
     this.seancesPassees = this.seances.filter(s => 
-      s.statut === 'terminée' || 
+      s.statut === 'passee'
+    );
+    
+    // Séances annulées
+    this.seancesAnnulees = this.seances.filter(s => 
       s.statut === 'annulee'
     );
     
     console.log('Séances à venir:', this.seancesAVenir);
     console.log('Séances passées:', this.seancesPassees);
+    console.log('Séances annulées:', this.seancesAnnulees);
     
     // Organiser les séances par jour pour le calendrier
     this.seancesParJour = {};
@@ -93,18 +118,47 @@ export class MesSceancesComponent implements OnInit {
   }
 
   // Méthode pour changer d'onglet dans la vue liste
-  switchTab(tab: 'avenir' | 'passees'): void {
+  switchTab(tab: 'avenir' | 'passees' | 'annulees'): void {
     this.activeTab = tab;
-    // Recharger les séances appropriées
+    
+    // Vérifier si nous avons une date sélectionnée (si nous venons de la vue jour)
+    // ou si les séances ne contiennent que les séances d'un jour spécifique
+    if (this.selectedDate) {
+      // Recharger toutes les séances avant de filtrer
+      this.isLoading = true;
+      this.seanceService.getMesSeances().subscribe({
+        next: seances => {
+          this.seances = seances;
+          this.filterSeancesByTab(tab);
+          this.selectedDate = null;
+          this.isLoading = false;
+        },
+        error: error => {
+          console.error('Erreur lors du chargement des séances:', error);
+          this.isLoading = false;
+          this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+        }
+      });
+    } else {
+      // Sinon, filtrer les séances déjà chargées
+      this.filterSeancesByTab(tab);
+    }
+  }
+
+  // Méthode utilitaire pour filtrer les séances selon l'onglet actif
+  private filterSeancesByTab(tab: 'avenir' | 'passees' | 'annulees'): void {
     if (tab === 'avenir') {
       this.seancesAVenir = this.seances.filter(s => 
         s.statut === 'à venir' || 
         s.statut === 'validee' || 
         s.statut === 'prevue'
       );
-    } else {
+    } else if (tab === 'passees') {
       this.seancesPassees = this.seances.filter(s => 
-        s.statut === 'terminée' || 
+        s.statut === 'passee'
+      );
+    } else if (tab === 'annulees') {
+      this.seancesAnnulees = this.seances.filter(s => 
         s.statut === 'annulee'
       );
     }
@@ -155,8 +209,32 @@ export class MesSceancesComponent implements OnInit {
     this.viewMode = 'day';
     
     // Charger les séances pour cette date
-    this.seanceService.getSeancesByDate(this.selectedDate).subscribe(seances => {
-      this.seancesAVenir = seances;
+    this.isLoading = true;
+    this.seanceService.getSeancesByDate(this.selectedDate).subscribe({
+      next: seances => {
+        this.seances = seances;
+        
+        // Filtrer les séances selon leur statut
+        this.seancesAVenir = this.seances.filter(s => 
+          s.statut === 'à venir' || 
+          s.statut === 'validee' || 
+          s.statut === 'prevue'
+        );
+        this.seancesPassees = this.seances.filter(s => 
+          s.statut === 'passee'
+        );
+        this.seancesAnnulees = this.seances.filter(s => 
+          s.statut === 'annulee'
+        );
+        
+        console.log(`Séances chargées pour le ${this.formatDateFr(this.selectedDate!)}:`, this.seances.length);
+        this.isLoading = false;
+      },
+      error: error => {
+        console.error(`Erreur lors du chargement des séances pour le ${this.formatDateFr(this.selectedDate!)}:`, error);
+        this.isLoading = false;
+        this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+      }
     });
   }
 
@@ -176,22 +254,84 @@ export class MesSceancesComponent implements OnInit {
 
   backToCalendar(): void {
     this.viewMode = 'calendar';
-    this.selectedDate = null;
+    
+    // Recharger toutes les séances pour la vue calendrier
+    this.isLoading = true;
+    this.seanceService.getMesSeances().subscribe({
+      next: seances => {
+        this.seances = seances;
+        this.organizeSeances();
+        this.selectedDate = null;
+        this.isLoading = false;
+      },
+      error: error => {
+        console.error('Erreur lors du chargement des séances:', error);
+        this.isLoading = false;
+        this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+      }
+    });
+  }
+
+  switchToCalendarView(): void {
+    // Si nous venons de la vue jour ou liste, nous devons recharger toutes les séances
+    if (this.viewMode === 'day' || (this.viewMode === 'list' && this.selectedDate)) {
+      this.isLoading = true;
+      this.seanceService.getMesSeances().subscribe({
+        next: seances => {
+          this.seances = seances;
+          this.organizeSeances();
+          this.selectedDate = null;
+          this.viewMode = 'calendar';
+          this.isLoading = false;
+        },
+        error: error => {
+          console.error('Erreur lors du chargement des séances:', error);
+          this.isLoading = false;
+          this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+        }
+      });
+    } else {
+      // Sinon, changer simplement la vue
+      this.viewMode = 'calendar';
+    }
   }
 
   switchToListView(): void {
     this.viewMode = 'list';
     this.activeTab = 'avenir'; // Initialiser l'onglet actif à "à venir"
-    this.seancesAVenir = this.seances.filter(s => 
-      s.statut === 'à venir' || 
-      s.statut === 'validee' || 
-      s.statut === 'prevue'
-    );
-    this.seancesPassees = this.seances.filter(s => 
-      s.statut === 'terminée' || 
-      s.statut === 'annulee'
-    );
-    this.selectedDate = null;
+    
+    // Si on vient de la vue jour (on a sélectionné une date spécifique),
+    // on recharge toutes les séances pour avoir la liste complète
+    if (this.selectedDate) {
+      this.isLoading = true;
+      this.seanceService.getMesSeances().subscribe({
+        next: seances => {
+          this.seances = seances;
+          this.organizeSeances();
+          this.selectedDate = null;
+          this.isLoading = false;
+        },
+        error: error => {
+          console.error('Erreur lors du chargement des séances:', error);
+          this.isLoading = false;
+          this.showErrorMessage('Une erreur est survenue lors du chargement des séances');
+        }
+      });
+    } else {
+      // Sinon, on filtre simplement les séances déjà chargées
+      this.seancesAVenir = this.seances.filter(s => 
+        s.statut === 'à venir' || 
+        s.statut === 'validee' || 
+        s.statut === 'prevue'
+      );
+      this.seancesPassees = this.seances.filter(s => 
+        s.statut === 'passee'
+      );
+      this.seancesAnnulees = this.seances.filter(s => 
+        s.statut === 'annulee'
+      );
+      this.selectedDate = null;
+    }
   }
 
   hasSeances(day: number): boolean {
@@ -309,5 +449,85 @@ export class MesSceancesComponent implements OnInit {
       this.showNotification = false;
       setTimeout(() => this.notification = null, 100);
     }, 300);
+  }
+
+  // Formater le nom du coach
+  formatCoachName(coach: any): string {
+    if (!coach) return 'Coach';
+    
+    if (coach.name) return coach.name;
+    
+    if (coach.prenom && coach.nom) {
+      return `${coach.prenom} ${coach.nom}`;
+    } else if (coach.nom) {
+      return coach.nom;
+    } else if (coach.prenom) {
+      return coach.prenom;
+    }
+    
+    return 'Coach';
+  }
+
+  // Formater l'URL de l'image du coach
+  getCoachImage(coach: any): string {
+    if (!coach) return 'assets/images/default-coach.png';
+    
+    // Image par défaut
+    const defaultImage = 'assets/images/default-coach.png';
+    const baseImageUrl = 'https://127.0.0.1:8000/images/coaches/';
+    
+    // Si le coach a une image via la propriété avatar
+    if (coach.avatar) {
+      // Si l'avatar est déjà une URL complète ou chemin relatif des assets
+      if (coach.avatar.startsWith('http') || coach.avatar.startsWith('assets/')) {
+        return coach.avatar;
+      }
+      // Sinon, c'est juste le nom du fichier, on ajoute le chemin complet
+      return `${baseImageUrl}${coach.avatar}`;
+    }
+    
+    // Si le coach a une image via la propriété image
+    if (coach.image) {
+      // Si l'image est déjà une URL complète ou chemin relatif des assets
+      if (coach.image.startsWith('http') || coach.image.startsWith('assets/')) {
+        return coach.image;
+      }
+      // Sinon, c'est juste le nom du fichier, on ajoute le chemin complet
+      return `${baseImageUrl}${coach.image}`;
+    }
+    
+    // Fallback: image par défaut
+    return defaultImage;
+  }
+
+  // Créer un lien mailto pour contacter le coach
+  createMailtoLink(coach: any, seance: any): string {
+    if (!coach || !coach.email) return '';
+    
+    const coachName = this.formatCoachName(coach);
+    const seanceTitre = seance.titre || 'la séance';
+    
+    // Construction du corps du mail
+    let bodyText = `Bonjour ${coachName},\n\n`;
+    bodyText += `Je vous contacte au sujet de "${seanceTitre}"`;
+    
+    // Ajout des informations de date si disponibles
+    if (seance.date) {
+      const dateFormatted = this.formatDateFr(new Date(seance.date));
+      bodyText += ` prévue le ${dateFormatted}`;
+      
+      // Ajout de l'heure si disponible
+      if (seance.heureDebut) {
+        bodyText += ` à ${seance.heureDebut}`;
+      }
+    }
+    
+    bodyText += `.\n\n`;
+    bodyText += `Cordialement,\n`;
+    
+    const subject = encodeURIComponent(`À propos de : ${seanceTitre}`);
+    const body = encodeURIComponent(bodyText);
+    
+    return `mailto:${coach.email}?subject=${subject}&body=${body}`;
   }
 }

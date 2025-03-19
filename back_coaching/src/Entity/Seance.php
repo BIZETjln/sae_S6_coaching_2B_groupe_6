@@ -161,6 +161,18 @@ class Seance
         );
     }
 
+    /**
+     * Retourne les IDs des sportifs participant à la séance
+     * @return array
+     */
+    #[Groups(['seance:read', 'coach:read'])]
+    public function getSportifsIds(): array
+    {
+        return $this->participations
+            ->map(fn($p) => $p->getSportif()->getId()->__toString())
+            ->toArray();
+    }
+
     public function addParticipation(Participation $participation): static
     {
         // Vérifier si le sportif existe déjà dans les participations

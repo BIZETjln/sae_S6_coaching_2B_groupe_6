@@ -20,9 +20,12 @@ final class AuthController extends AbstractController{
         /** @var Utilisateur|null $user */
         $user = $this->security->getUser();
         if (!empty($user)) {
-            return new JsonResponse([
-                'id' => $user->getId(),
-            ]);
+            return $this->json(
+                $user,
+                Response::HTTP_OK,
+                [],
+                ['groups' => 'sportif:read']
+            );
         } else {
             return new JsonResponse(null);
         }

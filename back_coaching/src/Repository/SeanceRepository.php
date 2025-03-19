@@ -4,9 +4,11 @@ namespace App\Repository;
 
 use App\Entity\Coach;
 use App\Entity\Seance;
+use App\Entity\Sportif;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Uid\UuidV4;
 
 /**
  * @extends ServiceEntityRepository<Seance>
@@ -81,6 +83,91 @@ class SeanceRepository extends ServiceEntityRepository
         $result = $resultSet->fetchAssociative();
         
         return $result['conflict_count'] > 0;
+    }
+
+    public function hasSportifSessionConflict(Sportif $sportif, \DateTime $dateTime, ?Uuid $currentSeanceId = null): bool
+    {
+        // Définir les limites de temps pour cette séance
+        $seanceDebut = clone $dateTime;
+        $seanceFin = clone $dateTime;
+        $seanceFin->modify('+90 minutes');
+        
+        // Convertir l'UUID du sportif au format sans tirets pour la requête SQL
+        $sportifIdHex = str_replace('-', '', $sportif->getId()->__toString());
+        
+        // Convertir l'ID de la séance actuelle
+        $currentIdHex = $currentSeanceId ? str_replace('-', '', $currentSeanceId->__toString()) : null;
+        
+        // Utiliser une requête SQL native pour vérifier les conflits
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = "
+            SELECT COUNT(*) as conflict_count
+            FROM participation p
+            JOIN seance s ON p.seance_id = s.id
+            WHERE HEX(p.sportif_id) = :sportifIdHex
+            " . ($currentIdHex ? "AND HEX(s.id) != :currentIdHex" : "") . "
+            AND (
+                -- Vérifier si une séance existante chevauche la nouvelle séance
+                (
+                    -- Soit la séance existante commence avant la fin de la nouvelle
+                    s.date_heure < :seanceFin
+                    AND
+                    -- ET la séance existante finit après le début de la nouvelle
+                    DATE_ADD(s.date_heure, INTERVAL 90 MINUTE) > :seanceDebut
+                    AND
+                    -- MAIS on exclut le cas où la séance existante commence exactement à la fin de la nouvelle
+                    s.date_heure != :seanceFin
+                    AND
+                    -- ET on exclut le cas où la séance existante finit exactement au début de la nouvelle
+                    DATE_ADD(s.date_heure, INTERVAL 90 MINUTE) != :seanceDebut
+                )
+            )
+        ";
+        
+        $params = [
+            'sportifIdHex' => $sportifIdHex,
+            'seanceDebut' => $seanceDebut->format('Y-m-d H:i:s'),
+            'seanceFin' => $seanceFin->format('Y-m-d H:i:s'),
+        ];
+        
+        if ($currentIdHex) {
+            $params['currentIdHex'] = $currentIdHex;
+        }
+        
+        $stmt = $conn->executeQuery($sql, $params);
+        $result = $stmt->fetchAssociative();
+        
+        return $result['conflict_count'] > 0;
+    }
+
+    /**
+     * Compte le nombre de séances futures pour un sportif donné
+     */
+    public function countFutureSessionsForSportif(Sportif $sportif, ?UuidV4 $excludeSeanceId = null): int
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sportifIdHex = bin2hex($sportif->getId()->toBinary());
+        $excludeCondition = '';
+        $params = ['sportifIdHex' => $sportifIdHex];
+        
+        if ($excludeSeanceId) {
+            $excludeCondition = 'AND HEX(s.id) != :excludeSeanceIdHex';
+            $params['excludeSeanceIdHex'] = bin2hex($excludeSeanceId->toBinary());
+        }
+        
+        $sql = "
+            SELECT COUNT(*) as future_sessions_count
+            FROM participation p
+            JOIN seance s ON p.seance_id = s.id
+            WHERE HEX(p.sportif_id) = :sportifIdHex
+            AND s.date_heure > NOW()
+            $excludeCondition
+        ";
+        
+        $stmt = $conn->executeQuery($sql, $params);
+        $result = $stmt->fetchAssociative();
+        
+        return (int) $result['future_sessions_count'];
     }
 
     //    /**
