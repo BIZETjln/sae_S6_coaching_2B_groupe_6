@@ -16,6 +16,18 @@
             padding: 20px;
             margin-bottom: 20px;
             color: #fff;
+            height: 100%;
+        }
+        .row.equal-height {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .row.equal-height > [class*='col-'] {
+            display: flex;
+            flex-direction: column;
+        }
+        .row.equal-height .stats-card {
+            flex: 1;
         }
         .stats-card h2 {
             margin-top: 0;
@@ -81,7 +93,7 @@
 {% block content_title %}Tableau de bord statistique{% endblock %}
 
 {% block main %}
-    <div class="row">
+    <div class="row equal-height">
         {# Statistiques de présence #}
         <div class="col-md-6">
             <div class="stats-card">
@@ -98,6 +110,7 @@
         <div class="col-md-6">
             <div class="stats-card">
                 <h2><i class="fa fa-fill"></i> Taux de remplissage des séances</h2>
+                <h4 class="mt-4">Taux de remplissage global</h4>
                 <table class="stats-table">
                     <thead>
                         <tr>
@@ -108,6 +121,30 @@
                     </thead>
                     <tbody>
                         {% for rate in fillRateStats.by_type %}
+                            <tr>
+                                <td>{{ rate.type }}</td>
+                                <td>
+                                    {{ rate.fill_rate }}%
+                                    <div class="percentage-bar">
+                                        <div class="percentage-value" style="width: {{ rate.fill_rate }}%"></div>
+                                    </div>
+                                </td>
+                                <td>{{ rate.participant_count }} / {{ rate.total_capacity }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <h4 class="mt-4">Taux de remplissage (séances validées)</h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Type de séance</th>
+                            <th>Taux de remplissage</th>
+                            <th>Participants / Capacité</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rate in fillRateStats.by_type_validated %}
                             <tr>
                                 <td>{{ rate.type }}</td>
                                 <td>
