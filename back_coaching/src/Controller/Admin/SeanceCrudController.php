@@ -247,6 +247,12 @@ class SeanceCrudController extends AbstractCrudController
                     foreach ($conflicts as $conflict) {
                         $form->addError(new \Symfony\Component\Form\FormError($conflict));
                     }
+                    
+                    // Vérifier le nombre de séances futures par sportif
+                    $maxFutureSessionsConflicts = $this->checkMaxFutureSessions($seance);
+                    foreach ($maxFutureSessionsConflicts as $conflict) {
+                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
+                    }
                 }
             }
         };
@@ -309,6 +315,40 @@ class SeanceCrudController extends AbstractCrudController
                     $conflicts[] = sprintf(
                         'Le sportif %s a déjà annulé cette séance 2 fois et ne peut plus y être inscrit',
                         $sportif->__toString()
+                    );
+                }
+            }
+        }
+        
+        return $conflicts;
+    }
+
+    /**
+     * Vérifie que les sportifs n'ont pas plus de 3 séances réservées à l'avance
+     */
+    private function checkMaxFutureSessions(Seance $seance): array
+    {
+        $conflicts = [];
+        $repository = $this->entityManager->getRepository(Seance::class);
+        
+        if ($repository instanceof \App\Repository\SeanceRepository) {
+            foreach ($seance->getParticipations() as $participation) {
+                $sportif = $participation->getSportif();
+                if (!$sportif) continue;
+                
+                // Ne pas compter la séance actuelle si c'est une mise à jour
+                $countFutureSessions = $repository->countFutureSessionsForSportif($sportif, $seance->getId());
+                
+                // Si nouvelle séance, on ajoute 1 au compte
+                if (!$seance->getId()) {
+                    $countFutureSessions++;
+                }
+                
+                if ($countFutureSessions > 3) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s %s ne peut pas avoir plus de 3 séances réservées à l\'avance.',
+                        $sportif->getNom(),
+                        $sportif->getPrenom()
                     );
                 }
             }
@@ -440,6 +480,12 @@ class SeanceCrudController extends AbstractCrudController
                     $conflicts = $this->checkSportifsAvailability($entityInstance);
                     if (!empty($conflicts)) {
                         throw new \LogicException(implode("\n", $conflicts));
+                    }
+                    
+                    // Vérifier le nombre maximum de séances futures
+                    $maxSessionsConflicts = $this->checkMaxFutureSessions($entityInstance);
+                    if (!empty($maxSessionsConflicts)) {
+                        throw new \LogicException(implode("\n", $maxSessionsConflicts));
                     }
                 }
             }

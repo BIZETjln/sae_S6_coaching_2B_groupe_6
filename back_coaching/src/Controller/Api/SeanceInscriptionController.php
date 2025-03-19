@@ -124,6 +124,14 @@ class SeanceInscriptionController extends AbstractController
                         'Il doit y avoir au moins 1h30 entre deux séances.'
                     ], Response::HTTP_BAD_REQUEST);
                 }
+                
+                // Vérifier si le sportif a déjà 3 séances réservées à l'avance
+                $seancesFutures = $seanceRepository->countFutureSessionsForSportif($user);
+                if ($seancesFutures >= 3) {
+                    return $this->json([
+                        'message' => 'Vous ne pouvez pas réserver plus de 3 séances à l\'avance.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
             }
 
             try {
