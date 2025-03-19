@@ -228,6 +228,7 @@ canvas {
   letter-spacing: 0.5px;
   padding: 15px 10px;
   border-bottom: 2px solid #dee2e6;
+  text-align: center;
 }
 
 .table tbody td {
@@ -236,6 +237,7 @@ canvas {
   border-bottom: 1px solid #f1f1f1;
   color: #333;
   font-size: 0.95rem;
+  text-align: center;
 }
 
 .table tbody tr:hover {
