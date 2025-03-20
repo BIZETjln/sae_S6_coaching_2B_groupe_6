@@ -1,7 +1,7 @@
 <div class="mon-suivi-container">
   <div class="hero">
     <div class="hero-content">
-      <h1><i class="fas fa-chart-line me-2"></i>Mon Suivi Sportif</h1>
+      <h1><i class="fas fa-chart-line me-2"></i>Mon Bilan Sportif</h1>
       <p>Visualisez vos progrès et analysez votre activité sportive</p>
     </div>
   </div>
@@ -134,28 +134,332 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Graphique d'évolution de l'activité -->
-          <div class="chart-item-full">
-            <div class="chart-container activity-chart">
-              <h3>
-                <i class="fas fa-chart-line me-2"></i>Évolution de mon activité
-              </h3>
-              <div
-                *ngIf="stats.activitesParMois.size > 0"
-                class="chart-wrapper"
-              >
-                <canvas #activitesParMoisChart></canvas>
+        <!-- NOUVELLE SECTION: Statistiques avancées -->
+        <div *ngIf="statsAvancees" class="statistiques-avancees-section mb-4">
+          <h2 class="section-title mb-4">
+            <i class="fas fa-analytics me-2"></i>Analyse détaillée de votre
+            parcours
+          </h2>
+
+          <!-- SÉLECTEURS DE PÉRIODE -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="periode-selector">
+                <div
+                  class="selector-header d-flex justify-content-between align-items-center mb-3"
+                >
+                  <div class="periode-label">
+                    <i class="fas fa-calendar-alt me-2"></i>Période d'analyse
+                  </div>
+
+                  <!-- Remplacer la coche par des onglets -->
+                  <div class="mode-toggle-buttons">
+                    <button
+                      type="button"
+                      class="btn mode-btn"
+                      [class.mode-btn-active]="!modeAvance"
+                      (click)="setModeAvance(false)"
+                    >
+                      <i class="fas fa-calendar-week me-2"></i>Mode simple
+                    </button>
+                    <button
+                      type="button"
+                      class="btn mode-btn"
+                      [class.mode-btn-active]="modeAvance"
+                      (click)="setModeAvance(true)"
+                    >
+                      <i class="fas fa-calendar-day me-2"></i>Mode avancé
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Contenu de sélection de période -->
+                <ng-container *ngIf="!modeAvance; else modeAvanceTemplate">
+                  <!-- Boutons rapides -->
+                  <div class="mode-simple">
+                    <div class="btn-group-selector">
+                      <button
+                        *ngFor="let periode of periodes"
+                        type="button"
+                        class="btn btn-selector"
+                        [class.active]="
+                          statistiquesOptions.period === periode.value
+                        "
+                        (click)="changerPeriode(periode.value)"
+                        [attr.data-period]="periode.value"
+                      >
+                        {{ periode.label }}
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- Template pour le mode avancé -->
+                <ng-template #modeAvanceTemplate>
+                  <div class="mode-avance mt-3">
+                    <div
+                      *ngIf="messageErreurDates"
+                      class="alert alert-danger mb-3"
+                    >
+                      <i class="fas fa-exclamation-triangle me-2"></i
+                      >{{ messageErreurDates }}
+                    </div>
+
+                    <div class="date-range-container">
+                      <div class="date-fields-container">
+                        <div class="date-field">
+                          <label class="form-label mb-2"
+                            ><i class="fas fa-calendar-day me-2"></i>Date de
+                            début</label
+                          >
+                          <div class="input-group">
+                            <span class="input-group-text date-icon"
+                              ><i class="fas fa-calendar-alt"></i
+                            ></span>
+                            <input
+                              type="date"
+                              class="form-control date-input"
+                              [(ngModel)]="dateDebut"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="date-field">
+                          <label class="form-label mb-2"
+                            ><i class="fas fa-calendar-day me-2"></i>Date de
+                            fin</label
+                          >
+                          <div class="input-group">
+                            <span class="input-group-text date-icon"
+                              ><i class="fas fa-calendar-alt"></i
+                            ></span>
+                            <input
+                              type="date"
+                              class="form-control date-input"
+                              [(ngModel)]="dateFin"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-center mt-4">
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-apply"
+                          (click)="appliquerDatesPersonnalisees()"
+                        >
+                          <i class="fas fa-search me-2"></i>Appliquer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
               </div>
-              <div
-                *ngIf="stats.activitesParMois.size === 0"
-                class="text-center py-5 text-muted"
-              >
-                <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
-                <p>
-                  Pas encore suffisamment de données pour afficher l'évolution
-                  de votre activité.
-                </p>
+            </div>
+          </div>
+
+          <!-- CHIFFRES CLÉS -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="key-metrics-card">
+                <h3><i class="fas fa-chart-bar me-2"></i>Chiffres clés</h3>
+                <div class="row metrics-container">
+                  <!-- Nombre de séances -->
+                  <div class="col-md-6 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-dumbbell"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.total_seances }}
+                      </div>
+                      <div class="metric-label">Séances</div>
+                      <div
+                        class="metric-trend"
+                        [ngClass]="{
+                          positive: evolutionStats.seances >= 0,
+                          negative: evolutionStats.seances < 0
+                        }"
+                      >
+                        <i
+                          [ngClass]="
+                            evolutionStats.seances >= 0
+                              ? 'fas fa-arrow-up'
+                              : 'fas fa-arrow-down'
+                          "
+                        ></i>
+                        {{ evolutionStats.seances >= 0 ? "+" : ""
+                        }}{{ evolutionStats.seances }}% vs période précédente
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Heures d'entraînement -->
+                  <div class="col-md-6 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.duree_totale.formatee }}
+                      </div>
+                      <div class="metric-label">d'entraînement</div>
+                      <div
+                        class="metric-trend"
+                        [ngClass]="{
+                          positive: evolutionStats.duree >= 0,
+                          negative: evolutionStats.duree < 0
+                        }"
+                      >
+                        <i
+                          [ngClass]="
+                            evolutionStats.duree >= 0
+                              ? 'fas fa-arrow-up'
+                              : 'fas fa-arrow-down'
+                          "
+                        ></i>
+                        {{ evolutionStats.duree >= 0 ? "+" : ""
+                        }}{{ evolutionStats.duree }}% vs période précédente
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GRAPHIQUES ET STATISTIQUES -->
+          <div
+            class="row mb-4"
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 30px;
+            "
+          >
+            <!-- Répartition des types de séances -->
+            <div class="col-md-6 mb-4">
+              <div class="chart-card h-100">
+                <h3>
+                  <i class="fas fa-chart-pie me-2"></i>Répartition des types de
+                  séances
+                </h3>
+                <div class="seances-donut-container">
+                  <!-- Si des séances existent, afficher le donut chart -->
+                  <ng-container
+                    *ngIf="statsAvancees && statsAvancees.total_seances > 0"
+                  >
+                    <!-- Solution dynamique pour le donut chart -->
+                    <div class="simple-donut-chart">
+                      <!-- Graphique dynamique du donut chart -->
+                      <div
+                        class="donut-segment-simple"
+                        [style.background-image]="
+                          'conic-gradient(' + getDonutGradient() + ')'
+                        "
+                      ></div>
+
+                      <!-- Centre du donut -->
+                      <div
+                        class="donut-inner d-flex flex-column justify-content-center align-items-center"
+                      >
+                        <div class="percentage-value">
+                          {{ statsAvancees.total_seances }}
+                        </div>
+                        <div class="percentage-label">séances</div>
+                      </div>
+                    </div>
+
+                    <!-- Légende du donut -->
+                    <div class="donut-legend">
+                      <ng-container
+                        *ngIf="
+                          statsAvancees.repartition_types &&
+                          statsAvancees.repartition_types.length > 0
+                        "
+                      >
+                        <div
+                          *ngFor="
+                            let type of statsAvancees.repartition_types;
+                            let i = index
+                          "
+                          class="legend-item"
+                        >
+                          <div
+                            class="legend-color"
+                            [style.background-color]="getColorForIndex(i)"
+                          ></div>
+                          <div class="legend-text">
+                            <span>{{ type.type }}</span>
+                            <span class="percentage"
+                              >{{ calculatePercentage(type.count) }}%</span
+                            >
+                          </div>
+                        </div>
+                      </ng-container>
+                    </div>
+                  </ng-container>
+
+                  <!-- Si pas de séances, afficher un message simple -->
+                  <div
+                    *ngIf="!statsAvancees || statsAvancees.total_seances === 0"
+                    class="text-center py-5 d-flex flex-column align-items-center justify-content-center h-100"
+                  >
+                    <i
+                      class="fas fa-info-circle mb-3"
+                      style="font-size: 2.5rem; color: #e0e0e0"
+                    ></i>
+                    <p class="fs-5 text-muted">
+                      Aucune séance enregistrée pour le moment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Liste des exercices les plus pratiqués -->
+            <div class="col-md-6 mb-4">
+              <div class="exercices-card h-100">
+                <h3>
+                  <i class="fas fa-list-ol me-2"></i>Exercices les plus
+                  pratiqués
+                </h3>
+                <div class="exercices-liste">
+                  <div
+                    class="exercice-item"
+                    *ngFor="
+                      let exercice of statsAvancees.top_exercices;
+                      let i = index
+                    "
+                  >
+                    <div class="exercice-position">{{ i + 1 }}</div>
+                    <div class="exercice-details">
+                      <div class="exercice-nom">{{ exercice.nom }}</div>
+                      <div class="exercice-stats">
+                        <span>{{ exercice.count }} fois</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Affichage d'un message si aucun exercice n'est disponible -->
+                  <div
+                    *ngIf="
+                      !statsAvancees?.top_exercices ||
+                      statsAvancees.top_exercices.length === 0
+                    "
+                    class="text-center py-5"
+                  >
+                    <i
+                      class="fas fa-info-circle mb-3"
+                      style="font-size: 2rem; color: #673ab7"
+                    ></i>
+                    <p class="text-muted">
+                      Aucun exercice enregistré pour le moment.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
