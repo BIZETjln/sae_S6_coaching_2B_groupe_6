@@ -44,6 +44,7 @@ use ApiPlatform\Metadata\ApiProperty;
             securityMessage: "Vous ne pouvez modifier que votre propre profil."
         ),
         new Delete(
+            controller: 'App\Controller\Api\SportifSuppressionController',
             security: "is_granted('ROLE_USER') and object.getId() == user.getId()",
             securityMessage: "Vous ne pouvez supprimer que votre propre profil."
         ),
