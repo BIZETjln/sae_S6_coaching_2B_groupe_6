@@ -41,7 +41,7 @@ class SportifStatistiquesController extends AbstractController
         $dateMin = $request->query->get('date_min');
         $dateMax = $request->query->get('date_max');
 
-        // Si period est spécifié, calculer les dates en fonction
+        // Mode 1: Si period est spécifié, calculer les dates en fonction
         if ($period && $dateMin) {
             try {
                 $dateMinObj = new DateTime($dateMin);
@@ -66,40 +66,27 @@ class SportifStatistiquesController extends AbstractController
                         $dateMaxObj->modify('+1 year -1 day');
                         break;
                     default:
-                        return $this->json(['message' => 'Période non reconnue'], Response::HTTP_BAD_REQUEST);
+                        return $this->json(['message' => 'Période non valide'], Response::HTTP_BAD_REQUEST);
                 }
             } catch (\Exception $e) {
                 return $this->json(['message' => 'Format de date invalide'], Response::HTTP_BAD_REQUEST);
             }
         } 
-        // Sinon utiliser date_min et date_max directement
+        // Mode 2: Si date_min et date_max sont spécifiés (période personnalisée), utiliser ces dates directement
         elseif ($dateMin && $dateMax) {
             try {
                 $dateMinObj = new DateTime($dateMin);
                 $dateMaxObj = new DateTime($dateMax);
-            } catch (\Exception $e) {
-                return $this->json(['message' => 'Format de date invalide'], Response::HTTP_BAD_REQUEST);
-            }
-        } 
-        // Si seulement date_min est fournie, traiter comme un seul jour
-        elseif ($dateMin) {
-            try {
-                $dateMinObj = new DateTime($dateMin);
-                $dateMaxObj = clone $dateMinObj;
                 
-                // Si la date est seulement une date sans heure (comme '2025-04-01'),
-                // on couvre toute la journée
-                if (strlen($dateMin) <= 10) {
-                    $dateMaxObj->setTime(23, 59, 59);
+                // Vérifier que date_max est après date_min
+                if ($dateMaxObj < $dateMinObj) {
+                    return $this->json(['message' => 'La date de fin doit être postérieure à la date de début'], Response::HTTP_BAD_REQUEST);
                 }
             } catch (\Exception $e) {
                 return $this->json(['message' => 'Format de date invalide'], Response::HTTP_BAD_REQUEST);
             }
-        }
-        // Si aucune date n'est fournie, utiliser le mois en cours
-        else {
-            $dateMinObj = new DateTime('first day of this month');
-            $dateMaxObj = new DateTime('last day of this month');
+        } else {
+            return $this->json(['message' => 'Paramètres de date invalides. Veuillez spécifier soit (period + date_min) soit (date_min + date_max)'], Response::HTTP_BAD_REQUEST);
         }
 
         // Ajuster la fin de journée pour date_max

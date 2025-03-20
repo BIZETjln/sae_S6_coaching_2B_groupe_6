@@ -5,10 +5,6 @@
     {{ parent() }}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
     <style>
-        body {
-            background-color: #121212;
-            color: #fff;
-        }
         .stats-card {
             background-color: #222;
             border-radius: 8px;
@@ -225,7 +221,7 @@
         </div>
     </div>
     
-    <div class="row">
+    <div class="row mb-4 mt-4">
         {# Évolution des inscriptions #}
         <div class="col-md-12">
             <div class="stats-card">
@@ -241,6 +237,50 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        {# Taux d'occupation par créneau horaire #}
+        <div class="col-md-12">
+            <div class="stats-card">
+                <h2><i class="fa fa-clock"></i> Taux d'occupation par créneau horaire</h2>
+                <div class="chart-container">
+                    <canvas id="timeSlotChart"></canvas>
+                </div>
+                <h4 class="mt-4">Détails par créneau horaire</h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Horaire</th>
+                            <th>Taux d'occupation</th>
+                            <th>Sessions</th>
+                            <th>Participants / Capacité</th>
+                            <th>Détails par coach</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in timeSlotStats %}
+                            <tr>
+                                <td>{{ slot.time }}</td>
+                                <td>
+                                    {{ slot.occupation_rate }}%
+                                    <div class="percentage-bar">
+                                        <div class="percentage-value" style="width: {{ slot.occupation_rate }}%"></div>
+                                    </div>
+                                </td>
+                                <td>{{ slot.total_sessions }}</td>
+                                <td>{{ slot.total_participants }} / {{ slot.total_capacity }}</td>
+                                <td>
+                                    {% for coach, stats in slot.by_coach %}
+                                        <small>{{ coach }}: {{ stats.occupation_rate }}% ({{ stats.participants }}/{{ stats.capacity }})</small><br>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -512,6 +552,74 @@
                                     const percentage = Math.round((context.raw / total) * 100);
                                     return context.label + ': ' + context.raw + ' (' + percentage + '%)';
                                 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Graphique des taux d'occupation par créneau horaire
+            const timeSlotData = {{ timeSlotStats|json_encode|raw }};
+            const timeSlots = timeSlotData.map(slot => slot.time);
+            const occupationRates = timeSlotData.map(slot => slot.occupation_rate);
+            
+            new Chart(document.getElementById('timeSlotChart'), {
+                type: 'line',
+                data: {
+                    labels: timeSlots,
+                    datasets: [{
+                        label: 'Taux d\'occupation (%)',
+                        data: occupationRates,
+                        borderColor: colors[3],
+                        backgroundColor: colors[3] + '33',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                            labels: {
+                                color: '#fff'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#222',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            callbacks: {
+                                label: function(context) {
+                                    const slot = timeSlotData[context.dataIndex];
+                                    let label = `Taux d'occupation: ${context.parsed.y}%\n`;
+                                    label += `Sessions: ${slot.total_sessions}\n`;
+                                    label += `Participants: ${slot.total_participants}/${slot.total_capacity}\n\n`;
+                                    
+                                    // Ajouter les détails par coach
+                                    for (const [coach, stats] of Object.entries(slot.by_coach)) {
+                                        label += `${coach}: ${stats.occupation_rate}%\n`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                color: '#fff',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#fff'
                             }
                         }
                     }

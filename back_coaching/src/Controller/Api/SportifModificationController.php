@@ -23,6 +23,12 @@ class SportifModificationController extends AbstractController
 
     public function __invoke(Request $request, Sportif $sportif): JsonResponse
     {
+        // Vérifier que l'utilisateur a le droit de modifier ce profil
+        $user = $this->getUser();
+        if (!$user instanceof Sportif || $user->getId() !== $sportif->getId()) {
+            return $this->json(['message' => 'Vous ne pouvez modifier que votre propre profil.'], Response::HTTP_FORBIDDEN);
+        }
+        
         try {
             // Récupérer le contenu de la requête
             $data = $request->getContent();

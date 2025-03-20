@@ -1,7 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SeanceService } from '../services/seance.service';
 import { Seance } from '../models/seance.model';
 import { Router } from '@angular/router';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+
+// Interface pour les exercices
+interface ExerciceDetail {
+  id: string;
+  nom: string;
+  description: string;
+  difficulte: string;
+  dureeEstimee: number;
+  photo?: string;
+  expanded: boolean; // Pour l'interface utilisateur
+}
 
 @Component({
   selector: 'app-mes-sceances',
@@ -9,13 +22,20 @@ import { Router } from '@angular/router';
   styleUrl: './mes-sceances.component.css',
   standalone: false
 })
-export class MesSceancesComponent implements OnInit {
+export class MesSceancesComponent implements OnInit, OnDestroy {
   seances: Seance[] = [];
   seancesAVenir: Seance[] = [];
   seancesDuJour: Seance[] = [];
   seancesPassees: Seance[] = [];
   seancesAnnulees: Seance[] = [];
   seancesParJour: { [date: string]: Seance[] } = {};
+  
+  // Pour les exercices
+  exercicesDetails: ExerciceDetail[] = [];
+  isLoadingExercices: boolean = false;
+  
+  // Abonnements
+  private seanceChangedSubscription: Subscription | null = null;
   
   // État de chargement
   isLoading: boolean = false;
@@ -44,12 +64,20 @@ export class MesSceancesComponent implements OnInit {
   ngOnInit(): void {
     this.loadSeances();
     this.generateCalendarDays();
+    this.subscribeToSeanceChanges();
   }
 
-  loadSeances(): void {
+  ngOnDestroy(): void {
+    this.unsubscribeFromSeanceChanges();
+  }
+
+  loadSeances(forceRefresh: boolean = false): void {
     this.isLoading = true;
-    this.seanceService.getMesSeances().subscribe({
+    console.log(`Chargement des séances en cours... (forceRefresh: ${forceRefresh})`);
+    
+    this.seanceService.getMesSeances(forceRefresh).subscribe({
       next: seances => {
+        console.log('Séances récupérées avec succès:', seances.length);
         this.seances = seances;
         this.organizeSeances();
         
@@ -241,11 +269,17 @@ export class MesSceancesComponent implements OnInit {
   selectSeance(seance: Seance): void {
     this.selectedSeance = seance;
     this.showCancelConfirmation = false; // Réinitialiser l'état de confirmation
+    
+    // Charger les exercices si la séance en a
+    if (seance.exercices && seance.exercices.length > 0) {
+      this.loadExercicesDetails(seance.exercices);
+    }
   }
 
   closeSeanceDetails(): void {
     this.selectedSeance = null;
     this.showCancelConfirmation = false;
+    this.exercicesDetails = []; // Réinitialiser les détails d'exercices
   }
 
   redirectToSeances(): void {
@@ -374,27 +408,58 @@ export class MesSceancesComponent implements OnInit {
 
   // Afficher la confirmation d'annulation
   showCancelConfirmationDialog(): void {
+    if (this.isLoading) return; // Ne pas ouvrir si chargement en cours
     this.showCancelConfirmation = true;
+  }
+
+  // Méthode pour vérifier si une séance est dans moins de 24h
+  isWithin24Hours(seance: Seance): boolean {
+    if (!seance.date) return false;
+    
+    const seanceDate = new Date(seance.date);
+    
+    // Ajouter l'heure à la date si elle est disponible
+    if (seance.heureDebut) {
+      const [hours, minutes] = seance.heureDebut.split(':').map(Number);
+      seanceDate.setHours(hours, minutes, 0, 0);
+    }
+    
+    const now = new Date();
+    const differenceInHours = (seanceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    return differenceInHours <= 24;
   }
 
   // Annuler la séance
   cancelSeance(): void {
     if (!this.selectedSeance) return;
     
-    // Afficher un indicateur de chargement si nécessaire
+    // Vérifier si la séance est dans moins de 24h
+    if (this.isWithin24Hours(this.selectedSeance)) {
+      this.showErrorMessage('Impossible d\'annuler une séance moins de 24h avant son début');
+      this.closeCancelConfirmation();
+      return;
+    }
     
-    this.seanceService.cancelSeance(this.selectedSeance.id).subscribe({
+    // Afficher un indicateur de chargement
+    this.isLoading = true;
+    
+    this.seanceService.toggleReservationSeance(this.selectedSeance.id).subscribe({
       next: (response) => {
         console.log('Séance annulée avec succès:', response);
         
-        // Mettre à jour la liste des séances
-        this.loadSeances();
+        // Fermer la modale de confirmation d'annulation
+        this.closeCancelConfirmation();
         
-        // Fermer la modale
-        this.closeSeanceDetails();
+        // Fermer la modale des détails de la séance mais garder l'état de chargement
+        this.selectedSeance = null;
+        this.showCancelConfirmation = false;
         
         // Afficher un message de succès
         this.showSuccessMessage('Votre séance a été annulée avec succès');
+        
+        // Mettre à jour la liste des séances tout en gardant l'état de chargement
+        this.rechargerSeancesAvecChargement();
       },
       error: (error) => {
         console.error('Erreur lors de l\'annulation de la séance:', error);
@@ -403,13 +468,42 @@ export class MesSceancesComponent implements OnInit {
         this.showErrorMessage('Une erreur est survenue lors de l\'annulation de la séance');
         
         // Fermer quand même la modale
-        this.closeSeanceDetails();
+        this.closeCancelConfirmation();
+        
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Nouvelle méthode pour recharger les séances en gardant l'état de chargement
+  rechargerSeancesAvecChargement(forceRefresh: boolean = true): void {
+    // S'assurer que l'indicateur de chargement est activé
+    this.isLoading = true;
+    
+    // Recharger les séances
+    this.seanceService.getMesSeances(forceRefresh).subscribe({
+      next: seances => {
+        console.log('Séances rechargées avec succès:', seances.length);
+        this.seances = seances;
+        this.organizeSeances();
+        
+        // Attendre un court instant avant de désactiver l'état de chargement
+        // pour s'assurer que l'interface est mise à jour correctement
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 500);
+      },
+      error: error => {
+        console.error('Erreur lors du rechargement des séances:', error);
+        this.isLoading = false;
+        this.showErrorMessage('Une erreur est survenue lors du rechargement des séances');
       }
     });
   }
 
   // Fermer la confirmation sans annuler
   closeCancelConfirmation(): void {
+    if (this.isLoading) return; // Ne pas fermer pendant le chargement
     this.showCancelConfirmation = false;
   }
 
@@ -529,5 +623,117 @@ export class MesSceancesComponent implements OnInit {
     const body = encodeURIComponent(bodyText);
     
     return `mailto:${coach.email}?subject=${subject}&body=${body}`;
+  }
+
+  // Méthode pour charger les détails des exercices
+  loadExercicesDetails(exercices: any[]): void {
+    // Réinitialiser les détails d'exercices
+    this.exercicesDetails = [];
+    
+    // Si pas d'exercices, ne rien faire
+    if (!exercices || exercices.length === 0) {
+      return;
+    }
+    
+    this.isLoadingExercices = true;
+    
+    // Tableau pour stocker les observables de chaque appel d'API
+    const exerciceObservables = exercices.map(exerciceUrl => {
+      return this.seanceService.getExerciceById(exerciceUrl).pipe(
+        map(exercice => {
+          // Transformer les données d'API en notre format
+          const exerciceDetail: ExerciceDetail = {
+            id: exercice.id || '',
+            nom: exercice.nom || 'Exercice sans nom',
+            description: exercice.description || 'Aucune description disponible',
+            difficulte: this.formatDifficulte(exercice.difficulte),
+            dureeEstimee: exercice.dureeEstimee || exercice.duree_estimee || 0,
+            photo: exercice.photo,
+            expanded: false // Initialement fermé
+          };
+          return exerciceDetail;
+        }),
+        catchError(error => {
+          console.error('Erreur lors du chargement de l\'exercice:', error);
+          return of(null); // Retourner null en cas d'erreur
+        })
+      );
+    });
+    
+    // Exécuter tous les observables en parallèle
+    forkJoin(exerciceObservables).subscribe({
+      next: (exercicesResults) => {
+        // Filtrer les résultats null (en cas d'erreur)
+        this.exercicesDetails = exercicesResults.filter(exercice => exercice !== null) as ExerciceDetail[];
+        this.isLoadingExercices = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des exercices:', error);
+        this.isLoadingExercices = false;
+        this.showErrorMessage('Une erreur est survenue lors du chargement des exercices');
+      }
+    });
+  }
+  
+  // Méthode pour formater le niveau de difficulté
+  formatDifficulte(difficulte: string): string {
+    if (!difficulte) return 'Non défini';
+    
+    // Si c'est déjà en français, le retourner tel quel
+    if (['FACILE', 'MOYEN', 'DIFFICILE'].includes(difficulte)) {
+      return difficulte;
+    }
+    
+    // Sinon, traduire de l'anglais
+    const traductions: {[key: string]: string} = {
+      'EASY': 'FACILE',
+      'MEDIUM': 'MOYEN',
+      'HARD': 'DIFFICILE'
+    };
+    
+    return traductions[difficulte] || difficulte;
+  }
+  
+  // Méthode pour basculer l'affichage des détails d'un exercice
+  toggleExerciceDetails(exercice: ExerciceDetail): void {
+    exercice.expanded = !exercice.expanded;
+  }
+  
+  // Méthode pour récupérer l'URL de l'image d'un exercice
+  getExerciceImage(exercice: ExerciceDetail): string {
+    if (!exercice.photo) return 'assets/images/default-exercise.png';
+    
+    // Image par défaut
+    const defaultImage = 'assets/images/default-exercise.png';
+    const baseImageUrl = 'https://127.0.0.1:8000/images/exercices/';
+    
+    // Si la photo est déjà une URL complète ou chemin relatif des assets
+    if (exercice.photo.startsWith('http') || exercice.photo.startsWith('assets/')) {
+      return exercice.photo;
+    }
+    
+    // Sinon, c'est juste le nom du fichier, on ajoute le chemin complet
+    return `${baseImageUrl}${exercice.photo}`;
+  }
+
+  private subscribeToSeanceChanges(): void {
+    this.seanceChangedSubscription = this.seanceService.seanceChanged$.subscribe((change) => {
+      console.log('Notification de changement de séance reçue:', change);
+      
+      // Recharger toutes les séances en forçant une requête au serveur
+      // et en maintenant l'état de chargement
+      this.rechargerSeancesAvecChargement(true);
+      
+      // Afficher un message de confirmation à l'utilisateur
+      if (change.action === 'reserve') {
+        this.showSuccessMessage('Votre réservation a été prise en compte avec succès');
+      } else if (change.action === 'annule') {
+        this.showInfoMessage('Votre annulation a été prise en compte');
+      }
+    });
+  }
+
+  private unsubscribeFromSeanceChanges(): void {
+    this.seanceChangedSubscription?.unsubscribe();
   }
 }

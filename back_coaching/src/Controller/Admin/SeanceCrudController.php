@@ -50,6 +50,12 @@ class SeanceCrudController extends AbstractCrudController
                 ->setIcon('fa fa-calendar-alt')
                 ->setHelp('Informations de base de la séance'),
 
+            // Champ combiné date/heure pour la vue détail
+            DateTimeField::new('date_heure', 'Date et Heure')
+                ->setFormat('dd/MM/yyyy HH:mm')
+                ->hideOnForm(),
+
+            // Champs séparés pour le formulaire uniquement
             DateField::new('dateOnly', 'Date')
                 ->setFormTypeOptions([
                     'widget' => 'single_text',
@@ -64,15 +70,16 @@ class SeanceCrudController extends AbstractCrudController
                         : new \DateTime()
                 ])
                 ->setColumns(6)
-                ->hideOnIndex(),
+                ->hideOnIndex()
+                ->hideOnDetail(),
 
             ChoiceField::new('timeOnly', 'Heure')
                 ->setChoices(function () {
                     $choices = [];
-                    // Créneaux de 30 minutes de 9h à 17h
-                    for ($hour = 9; $hour <= 17; $hour++) {
+                    // Créneaux de 30 minutes de 6h à 21h
+                    for ($hour = 6; $hour <= 21; $hour++) {
                         $choices[sprintf("%02d:00", $hour)] = sprintf("%02d:00:00", $hour);
-                        if ($hour < 17) { // Pas de créneau à 17h30
+                        if ($hour < 21) { // Pas de créneau à 21h30
                             $choices[sprintf("%02d:30", $hour)] = sprintf("%02d:30:00", $hour);
                         }
                     }
@@ -81,17 +88,12 @@ class SeanceCrudController extends AbstractCrudController
                 ->setFormTypeOptions([
                     'mapped' => false,
                     'data' => $pageName === Crud::PAGE_EDIT && $this->getContext()->getEntity()->getInstance()->getDateHeure()
-                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('H:i:s')
-                        : '10:00:00'
+                        ? $this->getContext()->getEntity()->getInstance()->getDateHeure()->format('H:i:00')
+                        : '09:00:00'
                 ])
                 ->setColumns(6)
-                ->hideOnIndex(),
-                
-            // Champ caché pour stocker la valeur combinée
-            DateTimeField::new('date_heure')
-                ->hideOnForm()
-                ->setLabel('Date et heure')
-                ->setFormat('dd/MM/yyyy à HH:mm'),
+                ->hideOnIndex()
+                ->hideOnDetail(),
 
             FormField::addPanel('Caractéristiques de la séance')
                 ->setIcon('fa fa-list')
@@ -211,6 +213,18 @@ class SeanceCrudController extends AbstractCrudController
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
+        $seance = $entityDto->getInstance();
+
+        // Récupérer la séance originale depuis la base de données
+        $originalSeance = $this->entityManager->getRepository(Seance::class)->find($seance->getId());
+
+        // Vérifier si la séance était déjà validée
+        if ($originalSeance && $originalSeance->getStatut() === StatutSeance::VALIDEE) {
+            $this->addFlash('warning', 'Une séance validée ne peut plus être modifiée.');
+            // Désactiver tous les champs du formulaire
+            $formOptions->set('disabled', true);
+        }
+
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
         return $formBuilder
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleDateTimeFields())
@@ -241,7 +255,7 @@ class SeanceCrudController extends AbstractCrudController
 
                 // Vérifier les conflits de séances pour le coach
                 $this->checkCoachAvailability($form, $seance, $dateTime);
-                
+
                 // Vérifier les conflits d'horaires pour les sportifs
                 // Nous ne vérifions les sportifs que s'il y a au moins une participation
                 if (!$seance->getParticipations()->isEmpty()) {
@@ -249,7 +263,7 @@ class SeanceCrudController extends AbstractCrudController
                     foreach ($conflicts as $conflict) {
                         $form->addError(new \Symfony\Component\Form\FormError($conflict));
                     }
-                    
+
                     // Vérifier le nombre de séances futures par sportif
                     $maxFutureSessionsConflicts = $this->checkMaxFutureSessions($seance);
                     foreach ($maxFutureSessionsConflicts as $conflict) {
@@ -291,12 +305,12 @@ class SeanceCrudController extends AbstractCrudController
     {
         $conflicts = [];
         $repository = $this->entityManager->getRepository(Seance::class);
-        
+
         if ($repository instanceof \App\Repository\SeanceRepository) {
             foreach ($seance->getParticipations() as $participation) {
                 $sportif = $participation->getSportif();
                 if (!$sportif) continue;
-                
+
                 // Vérifier les conflits d'horaires
                 $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
                 if ($hasConflict) {
@@ -305,14 +319,26 @@ class SeanceCrudController extends AbstractCrudController
                         $sportif->__toString()
                     );
                 }
-                
+
+                // Vérifier la correspondance des niveaux
+                $niveauSportif = $sportif->getNiveauSportif();
+                $niveauSeance = $seance->getNiveauSeance();
+                if ($niveauSportif !== $niveauSeance) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s de niveau %s ne peut pas être inscrit à une séance de niveau %s',
+                        $sportif->__toString(),
+                        $niveauSportif->value,
+                        $niveauSeance->value
+                    );
+                }
+
                 // Vérifier le nombre d'annulations
                 $historiqueRepo = $this->entityManager->getRepository(\App\Entity\HistoriqueAnnulation::class);
                 $historique = $historiqueRepo->findOneBy([
                     'sportif' => $sportif,
                     'seance' => $seance
                 ]);
-                
+
                 if ($historique && $historique->getNbAnnulation() >= 2) {
                     $conflicts[] = sprintf(
                         'Le sportif %s a déjà annulé cette séance 2 fois et ne peut plus y être inscrit',
@@ -321,7 +347,7 @@ class SeanceCrudController extends AbstractCrudController
                 }
             }
         }
-        
+
         return $conflicts;
     }
 
@@ -332,20 +358,20 @@ class SeanceCrudController extends AbstractCrudController
     {
         $conflicts = [];
         $repository = $this->entityManager->getRepository(Seance::class);
-        
+
         if ($repository instanceof \App\Repository\SeanceRepository) {
             foreach ($seance->getParticipations() as $participation) {
                 $sportif = $participation->getSportif();
                 if (!$sportif) continue;
-                
+
                 // Ne pas compter la séance actuelle si c'est une mise à jour
                 $countFutureSessions = $repository->countFutureSessionsForSportif($sportif, $seance->getId());
-                
+
                 // Si nouvelle séance, on ajoute 1 au compte
                 if (!$seance->getId()) {
                     $countFutureSessions++;
                 }
-                
+
                 if ($countFutureSessions > 3) {
                     $conflicts[] = sprintf(
                         'Le sportif %s %s ne peut pas avoir plus de 3 séances réservées à l\'avance.',
@@ -355,7 +381,7 @@ class SeanceCrudController extends AbstractCrudController
                 }
             }
         }
-        
+
         return $conflicts;
     }
 
@@ -433,7 +459,7 @@ class SeanceCrudController extends AbstractCrudController
                     )
                 ));
             }
-            
+
             // Vérifier les conflits d'horaires et les annulations pour les sportifs
             if ($seance->getDateHeure()) {
                 $conflicts = $this->checkSportifsAvailability($seance);
@@ -467,7 +493,7 @@ class SeanceCrudController extends AbstractCrudController
                         )
                     );
                 }
-                
+
                 $repository = $entityManager->getRepository(Seance::class);
                 if ($repository instanceof \App\Repository\SeanceRepository) {
                     $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
@@ -477,13 +503,13 @@ class SeanceCrudController extends AbstractCrudController
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
                     }
-                    
+
                     // Vérifier les conflits pour les sportifs
                     $conflicts = $this->checkSportifsAvailability($entityInstance);
                     if (!empty($conflicts)) {
                         throw new \LogicException(implode("\n", $conflicts));
                     }
-                    
+
                     // Vérifier le nombre maximum de séances futures
                     $maxSessionsConflicts = $this->checkMaxFutureSessions($entityInstance);
                     if (!empty($maxSessionsConflicts)) {
@@ -522,7 +548,7 @@ class SeanceCrudController extends AbstractCrudController
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
                     }
-                    
+
                     // Vérifier les conflits pour les sportifs
                     $conflicts = $this->checkSportifsAvailability($entityInstance);
                     if (!empty($conflicts)) {

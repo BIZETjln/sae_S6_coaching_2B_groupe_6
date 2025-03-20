@@ -38,11 +38,11 @@
   <!-- Vue Calendrier -->
   <div class="calendar-view" *ngIf="viewMode === 'calendar'">
     <div class="calendar-header">
-      <button class="nav-btn" (click)="previousMonth()">
+      <button class="nav-btn" (click)="!isLoading && previousMonth()" [disabled]="isLoading">
         <i class="bi bi-chevron-left"></i>
       </button>
       <h2>{{ months[currentMonth] }} {{ currentYear }}</h2>
-      <button class="nav-btn" (click)="nextMonth()">
+      <button class="nav-btn" (click)="!isLoading && nextMonth()" [disabled]="isLoading">
         <i class="bi bi-chevron-right"></i>
       </button>
     </div>
@@ -58,7 +58,8 @@
           [class.empty]="day === 0"
           [class.today]="isToday(day)"
           [class.has-seances]="hasSeances(day)"
-          (click)="selectDate(day)"
+          [class.disabled-day]="isLoading && day !== 0"
+          (click)="!isLoading && day !== 0 && selectDate(day)"
         >
           <span class="day-number">{{ day !== 0 ? day : '' }}</span>
           
@@ -70,7 +71,18 @@
               [style.background-color]="seance.couleur"
             >
               <span class="seance-preview-title">{{ seance.titre }}</span>
-              <span class="seance-preview-time">{{ seance.heureDebut }}</span>
+              <span class="seance-preview-time">
+                {{ seance.heureDebut }}
+                <i class="bi"
+                  [ngClass]="{
+                    'bi-calendar-check-fill': seance.statut === 'à venir' || seance.statut === 'validee' || seance.statut === 'prevue',
+                    'bi-check-circle-fill': seance.statut === 'passee',
+                    'bi-x-circle-fill': seance.statut === 'annulee'
+                  }"
+                  [title]="seance.statut === 'à venir' || seance.statut === 'validee' || seance.statut === 'prevue' ? 'À venir' : 
+                         seance.statut === 'passee' ? 'Passée' : 
+                         'Annulée'"></i>
+              </span>
             </div>
             <div class="more-seances" *ngIf="getSeancesForDay(day).length > 2">
               +{{ getSeancesForDay(day).length - 2 }}
@@ -87,21 +99,24 @@
       <button 
         class="tab-btn" 
         [class.active]="activeTab === 'avenir'"
-        (click)="switchTab('avenir')"
+        (click)="!isLoading && switchTab('avenir')"
+        [disabled]="isLoading"
       >
         À venir ({{ seancesAVenir.length }})
       </button>
       <button 
         class="tab-btn" 
         [class.active]="activeTab === 'passees'"
-        (click)="switchTab('passees')"
+        (click)="!isLoading && switchTab('passees')"
+        [disabled]="isLoading"
       >
         Passées ({{ seancesPassees.length }})
       </button>
       <button 
         class="tab-btn" 
         [class.active]="activeTab === 'annulees'"
-        (click)="switchTab('annulees')"
+        (click)="!isLoading && switchTab('annulees')"
+        [disabled]="isLoading"
       >
         Annulées ({{ seancesAnnulees.length }})
       </button>
@@ -110,10 +125,16 @@
     <div class="seances-list">
       <!-- Séances à venir -->
       <div *ngIf="activeTab === 'avenir'">
-        <div class="seance-card" *ngFor="let seance of seancesAVenir" (click)="selectSeance(seance)">
+        <div class="seance-card" 
+             *ngFor="let seance of seancesAVenir" 
+             (click)="!isLoading && selectSeance(seance)"
+             [class.disabled-card]="isLoading">
           <div class="seance-date">
             <div class="date-day">{{ seance.date?.getDate() }}</div>
             <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
+            <div class="status-icon">
+              <i class="bi bi-calendar-check-fill" title="À venir"></i>
+            </div>
           </div>
           <div class="seance-info">
             <h3>{{ seance.titre }}</h3>
@@ -134,16 +155,24 @@
         <div class="empty-state" *ngIf="seancesAVenir.length === 0">
           <i class="bi bi-calendar-x"></i>
           <p>Vous n'avez pas de séances à venir</p>
-          <button class="btn-primary">Réserver une séance</button>
+          <button class="btn-primary" 
+                 [disabled]="isLoading"
+                 (click)="!isLoading && redirectToSeances()">Réserver une séance</button>
         </div>
       </div>
 
       <!-- Séances passées -->
       <div *ngIf="activeTab === 'passees'">
-        <div class="seance-card" *ngFor="let seance of seancesPassees" (click)="selectSeance(seance)">
+        <div class="seance-card" 
+             *ngFor="let seance of seancesPassees" 
+             (click)="!isLoading && selectSeance(seance)"
+             [class.disabled-card]="isLoading">
           <div class="seance-date">
             <div class="date-day">{{ seance.date?.getDate() }}</div>
             <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
+            <div class="status-icon passee">
+              <i class="bi bi-check-circle-fill" title="Passée"></i>
+            </div>
           </div>
           <div class="seance-info">
             <h3>{{ seance.titre }}</h3>
@@ -169,10 +198,16 @@
 
       <!-- Séances annulées -->
       <div *ngIf="activeTab === 'annulees'">
-        <div class="seance-card" *ngFor="let seance of seancesAnnulees" (click)="selectSeance(seance)">
+        <div class="seance-card" 
+             *ngFor="let seance of seancesAnnulees" 
+             (click)="!isLoading && selectSeance(seance)"
+             [class.disabled-card]="isLoading">
           <div class="seance-date">
             <div class="date-day">{{ seance.date?.getDate() }}</div>
             <div class="date-month">{{ months[seance.date?.getMonth() || 0].substring(0, 3) }}</div>
+            <div class="status-icon annulee">
+              <i class="bi bi-x-circle-fill" title="Annulée"></i>
+            </div>
           </div>
           <div class="seance-info">
             <h3>{{ seance.titre }}</h3>
@@ -201,7 +236,9 @@
   <!-- Vue Jour -->
   <div class="day-view" *ngIf="viewMode === 'day' && selectedDate">
     <div class="day-header">
-      <button class="back-btn" (click)="backToCalendar()">
+      <button class="back-btn" 
+              (click)="!isLoading && backToCalendar()" 
+              [disabled]="isLoading">
         <i class="bi bi-arrow-left"></i> Retour
       </button>
       <h2>{{ formatDateFr(selectedDate) }}</h2>
@@ -209,11 +246,17 @@
 
     <div class="day-seances">
       <!-- Séances à venir -->
-      <div *ngFor="let seance of seancesAVenir" class="seance-card" (click)="selectSeance(seance)">
+      <div *ngFor="let seance of seancesAVenir" 
+           class="seance-card" 
+           (click)="!isLoading && selectSeance(seance)"
+           [class.disabled-card]="isLoading">
         <div class="seance-time">
           <span>{{ seance.heureDebut }}</span>
           <div class="time-line"></div>
           <span>{{ seance.heureFin }}</span>
+          <div class="status-icon">
+            <i class="bi bi-calendar-check-fill" title="À venir"></i>
+          </div>
         </div>
         <div class="seance-content" [style.border-left-color]="seance.couleur">
           <h3>{{ seance.titre }}</h3>
@@ -229,11 +272,17 @@
       </div>
       
       <!-- Séances passées -->
-      <div *ngFor="let seance of seancesPassees" class="seance-card seance-passee" (click)="selectSeance(seance)">
+      <div *ngFor="let seance of seancesPassees" 
+           class="seance-card seance-passee" 
+           (click)="!isLoading && selectSeance(seance)"
+           [class.disabled-card]="isLoading">
         <div class="seance-time">
           <span>{{ seance.heureDebut }}</span>
           <div class="time-line"></div>
           <span>{{ seance.heureFin }}</span>
+          <div class="status-icon passee">
+            <i class="bi bi-check-circle-fill" title="Passée"></i>
+          </div>
         </div>
         <div class="seance-content" [style.border-left-color]="seance.couleur">
           <div class="status-badge">Passée</div>
@@ -250,11 +299,17 @@
       </div>
       
       <!-- Séances annulées -->
-      <div *ngFor="let seance of seancesAnnulees" class="seance-card seance-annulee" (click)="selectSeance(seance)">
+      <div *ngFor="let seance of seancesAnnulees" 
+           class="seance-card seance-annulee" 
+           (click)="!isLoading && selectSeance(seance)"
+           [class.disabled-card]="isLoading">
         <div class="seance-time">
           <span>{{ seance.heureDebut }}</span>
           <div class="time-line"></div>
           <span>{{ seance.heureFin }}</span>
+          <div class="status-icon annulee">
+            <i class="bi bi-x-circle-fill" title="Annulée"></i>
+          </div>
         </div>
         <div class="seance-content" [style.border-left-color]="'var(--neutral-600)'">
           <div class="status-badge annulee">Annulée</div>
@@ -273,16 +328,20 @@
       <div class="empty-state" *ngIf="seancesAVenir.length === 0 && seancesPassees.length === 0 && seancesAnnulees.length === 0">
         <i class="bi bi-calendar-x"></i>
         <p>Pas de séances prévues ce jour</p>
-        <button class="btn-primary" (click)="redirectToSeances()">Réserver une séance</button>
+        <button class="btn-primary" 
+               [disabled]="isLoading"
+               (click)="!isLoading && redirectToSeances()">Réserver une séance</button>
       </div>
     </div>
   </div>
 
   <!-- Détails d'une séance -->
   <div class="seance-details-modal" *ngIf="selectedSeance">
-    <div class="modal-backdrop" (click)="closeSeanceDetails()"></div>
+    <div class="modal-backdrop" (click)="!isLoading && closeSeanceDetails()"></div>
     <div class="modal-content">
-      <button class="close-btn" (click)="closeSeanceDetails()">
+      <button class="close-btn" 
+              [disabled]="isLoading"
+              (click)="!isLoading && closeSeanceDetails()">
         <i class="bi bi-x-lg"></i>
       </button>
       
@@ -291,6 +350,17 @@
         <div class="seance-meta">
           <span><i class="bi bi-calendar"></i> {{ formatDateFr(selectedSeance.date!) }}</span>
           <span><i class="bi bi-clock"></i> {{ selectedSeance.heureDebut }} - {{ selectedSeance.heureFin }}</span>
+          <span class="seance-status-indicator">
+            <i class="bi" 
+              [ngClass]="{
+                'bi-calendar-check-fill': selectedSeance.statut === 'à venir' || selectedSeance.statut === 'validee' || selectedSeance.statut === 'prevue',
+                'bi-check-circle-fill': selectedSeance.statut === 'passee',
+                'bi-x-circle-fill': selectedSeance.statut === 'annulee'
+              }"></i>
+            <span>{{ selectedSeance.statut === 'à venir' || selectedSeance.statut === 'validee' || selectedSeance.statut === 'prevue' ? 'À venir' : 
+                   selectedSeance.statut === 'passee' ? 'Passée' : 
+                   'Annulée' }}</span>
+          </span>
         </div>
       </div>
       
@@ -350,10 +420,54 @@
           </div>
         </div>
         
+        <!-- Nouvelle section pour les exercices -->
+        <div class="exercices-info" *ngIf="selectedSeance.exercices && selectedSeance.exercices.length > 0">
+          <h3>Exercices prévus</h3>
+          <div class="exercices-loader" *ngIf="isLoadingExercices">
+            <div class="spinner-mini"></div>
+            <p>Chargement des exercices...</p>
+          </div>
+          <div class="exercices-list" *ngIf="!isLoadingExercices">
+            <div class="exercice-card" *ngFor="let exercice of exercicesDetails">
+              <div class="exercice-header" (click)="toggleExerciceDetails(exercice)">
+                <div class="exercice-title">
+                  <h4>{{ exercice.nom }}</h4>
+                  <span class="exercice-difficulty" [ngClass]="'difficulty-' + exercice.difficulte.toLowerCase()">
+                    {{ exercice.difficulte }}
+                  </span>
+                </div>
+                <div class="exercice-toggle">
+                  <i class="bi" [ngClass]="exercice.expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </div>
+              </div>
+              <div class="exercice-details" *ngIf="exercice.expanded">
+                <p class="exercice-description">{{ exercice.description }}</p>
+                <div class="exercice-meta">
+                  <span><i class="bi bi-stopwatch"></i> Durée estimée: {{ exercice.dureeEstimee }} min</span>
+                </div>
+                <div class="exercice-image" *ngIf="exercice.photo">
+                  <img [src]="getExerciceImage(exercice)" alt="{{ exercice.nom }}">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-exercices" *ngIf="!isLoadingExercices && exercicesDetails.length === 0">
+            <p>Aucun détail d'exercice disponible pour cette séance.</p>
+          </div>
+        </div>
+        
         <div class="seance-actions">
-          <button class="btn-secondary" *ngIf="selectedSeance.statut === 'à venir'" (click)="showCancelConfirmationDialog()">
-            <i class="bi bi-calendar-x"></i> Annuler ma réservation
+          <button class="btn-secondary" 
+            *ngIf="selectedSeance.statut === 'à venir'" 
+            (click)="!isLoading && showCancelConfirmationDialog()"
+            [disabled]="isWithin24Hours(selectedSeance) || isLoading"
+            [class.disabled]="isWithin24Hours(selectedSeance) || isLoading">
+            <i class="bi" [ngClass]="isLoading ? 'bi-hourglass-split' : 'bi-calendar-x'"></i>
+            {{ isLoading ? 'Traitement...' : 'Annuler ma réservation' }}
           </button>
+          <div class="warning-message" *ngIf="isWithin24Hours(selectedSeance) && selectedSeance.statut === 'à venir'">
+            <i class="bi bi-exclamation-triangle"></i> L'annulation n'est plus possible moins de 24h avant la séance
+          </div>
         </div>
       </div>
     </div>
@@ -361,11 +475,11 @@
 
   <!-- Confirmation d'annulation -->
   <div class="cancel-confirmation-modal" *ngIf="selectedSeance && showCancelConfirmation">
-    <div class="modal-backdrop" (click)="closeCancelConfirmation()"></div>
+    <div class="modal-backdrop" (click)="isLoading ? null : closeCancelConfirmation()"></div>
     <div class="modal-content cancel-content">
       <div class="cancel-header">
         <h2>Confirmation d'annulation</h2>
-        <button class="close-btn" (click)="closeCancelConfirmation()">
+        <button class="close-btn" (click)="closeCancelConfirmation()" [disabled]="isLoading">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -394,13 +508,23 @@
         </div>
         
         <div class="cancel-actions">
-          <button class="btn-outline" (click)="closeCancelConfirmation()">
+          <button class="btn-outline" 
+            (click)="closeCancelConfirmation()" 
+            [disabled]="isLoading"
+            [class.disabled]="isLoading">
             <i class="bi bi-arrow-left"></i> Retour
           </button>
-          <button class="btn-danger" (click)="cancelSeance()">
-            <i class="bi bi-calendar-x"></i> Confirmer l'annulation
+          <button class="btn-danger" 
+            (click)="cancelSeance()" 
+            [disabled]="isWithin24Hours(selectedSeance) || isLoading"
+            [class.disabled]="isWithin24Hours(selectedSeance) || isLoading">
+            <i class="bi" [ngClass]="isLoading ? 'bi-hourglass-split' : 'bi-calendar-x'"></i> 
+            {{ isLoading ? 'Annulation en cours...' : 'Confirmer l\'annulation' }}
           </button>
         </div>
+        <p class="warning-message" *ngIf="isWithin24Hours(selectedSeance)">
+          <i class="bi bi-exclamation-triangle"></i> L'annulation n'est plus possible moins de 24h avant la séance
+        </p>
       </div>
     </div>
   </div>

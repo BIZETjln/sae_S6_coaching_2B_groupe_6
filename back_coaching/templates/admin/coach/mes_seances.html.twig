@@ -115,6 +115,23 @@
             font-size: 20px;
             color: #fff;
         }
+
+        .btn-details {
+            display: inline-block;
+            padding: 8px 16px;
+            margin-top: 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-details:hover {
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
     </style>
 {% endblock %}
 
@@ -127,6 +144,9 @@
             <span class="close-details">&times;</span>
             <h3 id="seance-title"></h3>
             <div id="seance-info"></div>
+            <a href="#" id="btn-details" class="btn-details">
+                <i class="fa fa-eye"></i> Voir les détails
+            </a>
         </div>
     </div>
 {% endblock %}
@@ -166,8 +186,7 @@
                             type: '{{ seance.typeSeance.value }}',
                             theme: '{{ seance.themeSeance.value }}',
                             niveau: '{{ seance.niveauSeance.value }}',
-                            statut: '{{ seance.statut.value }}',
-                            coach: '{{ seance.coach }}'
+                            statut: '{{ seance.statut.value }}'
                         }
                     }{% if not loop.last %},{% endif %}
                     {% endfor %}
@@ -189,12 +208,15 @@
                                 <p><strong>Thème:</strong> ${props.theme}</p>
                                 <p><strong>Niveau:</strong> ${props.niveau}</p>
                                 <p><strong>Statut:</strong> ${props.statut}</p>
-                                <p><strong>Coach:</strong> ${props.coach}</p>
                             </div>
                         </div>
                     `;
                     
                     document.getElementById('seance-info').innerHTML = infoHtml;
+                    
+                    // Mettre à jour le lien du bouton de détails
+                    const btnDetails = document.getElementById('btn-details');
+                    btnDetails.href = `/admin/coach-seance/${event.id}`;
                     
                     document.querySelector('.seance-details').style.display = 'block';
                     document.querySelector('.backdrop').style.display = 'block';

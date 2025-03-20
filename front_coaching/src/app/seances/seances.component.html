@@ -120,7 +120,21 @@
           </button>
         </div>
       </div>
-      <!-- Nouveau filtre pour les coachs -->
+      <!-- Nouveau filtre pour la date -->
+      <div class="filter-group">
+        <label>Date</label>
+        <div class="filter-buttons">
+          <button 
+            *ngFor="let option of optionsFilterDate"
+            class="filter-btn"
+            [class.active]="filtreDateActif === option.value"
+            (click)="filtrerParDate(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+      <!-- Filtre pour les coachs -->
       <div class="filter-group">
         <label>Coach</label>
         <div class="filter-buttons">
@@ -151,13 +165,22 @@
       <p>Chargement des séances...</p>
     </div>
 
+    <!-- Overlay de chargement -->
+    <div class="global-loading-overlay" *ngIf="reservationEnCours">
+      <div class="loading-spinner">
+        <i class="bi bi-arrow-repeat"></i>
+        <p>Traitement en cours...</p>
+      </div>
+    </div>
+
     <!-- Liste des séances -->
     <div class="seances-grid" *ngIf="!loading">
       <div
         class="seance-card"
         *ngFor="let seance of seancesFiltrees"
         [class.selected]="seance === seanceSelectionnee"
-        (click)="selectionnerSeance(seance)"
+        [class.disabled-card]="reservationEnCours"
+        (click)="!reservationEnCours && selectionnerSeance(seance)"
       >
         <div class="seance-image">
           <img
@@ -222,16 +245,26 @@
       <p>Essayez de modifier vos filtres pour voir plus de résultats</p>
       <button
         class="btn btn-primary"
-        (click)="filtrerParType('Tous'); filtrerParNiveau('Tous'); filtrerParFormat('Tous'); filtrerParCoach('Tous')"
+        (click)="filtrerParType('Tous'); filtrerParNiveau('Tous'); filtrerParFormat('Tous'); filtrerParCoach('Tous'); filtrerParDate('Tous')"
       >
         Réinitialiser les filtres
       </button>
     </div>
 
+    <!-- Bloc d'informations sur les règles de réservation -->
+    <div class="reservation-rules" *ngIf="isClient() && seancesFiltrees.length > 0 && !reservationEnCours">
+      <h3><i class="bi bi-info-circle"></i> Règles de réservation</h3>
+      <ul>
+        <li><i class="bi bi-check-circle"></i> Vous pouvez réserver jusqu'à 3 séances à l'avance</li>
+        <li><i class="bi bi-check-circle"></i> Vous ne pouvez réserver que des séances correspondant à votre niveau ou inférieur</li>
+        <li><i class="bi bi-check-circle"></i> Vous pouvez annuler une réservation jusqu'à 24h avant la séance</li>
+      </ul>
+    </div>
+
     <!-- Détails de la séance sélectionnée (visible uniquement pour les clients connectés) -->
     <div
       class="seance-details"
-      *ngIf="seanceSelectionnee && isClient()"
+      *ngIf="seanceSelectionnee && isClient() && !reservationEnCours"
       #seanceDetails
     >
       <div class="seance-details-header">
@@ -333,13 +366,20 @@
       <div class="seance-details-footer">
         <button 
           class="btn btn-primary btn-lg"
-          [disabled]="reservationEnCours || (estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee))"
+          [ngClass]="{'btn-disabled': reservationEnCours || (!peutReserver(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee)) || (estInscritASeance(seanceSelectionnee) && !peutAnnuler(seanceSelectionnee)), 'btn-loading': reservationEnCours}"
+          [disabled]="reservationEnCours || (!peutReserver(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee)) || (estInscritASeance(seanceSelectionnee) && !peutAnnuler(seanceSelectionnee))"
           (click)="toggleReservation(seanceSelectionnee)"
-          [title]="estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee) ? 'Cette séance est complète' : ''"
+          [title]="getMessageReservation(seanceSelectionnee)"
         >
-          <i class="bi" [ngClass]="estInscritASeance(seanceSelectionnee) ? 'bi-calendar-x' : 'bi-calendar-plus'"></i>
-          {{ estInscritASeance(seanceSelectionnee) ? 'Annuler ma réservation' : 'Réserver cette séance' }}
-          <span *ngIf="reservationEnCours"><i class="bi bi-hourglass-split spinner"></i></span>
+          <div class="btn-content">
+            <div class="btn-normal-content" [class.hidden]="reservationEnCours">
+              <i class="bi" [ngClass]="estInscritASeance(seanceSelectionnee) ? 'bi-calendar-x' : 'bi-calendar-plus'"></i>
+              <span class="btn-text">{{ getMessageReservation(seanceSelectionnee) }}</span>
+            </div>
+            <div class="btn-loading-content" [class.visible]="reservationEnCours">
+              <i class="bi bi-hourglass-split spinner"></i>
+            </div>
+          </div>
         </button>
         <a 
           [href]="getCoachEmailLink()"

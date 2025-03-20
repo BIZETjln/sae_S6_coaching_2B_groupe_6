@@ -31,7 +31,14 @@ class SeanceFixtures extends Fixture implements DependentFixtureInterface
             $seance = new Seance();
 
             // Date entre il y a 2 mois et aujourd'hui
-            $seance->setDateHeure($faker->dateTimeBetween('-2 months', 'now'));
+            $date = $faker->dateTimeBetween('-2 months', 'now');
+
+            // Ajuster l'heure entre 6h et 21h, uniquement à 00 ou 30 minutes
+            $hour = $faker->numberBetween(6, 21);
+            $minute = $faker->randomElement([0, 30]);
+            $date->setTime($hour, $minute);
+
+            $seance->setDateHeure($date);
             $seance->setTypeSeance($faker->randomElement($types));
             $seance->setThemeSeance($faker->randomElement($themes));
 
@@ -46,13 +53,6 @@ class SeanceFixtures extends Fixture implements DependentFixtureInterface
 
             // Persistence de la séance avant d'ajouter les participations
             $manager->persist($seance);
-
-            // Déterminer le nombre max de participants selon le type
-            $maxPossible = match ($seance->getTypeSeance()) {
-                TypeSeance::SOLO => 1,
-                TypeSeance::DUO => 2,
-                TypeSeance::TRIO => 3,
-            };
 
             // Pour les séances passées, on varie le remplissage
             $nombreParticipants = match ($seance->getTypeSeance()) {
@@ -92,7 +92,14 @@ class SeanceFixtures extends Fixture implements DependentFixtureInterface
             $seance = new Seance();
 
             // Date entre demain et dans 2 mois
-            $seance->setDateHeure($faker->dateTimeBetween('tomorrow', '+2 months'));
+            $date = $faker->dateTimeBetween('tomorrow', '+2 months');
+
+            // Ajuster l'heure entre 6h et 21h, uniquement à 00 ou 30 minutes
+            $hour = $faker->numberBetween(6, 21);
+            $minute = $faker->randomElement([0, 30]);
+            $date->setTime($hour, $minute);
+
+            $seance->setDateHeure($date);
             $seance->setTypeSeance($faker->randomElement($types));
             $seance->setThemeSeance($faker->randomElement($themes));
             $seance->setStatut(StatutSeance::PREVUE);

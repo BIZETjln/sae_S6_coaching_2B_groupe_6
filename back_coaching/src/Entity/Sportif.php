@@ -25,8 +25,11 @@ use ApiPlatform\Metadata\ApiProperty;
     operations: [
         new Get(
             normalizationContext: ['groups' => ['sportif:read']],
+            security: "is_granted('ROLE_USER') and object.getId() == user.getId()",
+            securityMessage: "Vous ne pouvez accéder qu'à votre propre profil."
         ),
         new GetCollection(
+            // TODO : A supprimer quand on l'utilisera plus
             normalizationContext: ['groups' => ['sportif:read']],
         ),
         new Post(
@@ -173,6 +176,11 @@ class Sportif extends Utilisateur
 
     public function __toString(): string
     {
-        return $this->getNom() . ' ' . $this->getPrenom();
+        return sprintf(
+            '%s %s - Niveau %s',
+            $this->getNom(),
+            $this->getPrenom(),
+            $this->getNiveauSportif()->value
+        );
     }
 }

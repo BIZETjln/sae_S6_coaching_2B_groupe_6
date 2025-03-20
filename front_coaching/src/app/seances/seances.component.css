@@ -30,6 +30,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
 }
 
 /* Indicateur de chargement */
@@ -105,6 +106,37 @@
 .filter-btn.active {
   background-color: var(--color-primary);
   color: white;
+}
+
+/* Style amélioré pour le filtre de date */
+.filter-group:nth-child(4) .filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-group:nth-child(4) .filter-btn {
+  background-color: var(--color-bg-light);
+  border: 1px solid transparent;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.filter-group:nth-child(4) .filter-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 4px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.filter-group:nth-child(4) .filter-btn:hover:not(.active) {
+  border-color: var(--color-primary);
+  background-color: rgba(var(--color-primary-rgb), 0.05);
 }
 
 /* Style pour les boutons de filtre de coachs */
@@ -837,4 +869,317 @@
 .capacity-full-text {
   color: #f44336;
   font-weight: bold;
+}
+
+/* Styles pour les boutons désactivés */
+.btn:disabled,
+.btn[disabled],
+.btn.btn-disabled {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+/* Style pour que le bouton soit toujours visible comme désactivé même avec pointer-events: none */
+button.btn:disabled,
+button.btn[disabled],
+button.btn.btn-disabled {
+  pointer-events: auto;
+  cursor: not-allowed !important;
+}
+
+/* Style spécifique pour le bouton de réservation désactivé */
+.seance-details-footer .btn.btn-primary:disabled,
+.seance-details-footer .btn.btn-primary[disabled],
+.seance-details-footer .btn.btn-primary.btn-disabled {
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  color: #f8f9fa !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.seance-details-footer .btn.btn-primary:disabled i,
+.seance-details-footer .btn.btn-primary[disabled] i,
+.seance-details-footer .btn.btn-primary.btn-disabled i {
+  color: #f8f9fa !important;
+}
+
+/* Style pour améliorer la visualisation du bouton désactivé */
+.btn.btn-disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn.btn-disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.2) 10px,
+    rgba(255, 255, 255, 0.2) 20px
+  );
+}
+
+/* Styles pour maintenir une taille constante du bouton de réservation */
+.seance-details-footer .btn.btn-primary {
+  min-width: 250px;
+  position: relative;
+  padding: 12px 20px;
+  height: 48px; /* Hauteur fixe pour le bouton */
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.seance-details-footer .btn-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+}
+
+.btn-normal-content, 
+.btn-loading-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
+.btn-normal-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn-normal-content.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.btn-loading-content {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.btn-loading-content.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.seance-details-footer .btn-content .bi {
+  margin-right: 8px;
+}
+
+.btn-loading-content .bi {
+  margin-right: 0;
+  font-size: 1.2rem;
+}
+
+.seance-details-footer .btn-text {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Animation du spinner */
+.spinner {
+  display: inline-block;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation de pulsation pour le bouton en chargement */
+.btn-loading {
+  animation: pulse 1.5s infinite ease-in-out !important;
+}
+
+/* Style spécifique pour le bouton en chargement */
+.btn.btn-primary.btn-loading {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  opacity: 0.85;
+}
+
+.btn.btn-primary.btn-loading[disabled],
+.btn.btn-primary.btn-loading:disabled {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+  opacity: 0.85;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0);
+  }
+}
+
+/* Style pour le bouton de contact coach */
+.seance-details-footer .btn.btn-outline-primary {
+  min-width: 200px;
+  height: 48px; /* Même hauteur que le bouton de réservation */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Styles pour les règles de réservation */
+.reservation-rules {
+  background-color: rgba(var(--color-primary-rgb), 0.05);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: var(--shadow-sm);
+}
+
+.reservation-rules h3 {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.reservation-rules h3 i {
+  margin-right: 10px;
+  font-size: 1.4rem;
+}
+
+.reservation-rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reservation-rules li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.reservation-rules li:last-child {
+  margin-bottom: 0;
+}
+
+.reservation-rules li i {
+  color: var(--color-success);
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .reservation-rules {
+    padding: 15px;
+  }
+  
+  .reservation-rules h3 {
+    font-size: 1.1rem;
+  }
+  
+  .reservation-rules li {
+    font-size: 0.9rem;
+  }
+}
+
+/* Styles pour l'overlay de chargement global */
+.global-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  border-radius: 10px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-spinner i {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  animation: spin 1s infinite linear;
+  margin-bottom: 15px;
+}
+
+.loading-spinner p {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Style pour les cartes désactivées pendant le chargement */
+.seance-card.disabled-card {
+  pointer-events: none;
+  opacity: 0.7;
+  filter: grayscale(30%);
+  transform: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Modification de l'animation du spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
