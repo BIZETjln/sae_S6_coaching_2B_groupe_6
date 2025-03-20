@@ -16,6 +16,9 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Metadata\Link;
+use ApiPlatform\Metadata\ApiProperty;
 
 #[ORM\Entity(repositoryClass: SportifRepository::class)]
 #[ApiResource(
@@ -40,6 +43,11 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Delete(
             security: "is_granted('ROLE_USER') and object.getId() == user.getId()",
             securityMessage: "Vous ne pouvez supprimer que votre propre profil."
+        ),
+        new Get(
+            uriTemplate: '/sportifs/{id}/statistiques',
+            controller: 'App\Controller\Api\SportifStatistiquesController::getStatistiques',
+            normalizationContext: ['groups' => ['sportif:read']]
         )
     ],
 )]
