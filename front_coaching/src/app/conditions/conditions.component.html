@@ -1,0 +1,122 @@
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">Conditions d'Utilisation</h1>
+    <p class="page-description">
+      Prenez connaissance des règles et conditions qui régissent l'utilisation de nos services.
+    </p>
+  </div>
+</section>
+
+<!-- Introduction Section -->
+<section class="intro-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Nos <span style="color: var(--color-primary)">Conditions</span>
+      </h2>
+    </div>
+    <div class="row">
+      <div class="col-md-12 intro-text">
+        <p>
+          Les présentes conditions d'utilisation définissent les règles et obligations qui s'appliquent 
+          à l'utilisation de la plateforme SportCoach. En vous inscrivant ou en utilisant nos services, 
+          vous acceptez de vous conformer à ces conditions.
+        </p>
+        <p>
+          Ces conditions constituent un contrat légal entre vous et SportCoach. Nous vous invitons à les 
+          lire attentivement avant d'utiliser nos services. Si vous n'acceptez pas ces conditions, 
+          veuillez ne pas utiliser notre plateforme.
+        </p>
+        <p>
+          Nous nous réservons le droit de modifier ces conditions à tout moment. Les modifications 
+          prendront effet dès leur publication sur la plateforme. Votre utilisation continue de nos 
+          services après la publication des modifications constitue votre acceptation des nouvelles conditions.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Terms Cards Section -->
+<section class="terms-info-section bg-light">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Points <span style="color: var(--color-primary)">Essentiels</span>
+      </h2>
+    </div>
+    <div class="row">
+      <div *ngFor="let section of termsSections; let i = index" class="col-md-6 col-lg-3 mb-4">
+        <div class="terms-card animate" [style.transition-delay]="i * 0.1 + 's'">
+          <div class="terms-icon">
+            <i class="bi" [ngClass]="section.icon"></i>
+          </div>
+          <h3 class="terms-title">{{section.title}}</h3>
+          <p class="terms-description">{{section.description}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Conditions Section -->
+<section class="main-conditions-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Détails des <span style="color: var(--color-primary)">Conditions</span>
+      </h2>
+    </div>
+    <div class="row">
+      <div class="col-md-10 mx-auto">
+        <div class="accordion" id="termsAccordion">
+          <div *ngFor="let condition of mainConditions; let i = index" class="accordion-item main-condition animate"
+               [style.transition-delay]="i * 0.1 + 's'">
+            <h2 class="accordion-header" [id]="'headingTerm' + i">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      [attr.data-bs-target]="'#collapseTerm' + i" aria-expanded="false" [attr.aria-controls]="'collapseTerm' + i">
+                {{condition.title}}
+              </button>
+            </h2>
+            <div [id]="'collapseTerm' + i" class="accordion-collapse collapse" [attr.aria-labelledby]="'headingTerm' + i"
+                 data-bs-parent="#termsAccordion">
+              <div class="accordion-body" [innerHTML]="condition.content">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Last Updated Section -->
+<section class="last-updated-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <div class="last-updated">
+          <p>Dernière mise à jour : 20 mars 2024</p>
+          <p>Pour toute question concernant nos conditions d'utilisation, veuillez nous contacter à <a href="mailto:conditions&#64;sportcoach.fr">conditions&#64;sportcoach.fr</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta animate">
+      <h2 class="cta-title">Prêt à commencer l'aventure ?</h2>
+      <p class="cta-text">
+        Maintenant que vous connaissez nos conditions, rejoignez la communauté SportCoach et commencez votre parcours sportif
+      </p>
+      <div class="cta-buttons">
+        <a routerLink="/inscription" class="btn btn-primary btn-lg">S'inscrire</a>
+        <a routerLink="/confidentialite" class="btn btn-outline-light btn-lg">Politique de confidentialité</a>
+      </div>
+    </div>
+  </div>
+</section> 

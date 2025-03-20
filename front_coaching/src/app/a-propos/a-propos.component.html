@@ -1,0 +1,111 @@
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">À Propos de SportCoach</h1>
+    <p class="page-description">
+      Découvrez notre histoire, notre mission et les valeurs qui font de 
+      SportCoach la plateforme de coaching sportif de référence.
+    </p>
+  </div>
+</section>
+
+<!-- Mission Section -->
+<section class="mission-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Notre <span style="color: var(--color-primary)">Mission</span>
+      </h2>
+    </div>
+    <div class="row">
+      <div class="col-md-12 mission-text">
+        <p>
+          Chez SportCoach, notre mission est de rendre le coaching sportif personnalisé 
+          accessible à tous. Nous croyons que chacun mérite un accompagnement de qualité 
+          pour atteindre ses objectifs de forme physique et de bien-être.
+        </p>
+        <p>
+          Nous nous engageons à fournir des services de coaching professionnels, 
+          des programmes d'entraînement adaptés et un suivi personnalisé qui prend 
+          en compte les besoins spécifiques de chaque client.
+        </p>
+        <p>
+          Notre plateforme connecte des coachs professionnels certifiés avec des 
+          personnes motivées à améliorer leur santé et leur condition physique, 
+          créant ainsi une communauté dynamique et solidaire.
+        </p>
+        <p>
+          Grâce à notre technologie innovante, nous offrons un système de réservation de séances 
+          simple et efficace, un tableau de bord personnalisé pour suivre vos progrès, et des 
+          recommandations nutritionnelles pour compléter votre parcours sportif.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Histoire Section -->
+<section class="history-section bg-light">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Notre <span style="color: var(--color-primary)">Histoire</span>
+      </h2>
+    </div>
+    <div class="timeline">
+      <div class="row">
+        <div class="col-md-10 mx-auto">
+          <div class="timeline-inner">
+            <div *ngFor="let event of historyEvents; let isOdd = odd; let i = index" 
+                [ngClass]="{'history-item': true, 'left': !isOdd, 'right': isOdd, 'animate': true}"
+                [style.transition-delay]="i * 0.1 + 's'">
+              <div class="history-content">
+                <div class="history-date">{{event.year}}</div>
+                <h3 class="history-title">{{event.title}}</h3>
+                <p class="history-description">{{event.description}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Valeurs Section -->
+<section class="values-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Nos <span style="color: var(--color-primary)">Valeurs</span>
+      </h2>
+    </div>
+    <div class="row">
+      <div *ngFor="let value of coreValues; let i = index" class="col-md-6 col-lg-3 mb-4">
+        <div class="value-card animate" [style.transition-delay]="i * 0.1 + 's'">
+          <div class="value-icon">
+            <i class="bi" [ngClass]="value.icon"></i>
+          </div>
+          <h3 class="value-title">{{value.title}}</h3>
+          <p class="value-description">{{value.description}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta animate">
+      <h2 class="cta-title">Rejoignez la communauté SportCoach</h2>
+      <p class="cta-text">
+        Commencez dès aujourd'hui votre parcours vers une meilleure forme physique avec nos coachs professionnels
+      </p>
+      <div class="cta-buttons">
+        <a routerLink="/inscription" class="btn btn-primary btn-lg">S'inscrire</a>
+        <a routerLink="/seances" class="btn btn-outline-light btn-lg">Découvrir nos séances</a>
+      </div>
+    </div>
+  </div>
+</section> 

@@ -40,7 +40,7 @@ class DashboardController extends AbstractDashboardController
         if ($this->isGranted('ROLE_COACH') && !$this->isGranted('ROLE_ADMIN')) {
             yield MenuItem::section('Mon espace coach');
             yield MenuItem::linktoRoute('Calendrier', 'fas fa-calendar-check', 'route_coach_calendar');
-            yield MenuItem::linkToCrud('Mes Séances', 'fas fa-calendar-check', Seance::class)
+            yield MenuItem::linkToCrud('Mes Séances', 'fas fa-stopwatch', Seance::class)
                 ->setController(CoachSeanceCrudController::class);
             yield MenuItem::linkToCrud('Exercices', 'fas fa-dumbbell', Exercice::class);
         }

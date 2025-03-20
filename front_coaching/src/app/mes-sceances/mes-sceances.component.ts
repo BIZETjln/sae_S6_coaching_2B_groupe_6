@@ -448,16 +448,18 @@ export class MesSceancesComponent implements OnInit, OnDestroy {
       next: (response) => {
         console.log('Séance annulée avec succès:', response);
         
-        // Mettre à jour la liste des séances
-        this.loadSeances();
+        // Fermer la modale de confirmation d'annulation
+        this.closeCancelConfirmation();
         
-        // Fermer la modale
-        this.closeSeanceDetails();
+        // Fermer la modale des détails de la séance mais garder l'état de chargement
+        this.selectedSeance = null;
+        this.showCancelConfirmation = false;
         
         // Afficher un message de succès
         this.showSuccessMessage('Votre séance a été annulée avec succès');
         
-        this.isLoading = false;
+        // Mettre à jour la liste des séances tout en gardant l'état de chargement
+        this.rechargerSeancesAvecChargement();
       },
       error: (error) => {
         console.error('Erreur lors de l\'annulation de la séance:', error);
@@ -469,6 +471,32 @@ export class MesSceancesComponent implements OnInit, OnDestroy {
         this.closeCancelConfirmation();
         
         this.isLoading = false;
+      }
+    });
+  }
+
+  // Nouvelle méthode pour recharger les séances en gardant l'état de chargement
+  rechargerSeancesAvecChargement(forceRefresh: boolean = true): void {
+    // S'assurer que l'indicateur de chargement est activé
+    this.isLoading = true;
+    
+    // Recharger les séances
+    this.seanceService.getMesSeances(forceRefresh).subscribe({
+      next: seances => {
+        console.log('Séances rechargées avec succès:', seances.length);
+        this.seances = seances;
+        this.organizeSeances();
+        
+        // Attendre un court instant avant de désactiver l'état de chargement
+        // pour s'assurer que l'interface est mise à jour correctement
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 500);
+      },
+      error: error => {
+        console.error('Erreur lors du rechargement des séances:', error);
+        this.isLoading = false;
+        this.showErrorMessage('Une erreur est survenue lors du rechargement des séances');
       }
     });
   }
@@ -693,7 +721,8 @@ export class MesSceancesComponent implements OnInit, OnDestroy {
       console.log('Notification de changement de séance reçue:', change);
       
       // Recharger toutes les séances en forçant une requête au serveur
-      this.loadSeances(true);
+      // et en maintenant l'état de chargement
+      this.rechargerSeancesAvecChargement(true);
       
       // Afficher un message de confirmation à l'utilisateur
       if (change.action === 'reserve') {

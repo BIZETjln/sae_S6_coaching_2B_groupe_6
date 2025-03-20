@@ -10,6 +10,9 @@ import { CoachsComponent } from './coachs/coachs.component';
 import { SeancesComponent } from './seances/seances.component';
 import { MesSceancesComponent } from './mes-sceances/mes-sceances.component';
 import { MonSuiviComponent } from './mon-suivi/mon-suivi.component';
+import { AProposComponent } from './a-propos/a-propos.component';
+import { ConfidentialiteComponent } from './confidentialite/confidentialite.component';
+import { ConditionsComponent } from './conditions/conditions.component';
 // Composant temporaire pour les routes non encore implémentées
 @Component({
   template: `<div class="container mt-5">
@@ -28,9 +31,9 @@ const routes: Routes = [
   { path: 'seances', component: SeancesComponent },
   { path: 'connexion', component: ConnexionComponent },
   { path: 'inscription', component: InscriptionComponent },
-  { path: 'a-propos', component: PlaceholderComponent },
-  { path: 'confidentialite', component: PlaceholderComponent },
-  { path: 'conditions', component: PlaceholderComponent },
+  { path: 'a-propos', component: AProposComponent },
+  { path: 'confidentialite', component: ConfidentialiteComponent },
+  { path: 'conditions', component: ConditionsComponent },
   { path: 'acces-refuse', component: PlaceholderComponent },
 
   // Routes pour les clients
@@ -58,60 +61,6 @@ const routes: Routes = [
         UserRole.RESPONSABLE,
       ],
     },
-  },
-
-  // Routes pour les coachs
-  {
-    path: 'mes-clients',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.COACH] },
-  },
-  {
-    path: 'planning',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.COACH] },
-  },
-
-  // Routes pour les agents
-  {
-    path: 'gestion-clients',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.AGENT, UserRole.RESPONSABLE] },
-  },
-  {
-    path: 'reservations',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.AGENT, UserRole.RESPONSABLE] },
-  },
-
-  // Routes pour les responsables
-  {
-    path: 'dashboard',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.RESPONSABLE] },
-  },
-  {
-    path: 'gestion-personnel',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.RESPONSABLE] },
-  },
-  {
-    path: 'statistiques',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.RESPONSABLE] },
-  },
-  {
-    path: 'parametres',
-    component: PlaceholderComponent,
-    canActivate: [RoleGuard],
-    data: { roles: [UserRole.RESPONSABLE] },
   },
 
   // Route pour le back-office (accessible par tout le personnel)
