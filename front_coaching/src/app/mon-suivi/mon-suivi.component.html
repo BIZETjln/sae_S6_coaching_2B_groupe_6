@@ -148,77 +148,106 @@
             <div class="col-12">
               <div class="periode-selector">
                 <div
-                  class="selector-header d-flex justify-content-between align-items-center"
+                  class="selector-header d-flex justify-content-between align-items-center mb-3"
                 >
                   <div class="periode-label">
                     <i class="fas fa-calendar-alt me-2"></i>Période d'analyse
                   </div>
-                  <div class="form-check form-switch">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="modeAvanceSwitch"
-                      [(ngModel)]="modeAvance"
-                      (change)="toggleModeAvance()"
-                    />
-                    <label class="form-check-label" for="modeAvanceSwitch"
-                      >Mode avancé</label
-                    >
-                  </div>
-                </div>
 
-                <!-- Boutons rapides -->
-                <div *ngIf="!modeAvance">
-                  <div class="btn-group-selector">
+                  <!-- Remplacer la coche par des onglets -->
+                  <div class="btn-group" role="group">
                     <button
-                      *ngFor="let periode of periodes"
                       type="button"
-                      class="btn btn-selector"
-                      [class.active]="
-                        statistiquesOptions.period === periode.value
-                      "
-                      (click)="changerPeriode(periode.value)"
-                      [attr.data-period]="periode.value"
+                      class="btn btn-sm"
+                      [class.btn-primary]="!modeAvance"
+                      [class.btn-outline-primary]="modeAvance"
+                      (click)="setModeAvance(false)"
                     >
-                      {{ periode.label }}
+                      <i class="fas fa-calendar-week me-1"></i>Mode simple
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      [class.btn-primary]="modeAvance"
+                      [class.btn-outline-primary]="!modeAvance"
+                      (click)="setModeAvance(true)"
+                    >
+                      <i class="fas fa-calendar-day me-1"></i>Mode avancé
                     </button>
                   </div>
                 </div>
 
-                <!-- Mode avancé (sélecteur de dates) -->
-                <div *ngIf="modeAvance">
-                  <div class="row">
-                    <div class="col-md-6 mb-2 mb-md-0">
-                      <div class="input-group">
-                        <span class="input-group-text">Du</span>
-                        <input
-                          type="date"
-                          class="form-control"
-                          [(ngModel)]="dateDebut"
-                        />
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="input-group">
-                        <span class="input-group-text">Au</span>
-                        <input
-                          type="date"
-                          class="form-control"
-                          [(ngModel)]="dateFin"
-                        />
-                      </div>
+                <!-- Contenu de sélection de période -->
+                <ng-container *ngIf="!modeAvance; else modeAvanceTemplate">
+                  <!-- Boutons rapides -->
+                  <div class="mode-simple">
+                    <div class="btn-group-selector">
+                      <button
+                        *ngFor="let periode of periodes"
+                        type="button"
+                        class="btn btn-selector"
+                        [class.active]="
+                          statistiquesOptions.period === periode.value
+                        "
+                        (click)="changerPeriode(periode.value)"
+                        [attr.data-period]="periode.value"
+                      >
+                        {{ periode.label }}
+                      </button>
                     </div>
                   </div>
-                  <div class="d-flex justify-content-end mt-3">
-                    <button
-                      type="button"
-                      class="btn btn-primary"
-                      (click)="appliquerDatesPersonnalisees()"
+                </ng-container>
+
+                <!-- Template pour le mode avancé -->
+                <ng-template #modeAvanceTemplate>
+                  <div
+                    class="mode-avance mt-3"
+                    style="
+                      background-color: #f9f9f9;
+                      padding: 15px;
+                      border-radius: 8px;
+                    "
+                  >
+                    <div
+                      *ngIf="messageErreurDates"
+                      class="alert alert-danger mb-3"
                     >
-                      <i class="fas fa-search me-2"></i>Appliquer
-                    </button>
+                      <i class="fas fa-exclamation-triangle me-2"></i
+                      >{{ messageErreurDates }}
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6 mb-2 mb-md-0">
+                        <div class="input-group">
+                          <span class="input-group-text">Du</span>
+                          <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="dateDebut"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="input-group">
+                          <span class="input-group-text">Au</span>
+                          <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="dateFin"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="appliquerDatesPersonnalisees()"
+                      >
+                        <i class="fas fa-search me-2"></i>Appliquer
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </ng-template>
               </div>
             </div>
           </div>

@@ -93,19 +93,23 @@ export class StatistiquesService {
     // Définir les paramètres de la requête
     let params = new HttpParams();
 
+    // Ajouter la période si définie (mode simple)
     if (options.period) {
       params = params.set('period', options.period);
-    } else {
-      // Par défaut, utiliser la période mensuelle
-      params = params.set('period', 'monthly');
     }
 
+    // Ajouter date_min et date_max si définies (prioritaires en mode avancé)
     if (options.date_min) {
       params = params.set('date_min', options.date_min);
     }
 
     if (options.date_max) {
       params = params.set('date_max', options.date_max);
+    }
+
+    // Si aucun paramètre n'est défini, utiliser la période mensuelle par défaut
+    if (!options.period && !options.date_min && !options.date_max) {
+      params = params.set('period', 'monthly');
     }
 
     // Récupérer le token d'authentification depuis l'utilisateur courant
@@ -123,26 +127,27 @@ export class StatistiquesService {
       Authorization: `Bearer ${token}`,
     });
 
+    // Construire l'URL complète
+    const url = `${this.apiUrl}/sportifs/${sportifId}/statistiques`;
+
+    // Logger l'URL complète pour le débogage
+    console.log(`Requête GET: ${url} avec params:`, params.toString());
+
     // Faire la requête à l'API
-    return this.http
-      .get<StatistiquesAvancees>(
-        `${this.apiUrl}/sportifs/${sportifId}/statistiques`,
-        { params, headers }
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(
-            'Erreur lors de la récupération des statistiques avancées:',
-            error
-          );
-          return throwError(
-            () =>
-              new Error(
-                `Erreur lors de la récupération des statistiques: ${error.message}`
-              )
-          );
-        })
-      );
+    return this.http.get<StatistiquesAvancees>(url, { params, headers }).pipe(
+      catchError((error) => {
+        console.error(
+          'Erreur lors de la récupération des statistiques avancées:',
+          error
+        );
+        return throwError(
+          () =>
+            new Error(
+              `Erreur lors de la récupération des statistiques: ${error.message}`
+            )
+        );
+      })
+    );
   }
 
   /**

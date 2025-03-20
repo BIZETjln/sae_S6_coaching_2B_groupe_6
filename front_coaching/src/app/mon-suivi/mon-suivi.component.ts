@@ -4,6 +4,7 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { SeanceService } from '../services/seance.service';
 import { AuthService } from '../services/auth.service';
@@ -17,6 +18,7 @@ import {
   StatistiquesOptions,
 } from '../services/statistiques.service';
 import { ExerciceService } from '../services/exercice.service';
+import { environment } from '../../environments/environment';
 
 // Enregistrer tous les composants de Chart.js
 Chart.register(...registerables);
@@ -153,11 +155,15 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     end: 'rgba(255, 152, 0, 0.2)',
   };
 
+  // Message d'erreur pour les dates
+  messageErreurDates: string | null = null;
+
   constructor(
     private seanceService: SeanceService,
     private authService: AuthService,
     private statistiquesService: StatistiquesService,
-    private exerciceService: ExerciceService
+    private exerciceService: ExerciceService,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -553,18 +559,31 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Bascule entre le mode simple et avancé pour la sélection de période
+   * Définit le mode de sélection de période (simple ou avancé)
+   * @param isAdvanced true pour activer le mode avancé, false pour le mode simple
    */
-  toggleModeAvance(): void {
-    this.modeAvance = !this.modeAvance;
+  setModeAvance(isAdvanced: boolean): void {
+    // On ne fait rien si le mode est déjà le même
+    if (this.modeAvance === isAdvanced) return;
+
+    // Définir le nouveau mode
+    this.modeAvance = isAdvanced;
+    console.log('Mode avancé activé:', this.modeAvance);
+
+    // Forcer la détection des changements pour mettre à jour l'interface immédiatement
+    this.cdRef.detectChanges();
 
     // Si on active le mode avancé, initialiser les dates
-    if (this.modeAvance && this.statistiquesOptions.date_min) {
+    if (this.modeAvance) {
       // Utiliser une chaîne de date directement (au format YYYY-MM-DD)
-      this.dateDebut = this.statistiquesOptions.date_min;
+      this.dateDebut =
+        this.statistiquesOptions.date_min || this.formatDate(new Date());
 
       // Par défaut, la date de fin est aujourd'hui
       this.dateFin = this.formatDate(new Date());
+
+      // Forcer une autre détection des changements après initialisation des dates
+      this.cdRef.detectChanges();
     }
   }
 
@@ -572,17 +591,40 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
    * Applique les dates personnalisées sélectionnées par l'utilisateur
    */
   appliquerDatesPersonnalisees(): void {
+    // Réinitialiser le message d'erreur
+    this.messageErreurDates = null;
+
     if (this.dateDebut && this.dateFin) {
+      // Convertir les dates en objets Date pour la comparaison
+      const dateDebutObj = new Date(this.dateDebut);
+      const dateFinObj = new Date(this.dateFin);
+
+      // Vérifier que la date de fin est postérieure à la date de début
+      if (dateFinObj <= dateDebutObj) {
+        this.messageErreurDates =
+          'La date de fin doit être postérieure à la date de début.';
+        return;
+      }
+
+      // Mettre à jour les options avec les dates sélectionnées
       this.statistiquesOptions.date_min = this.dateDebut;
       this.statistiquesOptions.date_max = this.dateFin;
+
+      // Supprimer l'option period pour ne pas l'envoyer en même temps que les dates personnalisées
+      // car cela pourrait créer des conflits dans les filtres
+      this.statistiquesOptions.period = undefined;
 
       // Rechargement des statistiques avec les dates personnalisées
       this.chargerStatistiquesAvancees();
       console.log(
         `Dates personnalisées appliquées: de ${this.dateDebut} à ${this.dateFin}`
       );
+      console.log(
+        `URL de requête: ${environment.apiUrl}/sportifs/${this.authService.currentUserValue?.id}/statistiques?date_min=${this.dateDebut}&date_max=${this.dateFin}`
+      );
     } else {
-      console.error('Les dates de début et de fin doivent être spécifiées');
+      this.messageErreurDates =
+        'Veuillez spécifier les dates de début et de fin.';
     }
   }
 
