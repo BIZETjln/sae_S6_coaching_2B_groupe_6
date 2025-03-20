@@ -119,6 +119,8 @@
   position: relative;
   transition: all 0.3s ease;
   min-height: 80px;
+  max-height: 100px;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -196,6 +198,26 @@
 
 .seance-preview-time {
   font-size: 9px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.seance-preview-time i {
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+.seance-preview-time i.bi-calendar-check-fill {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.seance-preview-time i.bi-check-circle-fill {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.seance-preview-time i.bi-x-circle-fill {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .more-seances {
@@ -1132,14 +1154,14 @@ button:disabled {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
 }
 
 .spinner-container {
@@ -1170,8 +1192,22 @@ button:disabled {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation pour l'overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Animation pour l'icône de chargement */
@@ -1346,5 +1382,85 @@ button:disabled {
   .exercice-meta {
     flex-direction: column;
     gap: 10px;
+  }
+}
+
+/* Style pour les cartes désactivées pendant le chargement */
+.seance-card.disabled-card {
+  pointer-events: none;
+  opacity: 0.7;
+  filter: grayscale(30%);
+  transform: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Style pour les jours désactivés dans le calendrier */
+.day.disabled-day {
+  pointer-events: none;
+  opacity: 0.7;
+  filter: grayscale(30%);
+  cursor: default;
+}
+
+/* Styles des boutons désactivés */
+.tab-btn[disabled],
+.nav-btn[disabled],
+.back-btn[disabled] {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Style pour les icônes de statut */
+.status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.status-icon.passee {
+  color: var(--success-color);
+}
+
+.status-icon.annulee {
+  color: var(--danger-color);
+}
+
+.seance-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Dans la vue jour */
+.seance-time .status-icon {
+  margin-top: 15px;
+}
+
+/* Responsive pour les icônes de statut */
+@media (max-width: 768px) {
+  .status-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    margin-top: 0;
+  }
+  
+  .seance-time .status-icon {
+    position: static;
+    margin-top: 10px;
+    background-color: transparent;
   }
 }

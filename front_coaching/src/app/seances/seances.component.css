@@ -30,6 +30,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
 }
 
 /* Indicateur de chargement */
@@ -105,6 +106,37 @@
 .filter-btn.active {
   background-color: var(--color-primary);
   color: white;
+}
+
+/* Style amélioré pour le filtre de date */
+.filter-group:nth-child(4) .filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-group:nth-child(4) .filter-btn {
+  background-color: var(--color-bg-light);
+  border: 1px solid transparent;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.filter-group:nth-child(4) .filter-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 4px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.filter-group:nth-child(4) .filter-btn:hover:not(.active) {
+  border-color: var(--color-primary);
+  background-color: rgba(var(--color-primary-rgb), 0.05);
 }
 
 /* Style pour les boutons de filtre de coachs */
@@ -1020,4 +1052,134 @@ button.btn.btn-disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Styles pour les règles de réservation */
+.reservation-rules {
+  background-color: rgba(var(--color-primary-rgb), 0.05);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: var(--shadow-sm);
+}
+
+.reservation-rules h3 {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.reservation-rules h3 i {
+  margin-right: 10px;
+  font-size: 1.4rem;
+}
+
+.reservation-rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reservation-rules li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.reservation-rules li:last-child {
+  margin-bottom: 0;
+}
+
+.reservation-rules li i {
+  color: var(--color-success);
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .reservation-rules {
+    padding: 15px;
+  }
+  
+  .reservation-rules h3 {
+    font-size: 1.1rem;
+  }
+  
+  .reservation-rules li {
+    font-size: 0.9rem;
+  }
+}
+
+/* Styles pour l'overlay de chargement global */
+.global-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  border-radius: 10px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-spinner i {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  animation: spin 1s infinite linear;
+  margin-bottom: 15px;
+}
+
+.loading-spinner p {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Style pour les cartes désactivées pendant le chargement */
+.seance-card.disabled-card {
+  pointer-events: none;
+  opacity: 0.7;
+  filter: grayscale(30%);
+  transform: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Modification de l'animation du spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
