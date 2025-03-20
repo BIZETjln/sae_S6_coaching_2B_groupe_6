@@ -1272,4 +1272,72 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       return true;
     });
   }
+
+  /**
+   * Calcule le pourcentage d'un type de séance par rapport au total
+   * @param count Le nombre de séances d'un type particulier
+   * @returns Le pourcentage calculé
+   */
+  calculatePercentage(count: number): number {
+    if (!this.statsAvancees || this.statsAvancees.total_seances === 0) {
+      return 0;
+    }
+    return Math.round((count / this.statsAvancees.total_seances) * 100);
+  }
+
+  /**
+   * Génère un gradient conique pour le donut chart
+   * @returns La chaîne de gradient CSS
+   */
+  getDonutGradient(): string {
+    if (
+      !this.statsAvancees ||
+      !this.statsAvancees.repartition_types ||
+      this.statsAvancees.repartition_types.length === 0
+    ) {
+      return 'transparent';
+    }
+
+    let gradient = '';
+    let startAngle = 0;
+
+    // Trier les types par nombre décroissant
+    const typesTries = [...this.statsAvancees.repartition_types].sort(
+      (a, b) => b.count - a.count
+    );
+
+    typesTries.forEach((type, index) => {
+      const percentage = this.calculatePercentage(type.count);
+      const endAngle = startAngle + percentage * 3.6; // 3.6 = 360 / 100
+      const color = this.getColorForIndex(index);
+
+      gradient += `${color} ${startAngle}deg ${endAngle}deg, `;
+      startAngle = endAngle;
+    });
+
+    // Supprimer la virgule et l'espace à la fin
+    return gradient.slice(0, -2);
+  }
+
+  /**
+   * Renvoie une couleur pour un index donné
+   * @param index L'index pour lequel obtenir une couleur
+   * @returns Code couleur hex
+   */
+  getColorForIndex(index: number): string {
+    const colors = [
+      '#FF5722', // Orange vif
+      '#E91E63', // Rose
+      '#FF9800', // Orange
+      '#2196F3', // Bleu
+      '#4CAF50', // Vert
+      '#9C27B0', // Violet
+      '#F44336', // Rouge
+      '#00BCD4', // Cyan
+      '#FFEB3B', // Jaune
+      '#673AB7', // Violet foncé
+    ];
+
+    return colors[index % colors.length];
+  }
 }

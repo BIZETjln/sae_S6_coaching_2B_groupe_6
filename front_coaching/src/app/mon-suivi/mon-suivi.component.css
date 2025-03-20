@@ -792,7 +792,7 @@ canvas {
   position: relative;
   width: 240px;
   height: 240px;
-  margin: 0 auto;
+  margin: 0 auto 20px;
   border-radius: 50%;
   background: #f1f1f1;
   overflow: hidden;

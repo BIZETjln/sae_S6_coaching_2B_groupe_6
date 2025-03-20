@@ -311,76 +311,110 @@
                   séances
                 </h3>
                 <div class="seances-donut-container">
-                  <!-- Solution alternative plus simple pour le donut chart -->
+                  <!-- Solution dynamique pour le donut chart -->
                   <div class="simple-donut-chart">
-                    <!-- Segments statiques -->
-                    <div class="donut-segment-simple segment-fitness"></div>
-                    <div class="donut-segment-simple segment-cardio"></div>
-                    <div class="donut-segment-simple segment-muscu"></div>
-                    <div class="donut-segment-simple segment-yoga"></div>
+                    <!-- Graphique dynamique du donut chart -->
+                    <div
+                      *ngIf="statsAvancees && statsAvancees.total_seances > 0"
+                      class="donut-segment-simple"
+                      [style.background-image]="
+                        'conic-gradient(' + getDonutGradient() + ')'
+                      "
+                    ></div>
+
+                    <!-- Quand il n'y a pas de séances -->
+                    <div
+                      *ngIf="
+                        !statsAvancees || statsAvancees.total_seances === 0
+                      "
+                      class="donut-segment-simple"
+                      style="
+                        background-color: #f8f9fa;
+                        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+                      "
+                    ></div>
 
                     <!-- Centre du donut -->
-                    <div class="donut-inner">
-                      <div class="percentage-value">100%</div>
-                      <div class="percentage-label">séances</div>
+                    <div
+                      class="donut-inner d-flex flex-column justify-content-center align-items-center"
+                    >
+                      <ng-container
+                        *ngIf="statsAvancees && statsAvancees.total_seances > 0"
+                      >
+                        <div class="percentage-value">
+                          {{ statsAvancees.total_seances }}
+                        </div>
+                        <div class="percentage-label">séances</div>
+                      </ng-container>
+
+                      <ng-container
+                        *ngIf="
+                          !statsAvancees || statsAvancees.total_seances === 0
+                        "
+                      >
+                        <div class="d-flex flex-column align-items-center">
+                          <i
+                            class="fas fa-running mb-2"
+                            style="font-size: 1.5rem; color: #aaa"
+                          ></i>
+                          <div
+                            style="
+                              font-size: 1.4rem;
+                              color: #555;
+                              font-weight: 600;
+                            "
+                          >
+                            Aucune séance
+                          </div>
+                        </div>
+                      </ng-container>
                     </div>
                   </div>
 
-                  <!-- Légende -->
+                  <!-- Légende du donut -->
                   <div class="donut-legend">
                     <ng-container
-                      *ngFor="
-                        let type of statsAvancees.repartition_types;
-                        let i = index
+                      *ngIf="
+                        statsAvancees &&
+                        statsAvancees.total_seances > 0 &&
+                        statsAvancees.repartition_types &&
+                        statsAvancees.repartition_types.length > 0
                       "
                     >
-                      <div class="legend-item">
-                        <span
+                      <div
+                        *ngFor="
+                          let type of statsAvancees.repartition_types;
+                          let i = index
+                        "
+                        class="legend-item"
+                      >
+                        <div
                           class="legend-color"
-                          [style.background-color]="getZoneColor(i)"
-                        ></span>
-                        <span class="legend-text"
-                          >{{ type.type | titlecase }} - {{ type.count }}%</span
-                        >
+                          [style.background-color]="getColorForIndex(i)"
+                        ></div>
+                        <div class="legend-text">
+                          <span>{{ type.type }}</span>
+                          <span class="percentage"
+                            >{{ calculatePercentage(type.count) }}%</span
+                          >
+                        </div>
                       </div>
                     </ng-container>
 
-                    <!-- Légende statique fallback -->
-                    <ng-container
+                    <div
                       *ngIf="
-                        !statsAvancees?.repartition_types ||
-                        statsAvancees.repartition_types.length === 0
+                        !statsAvancees || statsAvancees.total_seances === 0
                       "
+                      class="empty-data-legend"
                     >
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #ff5722"
-                        ></span>
-                        <span class="legend-text">Fitness - 40%</span>
+                      <div>
+                        <i class="fas fa-info-circle info-icon"></i>
+                        <span class="empty-message"
+                          >Aucune donnée disponible pour la période
+                          sélectionnée</span
+                        >
                       </div>
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #e91e63"
-                        ></span>
-                        <span class="legend-text">Cardio - 30%</span>
-                      </div>
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #ff9800"
-                        ></span>
-                        <span class="legend-text">Musculation - 20%</span>
-                      </div>
-                      <div class="legend-item">
-                        <span
-                          class="legend-color"
-                          style="background-color: #2196f3"
-                        ></span>
-                        <span class="legend-text">Yoga - 10%</span>
-                      </div>
-                    </ng-container>
+                    </div>
                   </div>
                 </div>
               </div>
