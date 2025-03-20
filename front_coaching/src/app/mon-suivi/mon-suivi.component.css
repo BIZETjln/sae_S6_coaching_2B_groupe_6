@@ -964,32 +964,7 @@ canvas {
 .exercice-stats {
   font-size: 0.85rem;
   color: #6c757d;
-}
-
-.exercice-frequence {
-  width: 100px;
-  flex-shrink: 0;
-}
-
-.frequence-barre {
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 5px;
-}
-
-.frequence-remplissage {
-  height: 100%;
-  background: linear-gradient(90deg, #673ab7, #9c27b0);
-  border-radius: 4px;
-}
-
-.frequence-valeur {
-  text-align: right;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #673ab7;
+  font-weight: 500;
 }
 
 /* Zones travaillées */

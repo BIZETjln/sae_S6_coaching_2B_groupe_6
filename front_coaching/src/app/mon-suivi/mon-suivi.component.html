@@ -230,7 +230,7 @@
                 <h3><i class="fas fa-chart-bar me-2"></i>Chiffres clés</h3>
                 <div class="row metrics-container">
                   <!-- Nombre de séances -->
-                  <div class="col-md-3 col-6">
+                  <div class="col-md-6 col-6">
                     <div class="metric-item">
                       <div class="metric-icon">
                         <i class="fas fa-dumbbell"></i>
@@ -247,7 +247,7 @@
                   </div>
 
                   <!-- Heures d'entraînement -->
-                  <div class="col-md-3 col-6">
+                  <div class="col-md-6 col-6">
                     <div class="metric-item">
                       <div class="metric-icon">
                         <i class="fas fa-clock"></i>
@@ -258,40 +258,6 @@
                       <div class="metric-label">d'entraînement</div>
                       <div class="metric-trend positive">
                         <i class="fas fa-arrow-up"></i> +8% vs période
-                        précédente
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Taux de présence -->
-                  <div class="col-md-3 col-6">
-                    <div class="metric-item">
-                      <div class="metric-icon">
-                        <i class="fas fa-check-circle"></i>
-                      </div>
-                      <div class="metric-value">
-                        {{ statsAvancees.assiduite?.taux_presence || "0" }}%
-                      </div>
-                      <div class="metric-label">Présence</div>
-                      <div class="metric-trend positive">
-                        <i class="fas fa-arrow-up"></i> +5% vs période
-                        précédente
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Exercices complétés -->
-                  <div class="col-md-3 col-6">
-                    <div class="metric-item">
-                      <div class="metric-icon">
-                        <i class="fas fa-tasks"></i>
-                      </div>
-                      <div class="metric-value">
-                        {{ statsAvancees.performance?.taux_completion || "0" }}%
-                      </div>
-                      <div class="metric-label">Exercices complétés</div>
-                      <div class="metric-trend negative">
-                        <i class="fas fa-arrow-down"></i> -3% vs période
                         précédente
                       </div>
                     </div>
@@ -439,26 +405,7 @@
                     <div class="exercice-details">
                       <div class="exercice-nom">{{ exercice.nom }}</div>
                       <div class="exercice-stats">
-                        <span>{{ exercice.count }} répétitions</span>
-                      </div>
-                    </div>
-                    <div class="exercice-frequence">
-                      <div class="frequence-barre">
-                        <div
-                          class="frequence-remplissage"
-                          [style.width.%]="
-                            (exercice.count /
-                              statsAvancees.top_exercices[0].count) *
-                            100
-                          "
-                        ></div>
-                      </div>
-                      <div class="frequence-valeur">
-                        {{
-                          (exercice.count /
-                            statsAvancees.top_exercices[0].count) *
-                            100 | number : "1.0-0"
-                        }}%
+                        <span>{{ exercice.count }} fois</span>
                       </div>
                     </div>
                   </div>
