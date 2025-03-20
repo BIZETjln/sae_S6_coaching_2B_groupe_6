@@ -132,6 +132,18 @@ class SeanceInscriptionController extends AbstractController
                         'message' => 'Vous ne pouvez pas réserver plus de 3 séances à l\'avance.'
                     ], Response::HTTP_BAD_REQUEST);
                 }
+                
+                // Vérifier si le niveau du sportif correspond au niveau de la séance
+                $niveauSportif = $user->getNiveauSportif();
+                $niveauSeance = $seance->getNiveauSeance();
+                
+                if ($niveauSportif !== $niveauSeance) {
+                    return $this->json([
+                        'message' => 'Vous ne pouvez pas réserver cette séance car votre niveau (' . 
+                        $niveauSportif->value . ') ne correspond pas au niveau requis (' . 
+                        $niveauSeance->value . ').'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
             }
 
             try {

@@ -143,7 +143,7 @@ class SeanceRepository extends ServiceEntityRepository
     /**
      * Compte le nombre de séances futures pour un sportif donné
      */
-    public function countFutureSessionsForSportif(Sportif $sportif, ?UuidV4 $excludeSeanceId = null): int
+    public function countFutureSessionsForSportif(Sportif $sportif, ?Uuid $excludeSeanceId = null): int
     {
         $conn = $this->getEntityManager()->getConnection();
         $sportifIdHex = bin2hex($sportif->getId()->toBinary());
