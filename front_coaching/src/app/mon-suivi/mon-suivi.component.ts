@@ -11,6 +11,11 @@ import { Seance } from '../models/seance.model';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { map, catchError } from 'rxjs/operators';
+import {
+  StatistiquesService,
+  StatistiquesAvancees,
+  StatistiquesOptions,
+} from '../services/statistiques.service';
 
 // Enregistrer tous les composants de Chart.js
 Chart.register(...registerables);
@@ -62,6 +67,12 @@ interface ExerciceCache {
   [id: string]: string;
 }
 
+// Interface pour les données des zones travaillées
+interface ZoneTravaillee {
+  nom: string;
+  valeur: number;
+}
+
 @Component({
   selector: 'app-mon-suivi',
   templateUrl: './mon-suivi.component.html',
@@ -82,6 +93,22 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     activitesParMois: new Map<string, number>(),
     statistiquesCoachs: new Map<string, number>(),
   };
+
+  // Statistiques avancées
+  statsAvancees: StatistiquesAvancees | null = null;
+
+  // Options pour les statistiques
+  statistiquesOptions: StatistiquesOptions = {
+    period: 'monthly', // Période par défaut
+    date_min: this.getFirstDayOfMonth(new Date()), // Date minimale par défaut : premier jour du mois en cours
+  };
+
+  // Périodes disponibles pour le filtrage
+  periodes = [
+    { value: 'weekly' as const, label: 'Hebdomadaire' },
+    { value: 'monthly' as const, label: 'Mensuelle' },
+    { value: 'yearly' as const, label: 'Annuelle' },
+  ];
 
   // Cache pour stocker les noms des exercices déjà récupérés
   exerciceCache: ExerciceCache = {};
@@ -111,7 +138,8 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
   constructor(
     private seanceService: SeanceService,
-    private authService: AuthService
+    private authService: AuthService,
+    private statistiquesService: StatistiquesService
   ) {}
 
   ngOnInit(): void {
@@ -175,6 +203,10 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       }
 
       this.calculerStatistiques();
+
+      // Charger les statistiques avancées
+      this.chargerStatistiquesAvancees();
+
       this.isLoading = false;
       setTimeout(() => this.initialiserGraphiques(), 300);
     } else {
@@ -182,6 +214,60 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       this.sportif = null;
       this.isLoading = false;
     }
+  }
+
+  // Charger les statistiques avancées depuis le service avec les options
+  chargerStatistiquesAvancees(): void {
+    this.statistiquesService
+      .getStatistiquesAvancees(this.statistiquesOptions)
+      .subscribe({
+        next: (stats) => {
+          console.log('Statistiques avancées récupérées:', stats);
+          this.statsAvancees = stats;
+        },
+        error: (error) => {
+          console.error(
+            'Erreur lors de la récupération des statistiques avancées:',
+            error
+          );
+          this.statsAvancees = null;
+        },
+      });
+  }
+
+  // Méthode pour obtenir un tableau des zones travaillées à partir de l'objet
+  getZonesTravailleesArray(): ZoneTravaillee[] {
+    if (
+      !this.statsAvancees ||
+      !this.statsAvancees.performance.zones_travaillees
+    ) {
+      return [];
+    }
+
+    return Object.entries(this.statsAvancees.performance.zones_travaillees).map(
+      ([nom, valeur]) => ({
+        nom,
+        valeur,
+      })
+    );
+  }
+
+  // Récupérer une couleur pour chaque zone
+  getZoneColor(index: number): string {
+    const colors = [
+      '#FF5722',
+      '#E91E63',
+      '#FF9800',
+      '#2196F3',
+      '#4CAF50',
+      '#9C27B0',
+      '#F44336',
+      '#00BCD4',
+      '#FFC107',
+      '#3F51B5',
+    ];
+
+    return colors[index % colors.length];
   }
 
   // Méthode pour préparer les participations de l'utilisateur
@@ -763,5 +849,56 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
       return true;
     });
+  }
+
+  // Méthode pour changer la période d'analyse
+  changerPeriode(periode: string): void {
+    // Vérifier que la période est valide
+    const periodeTypee = periode as 'weekly' | 'monthly' | 'yearly';
+    this.statistiquesOptions.period = periodeTypee;
+
+    // Ajuster la date minimale en fonction de la période
+    switch (periodeTypee) {
+      case 'weekly':
+        this.statistiquesOptions.date_min = this.getFirstDayOfWeek(new Date());
+        break;
+      case 'monthly':
+        this.statistiquesOptions.date_min = this.getFirstDayOfMonth(new Date());
+        break;
+      case 'yearly':
+        this.statistiquesOptions.date_min = this.getFirstDayOfYear(new Date());
+        break;
+    }
+
+    // Recharger les statistiques
+    this.chargerStatistiquesAvancees();
+  }
+
+  // Méthode pour obtenir le premier jour de la semaine en cours
+  private getFirstDayOfWeek(date: Date): string {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // ajuster pour que la semaine commence le lundi
+    const firstDay = new Date(date.setDate(diff));
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour obtenir le premier jour du mois en cours
+  private getFirstDayOfMonth(date: Date): string {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour obtenir le premier jour de l'année en cours
+  private getFirstDayOfYear(date: Date): string {
+    const firstDay = new Date(date.getFullYear(), 0, 1);
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour formater une date au format YYYY-MM-DD
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
