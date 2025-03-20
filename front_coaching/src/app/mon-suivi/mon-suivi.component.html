@@ -239,9 +239,22 @@
                         {{ statsAvancees.total_seances }}
                       </div>
                       <div class="metric-label">Séances</div>
-                      <div class="metric-trend positive">
-                        <i class="fas fa-arrow-up"></i> +15% vs période
-                        précédente
+                      <div
+                        class="metric-trend"
+                        [ngClass]="{
+                          positive: evolutionStats.seances >= 0,
+                          negative: evolutionStats.seances < 0
+                        }"
+                      >
+                        <i
+                          [ngClass]="
+                            evolutionStats.seances >= 0
+                              ? 'fas fa-arrow-up'
+                              : 'fas fa-arrow-down'
+                          "
+                        ></i>
+                        {{ evolutionStats.seances >= 0 ? "+" : ""
+                        }}{{ evolutionStats.seances }}% vs période précédente
                       </div>
                     </div>
                   </div>
@@ -256,9 +269,22 @@
                         {{ statsAvancees.duree_totale.formatee }}
                       </div>
                       <div class="metric-label">d'entraînement</div>
-                      <div class="metric-trend positive">
-                        <i class="fas fa-arrow-up"></i> +8% vs période
-                        précédente
+                      <div
+                        class="metric-trend"
+                        [ngClass]="{
+                          positive: evolutionStats.duree >= 0,
+                          negative: evolutionStats.duree < 0
+                        }"
+                      >
+                        <i
+                          [ngClass]="
+                            evolutionStats.duree >= 0
+                              ? 'fas fa-arrow-up'
+                              : 'fas fa-arrow-down'
+                          "
+                        ></i>
+                        {{ evolutionStats.duree >= 0 ? "+" : ""
+                        }}{{ evolutionStats.duree }}% vs période précédente
                       </div>
                     </div>
                   </div>

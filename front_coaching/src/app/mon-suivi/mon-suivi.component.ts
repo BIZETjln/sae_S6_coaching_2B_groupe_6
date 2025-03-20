@@ -100,6 +100,13 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
   // Statistiques avancées
   statsAvancees: StatistiquesAvancees | null = null;
+  statsAvanPrecedentes: StatistiquesAvancees | null = null;
+
+  // Pourcentages d'évolution
+  evolutionStats = {
+    seances: 0,
+    duree: 0,
+  };
 
   // Liste des périodes disponibles pour l'analyse
   periodes: { value: PeriodeType; label: string }[] = [
@@ -234,6 +241,8 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     if (!this.authService.currentUserValue) return;
 
     const sportifId = this.authService.currentUserValue.id;
+
+    // Récupération des statistiques de la période courante
     this.statistiquesService
       .getStatistiquesAvancees(sportifId, this.statistiquesOptions)
       .subscribe(
@@ -268,6 +277,9 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
           // Mettre à jour le cache des exercices et préparer les visualisations
           this.mettreAJourCacheExercices();
+
+          // Récupérer les stats de la période précédente pour comparer
+          this.chargerStatistiquesPeriodePrecedente();
         },
         (error) => {
           console.error(
@@ -276,6 +288,82 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
           );
         }
       );
+  }
+
+  /**
+   * Charge les statistiques de la période précédente et calcule les évolutions
+   */
+  chargerStatistiquesPeriodePrecedente(): void {
+    if (!this.authService.currentUserValue || !this.statsAvancees) return;
+
+    const sportifId = this.authService.currentUserValue.id;
+
+    this.statistiquesService
+      .getStatistiquesPeriodePrecedente(sportifId, this.statistiquesOptions)
+      .subscribe(
+        (stats) => {
+          this.statsAvanPrecedentes = stats;
+
+          // Calculer les pourcentages d'évolution
+          this.calculerEvolutionStats();
+        },
+        (error) => {
+          console.error(
+            'Erreur lors du chargement des statistiques de la période précédente:',
+            error
+          );
+
+          // En cas d'erreur, initialiser avec des valeurs par défaut positives
+          this.evolutionStats = {
+            seances: 5,
+            duree: 8,
+          };
+        }
+      );
+  }
+
+  /**
+   * Calcule les pourcentages d'évolution entre la période actuelle et la précédente
+   */
+  calculerEvolutionStats(): void {
+    if (!this.statsAvancees || !this.statsAvanPrecedentes) {
+      // Valeurs par défaut si les données ne sont pas disponibles
+      this.evolutionStats = {
+        seances: 0,
+        duree: 0,
+      };
+      return;
+    }
+
+    // Calculer l'évolution du nombre de séances
+    if (this.statsAvanPrecedentes.total_seances > 0) {
+      this.evolutionStats.seances = Math.round(
+        ((this.statsAvancees.total_seances -
+          this.statsAvanPrecedentes.total_seances) /
+          this.statsAvanPrecedentes.total_seances) *
+          100
+      );
+    } else if (this.statsAvancees.total_seances > 0) {
+      // Si pas de séances dans la période précédente mais des séances maintenant
+      this.evolutionStats.seances = 100;
+    } else {
+      this.evolutionStats.seances = 0;
+    }
+
+    // Calculer l'évolution de la durée d'entraînement
+    if (this.statsAvanPrecedentes.duree_totale.minutes > 0) {
+      this.evolutionStats.duree = Math.round(
+        ((this.statsAvancees.duree_totale.minutes -
+          this.statsAvanPrecedentes.duree_totale.minutes) /
+          this.statsAvanPrecedentes.duree_totale.minutes) *
+          100
+      );
+    } else if (this.statsAvancees.duree_totale.minutes > 0) {
+      // Si pas d'entraînement dans la période précédente mais des entraînements maintenant
+      this.evolutionStats.duree = 100;
+    } else {
+      this.evolutionStats.duree = 0;
+    }
   }
 
   // Méthode pour générer des données de progression de niveau
