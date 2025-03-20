@@ -699,7 +699,7 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
           date_heure: seance.date_heure,
           type_seance: seance.type_seance || 'non spécifié',
           theme_seance: seance.theme_seance || 'non spécifié',
-          statut: seance.statut || (estPassee ? 'terminee' : 'prevue'),
+          statut: seance.statut || (estPassee ? 'passee' : 'à venir'),
           niveau_seance: seance.niveau_seance || 'non spécifié',
           exercices: seance.exercices || [],
           coach: seance.coach
@@ -877,7 +877,6 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
       // Compter les séances inscrites (statut prévu ou à venir)
       if (
         seance.statut === 'prevue' ||
-        seance.statut === 'validee' ||
         seance.statut === 'à venir'
       ) {
         this.stats.seancesInscrites++;
