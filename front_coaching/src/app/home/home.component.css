@@ -13,6 +13,7 @@
   --shadow-md: 0 8px 15px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 15px 30px rgba(0, 0, 0, 0.15);
   --transition-base: all 0.3s ease;
+  --transition-smooth: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --border-radius-sm: 5px;
   --border-radius-md: 10px;
   --border-radius-lg: 15px;
@@ -270,11 +271,12 @@ section:nth-child(even) {
   box-shadow: var(--shadow-sm);
   padding: 40px 30px;
   height: 100%;
-  transition: var(--transition-base);
+  transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
   border-bottom: 4px solid transparent;
   border-top: 1px solid rgba(255, 77, 77, 0.1);
+  will-change: transform, box-shadow;
 }
 
 .feature-card:hover {
@@ -285,12 +287,14 @@ section:nth-child(even) {
 
 .feature-card:hover .feature-icon {
   color: var(--color-accent);
+  transform: none;
 }
 
 .feature-icon {
   font-size: 3rem;
   color: var(--color-primary);
   margin-bottom: 25px;
+  transition: color 0.3s ease;
 }
 
 .feature-title {
@@ -350,12 +354,13 @@ section:nth-child(even) {
   padding: 50px 30px;
   text-align: center;
   height: 100%;
-  transition: var(--transition-base);
+  transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   border-top: 5px solid #ddd;
+  will-change: transform, box-shadow, border-top;
 }
 
 .pricing-card.featured {
@@ -363,6 +368,7 @@ section:nth-child(even) {
   color: var(--color-secondary);
   transform: scale(1.05);
   border-top: 5px solid var(--color-primary);
+  z-index: 2;
 }
 
 .pricing-card.featured::before {
@@ -419,10 +425,12 @@ section:nth-child(even) {
   color: var(--color-primary);
   margin-right: 10px;
   font-size: 1.2rem;
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .pricing-card:hover .pricing-feature i {
-  /* Suppression de l'animation */
+  transform: scale(1.2);
+  color: var(--color-accent);
 }
 
 .pricing-card.featured .pricing-feature i {
@@ -493,8 +501,9 @@ section:nth-child(even) {
   padding: 30px;
   text-align: center;
   height: 100%;
-  transition: var(--transition-base);
+  transition: var(--transition-smooth);
   border-left: 4px solid transparent;
+  will-change: transform, box-shadow, border-left;
 }
 
 .theme-card:hover {
@@ -505,11 +514,13 @@ section:nth-child(even) {
 
 .theme-card:hover .theme-icon {
   color: var(--color-primary);
+  transform: scale(1.1);
 }
 
 .theme-icon {
   font-size: 2.5rem;
   margin-bottom: 20px;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .theme-title {
@@ -571,10 +582,11 @@ section:nth-child(even) {
   box-shadow: var(--shadow-sm);
   padding: 40px 30px;
   height: 100%;
-  transition: var(--transition-base);
+  transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
   position: relative;
+  will-change: transform, box-shadow;
 }
 
 .testimonial::before {
@@ -602,10 +614,12 @@ section:nth-child(even) {
 
 .testimonial-stars i {
   color: var(--color-primary);
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .testimonial:hover .testimonial-stars i {
-  /* Suppression de l'animation */
+  transform: scale(1.2) rotate(5deg);
+  color: var(--color-accent);
 }
 
 .testimonial-text {
@@ -708,6 +722,7 @@ section:nth-child(even) {
 }
 
 .animate {
+  opacity: 0;
   animation: fadeInUp 0.8s ease-out forwards;
 }
 
