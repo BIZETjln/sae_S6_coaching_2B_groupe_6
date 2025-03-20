@@ -18,7 +18,12 @@ class ParticipationType extends AbstractType
             ->add('sportif', EntityType::class, [
                 'class' => Sportif::class,
                 'choice_label' => function (Sportif $sportif) {
-                    return $sportif->getNom() . ' ' . $sportif->getPrenom();
+                    return sprintf(
+                        '%s %s - Niveau %s',
+                        $sportif->getNom(),
+                        $sportif->getPrenom(),
+                        $sportif->getNiveauSportif()->value
+                    );
                 },
                 'label' => 'Sportif'
             ])
