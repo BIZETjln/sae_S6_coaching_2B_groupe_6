@@ -183,9 +183,9 @@ class Seance
                     $existingParticipation->getSportif() !== null &&
                     $existingParticipation->getSportif()->getId() === $participation->getSportif()->getId()
                 ) {
-                    // Au lieu de retourner silencieusement, lancer une exception
-                    throw new \LogicException("Le sportif " . $participation->getSportif()->getNom() . " " .
-                        $participation->getSportif()->getPrenom() . " participe déjà à cette séance");
+                    // Au lieu de lancer une exception, on retourne silencieusement
+                    // La vérification des doublons est maintenant gérée dans le contrôleur
+                    return $this;
                 }
             }
         }
