@@ -110,8 +110,8 @@ class StatsController extends AbstractController
     {
         $conn = $this->entityManager->getConnection();
 
-        // Taux de remplissage global
-        $sql = "
+        // Taux de remplissage global (séances non annulées)
+        $sqlGlobal = "
             SELECT 
                 s.type_seance,
                 COUNT(p.id) as participant_count,
@@ -128,14 +128,41 @@ class StatsController extends AbstractController
             GROUP BY s.type_seance
         ";
 
-        $stmt = $conn->prepare($sql);
-        $resultSet = $stmt->executeQuery([
+        $stmtGlobal = $conn->prepare($sqlGlobal);
+        $resultSetGlobal = $stmtGlobal->executeQuery([
             'statut_annulee' => StatutSeance::ANNULEE->value
         ]);
 
-        $fillRates = [];
-        $globalStats = $resultSet->fetchAllAssociative();
+        // Taux de remplissage des séances validées uniquement
+        $sqlValidated = "
+            SELECT 
+                s.type_seance,
+                COUNT(p.id) as participant_count,
+                COUNT(DISTINCT s.id) as session_count,
+                CASE 
+                    WHEN s.type_seance = 'SOLO' THEN 1
+                    WHEN s.type_seance = 'DUO' THEN 2
+                    WHEN s.type_seance = 'TRIO' THEN 3
+                    ELSE 0
+                END as max_capacity
+            FROM seance s
+            LEFT JOIN participation p ON s.id = p.seance_id
+            WHERE s.statut = :statut_validee
+            GROUP BY s.type_seance
+        ";
 
+        $stmtValidated = $conn->prepare($sqlValidated);
+        $resultSetValidated = $stmtValidated->executeQuery([
+            'statut_validee' => StatutSeance::VALIDEE->value
+        ]);
+
+        $fillRates = [];
+        $fillRatesValidated = [];
+
+        $globalStats = $resultSetGlobal->fetchAllAssociative();
+        $validatedStats = $resultSetValidated->fetchAllAssociative();
+
+        // Traitement des stats globales
         foreach ($globalStats as $row) {
             $maxCapacity = $row['session_count'] * $row['max_capacity'];
             $fillRate = 0;
@@ -151,8 +178,25 @@ class StatsController extends AbstractController
             ];
         }
 
+        // Traitement des stats des séances validées
+        foreach ($validatedStats as $row) {
+            $maxCapacity = $row['session_count'] * $row['max_capacity'];
+            $fillRate = 0;
+            if ($maxCapacity > 0) {
+                $fillRate = ($row['participant_count'] / $maxCapacity) * 100;
+            }
+
+            $fillRatesValidated[] = [
+                'type' => $row['type_seance'],
+                'fill_rate' => round($fillRate, 1),
+                'participant_count' => $row['participant_count'],
+                'total_capacity' => $maxCapacity
+            ];
+        }
+
         return [
-            'by_type' => $fillRates
+            'by_type' => $fillRates,
+            'by_type_validated' => $fillRatesValidated
         ];
     }
 

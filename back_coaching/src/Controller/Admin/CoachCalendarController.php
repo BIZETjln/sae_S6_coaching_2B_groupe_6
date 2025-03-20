@@ -12,10 +12,10 @@ use App\Enum\StatutSeance;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
-class CoachSeancesController extends AbstractController
+class CoachCalendarController extends AbstractController
 {
 
-    #[Route('/admin/coach_seances', name: 'route_coach_seances')]
+    #[Route('/admin/coach_calendar', name: 'route_coach_calendar')]
     public function index(EntityManagerInterface $entityManager, LoggerInterface $logger): Response
     {
         $coach = $this->getUser();

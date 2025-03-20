@@ -1,46 +1,73 @@
 <?php
+// src/Controller/Admin/CoachSeanceCrudController.php
 
 namespace App\Controller\Admin;
 
 use App\Entity\Seance;
-use App\Entity\Sportif;
+use App\Entity\Coach;
 use App\Entity\Participation;
 use App\Enum\Niveau;
 use App\Enum\StatutSeance;
 use App\Enum\ThemeSeance;
 use App\Enum\TypeSeance;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Asset;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
-use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
-use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Form\ParticipationType;
 use Doctrine\Common\Collections\ArrayCollection;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 
-class SeanceCrudController extends AbstractCrudController
+class CoachSeanceCrudController extends AbstractCrudController
 {
     private EntityManagerInterface $entityManager;
+    private LoggerInterface $logger;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger)
     {
         $this->entityManager = $entityManager;
+        $this->logger = $logger;
     }
 
     public static function getEntityFqcn(): string
     {
         return Seance::class;
+    }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            ->setEntityLabelInSingular('Séance')
+            ->setEntityLabelInPlural('Mes séances')
+            ->setPageTitle('index', 'Liste de mes séances')
+            ->setPageTitle('new', 'Créer une séance')
+            ->setPageTitle('edit', 'Modifier ma séance')
+            ->setPageTitle('detail', 'Détails de ma séance')
+            ->setDefaultSort(['date_heure' => 'DESC'])
+            ->setPaginatorPageSize(10)
+            ->showEntityActionsInlined();
     }
 
     public function configureFields(string $pageName): iterable
@@ -86,12 +113,11 @@ class SeanceCrudController extends AbstractCrudController
                 ])
                 ->setColumns(6)
                 ->hideOnIndex(),
-                
-            // Champ caché pour stocker la valeur combinée
-            DateTimeField::new('date_heure')
-                ->hideOnForm()
-                ->setLabel('Date et heure')
-                ->setFormat('dd/MM/yyyy à HH:mm'),
+
+            // Champ pour afficher la date et l'heure combinées dans l'index
+            DateTimeField::new('date_heure', 'Date Heure')
+                ->setFormat('dd/MM/yyyy HH:mm')
+                ->hideOnForm(),
 
             FormField::addPanel('Caractéristiques de la séance')
                 ->setIcon('fa fa-list')
@@ -117,11 +143,13 @@ class SeanceCrudController extends AbstractCrudController
 
             FormField::addPanel('Participants et contenu')
                 ->setIcon('fa fa-users')
-                ->setHelp('Coach, sportifs et exercices de la séance'),
+                ->setHelp('Sportifs et exercices de la séance'),
 
-            AssociationField::new('coach', 'Coach')
-                ->setRequired(true)
-                ->setColumns(12),
+            // Le coach est déjà défini comme l'utilisateur connecté
+            AssociationField::new('coach')
+                ->hideOnForm()
+                ->setFormTypeOption('disabled', true)
+                ->onlyOnDetail(),
 
             // Utilisation d'un champ CollectionField pour les sportifs via participations
             CollectionField::new('participations')
@@ -134,12 +162,9 @@ class SeanceCrudController extends AbstractCrudController
                         'label' => false
                     ]
                 ])
-                // Supprimer ou commenter cette ligne:
-                // ->setTemplatePath('admin/field/participation_collection.html.twig')
                 ->setLabel('Sportifs participants')
                 ->setHelp('Le nombre maximum de sportifs dépend du type de séance : Solo (1), Duo (2), Trio (3)')
-                ->setColumns(12)
-                ->hideOnIndex(),
+                ->setColumns(12),
 
             AssociationField::new('exercices', 'Exercices')
                 ->setFormTypeOptions([
@@ -151,25 +176,27 @@ class SeanceCrudController extends AbstractCrudController
                         ]),
                     ],
                 ])
-                ->setColumns(12)
-                ->hideOnIndex(),
+                ->setColumns(12),
 
             ImageField::new('photo', 'Photo')
                 ->setBasePath('images/seances')
                 ->setUploadDir('public/images/seances')
                 ->setUploadedFileNamePattern('[randomhash].[extension]')
                 ->setRequired(false)
-                ->setColumns(12)
-                ->hideOnIndex(),
+                ->setColumns(12),
         ];
 
         // Ajouter le champ statut uniquement en mode édition
         if (Crud::PAGE_NEW !== $pageName) {
+            $seance = $this->getContext()->getEntity()->getInstance();
+            $isValidatedSession = ($seance instanceof Seance && $seance->getStatut() === StatutSeance::VALIDEE);
+
             $fields[] = ChoiceField::new('statut', 'Statut de la séance')
                 ->setChoices(StatutSeance::cases())
                 ->renderExpanded()
                 ->setFormTypeOption('row_attr', ['class' => 'statut-seance-container'])
-                ->setColumns(12);
+                ->setColumns(12)
+                ->setFormTypeOption('disabled', $isValidatedSession);
         } else {
             // En mode création, on ajoute un champ caché avec la valeur par défaut
             $fields[] = ChoiceField::new('statut')
@@ -180,24 +207,78 @@ class SeanceCrudController extends AbstractCrudController
         return $fields;
     }
 
-    public function configureCrud(Crud $crud): Crud
+    public function configureActions(Actions $actions): Actions
     {
-        return $crud
-            ->setEntityLabelInSingular('Séance')
-            ->setEntityLabelInPlural('Séances')
-            ->setPageTitle('index', 'Liste des séances')
-            ->setPageTitle('new', 'Créer une séance')
-            ->setPageTitle('edit', 'Modifier la séance')
-            ->setPageTitle('detail', 'Détails de la séance')
-            ->setDefaultSort(['date_heure' => 'DESC']);
+        $detailAction = Action::new('detail', 'Détails')
+            ->setIcon('fa fa-eye')
+            ->linkToCrudAction('detail');
+
+        $editAction = Action::new('edit', 'Modifier')
+            ->setIcon('fa fa-pencil-alt')
+            ->linkToCrudAction('edit')
+            ->displayIf(static function (Seance $seance) {
+                // N'afficher le bouton Modifier que si la séance n'est pas validée
+                return $seance->getStatut() !== StatutSeance::VALIDEE;
+            });
+
+        return $actions
+            // Supprimer l'action standard d'édition
+            ->remove(Crud::PAGE_INDEX, Action::EDIT)
+            // Ajouter nos actions personnalisées
+            ->add(Crud::PAGE_INDEX, $detailAction)
+            ->add(Crud::PAGE_INDEX, $editAction)
+            ->add(Crud::PAGE_NEW, Action::INDEX)
+            ->update(Crud::PAGE_NEW, Action::SAVE_AND_RETURN, function (Action $action) {
+                return $action->setLabel('Créer');
+            })
+            ->update(Crud::PAGE_EDIT, Action::SAVE_AND_RETURN, function (Action $action) {
+                return $action->setLabel('Enregistrer les modifications');
+            })
+            ->disable(Action::DELETE)
+            ->setPermission(Action::EDIT, 'ROLE_COACH');
     }
 
-    public function createEntity(string $entityFqcn)
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {
-        $seance = new Seance();
-        $seance->setStatut(StatutSeance::PREVUE);
+        $user = $this->getUser();
+        $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
-        return $seance;
+        if (!$user instanceof Coach) {
+            $this->logger->warning('Utilisateur non-coach connecté: ' . get_class($user));
+            // Si l'utilisateur n'est pas un coach, ne montrer aucune séance
+            $qb->andWhere('1 = 0');
+            return $qb;
+        }
+
+        // Récupérer l'ID du coach et le convertir au format sans tirets
+        $coachId = $user->getId();
+        $coachIdHex = str_replace('-', '', $coachId->__toString());
+        $this->logger->info('Coach connecté: ID=' . $coachId . ', Hex=' . $coachIdHex);
+
+        // Récupérer les séances via une requête SQL native
+        $conn = $this->entityManager->getConnection();
+        $sql = "
+            SELECT s.id 
+            FROM seance s
+            WHERE HEX(s.coach_id) = :coachIdHex
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery(['coachIdHex' => $coachIdHex]);
+        $seanceIds = array_column($resultSet->fetchAllAssociative(), 'id');
+
+        $this->logger->info('Séances trouvées: ' . implode(', ', $seanceIds));
+
+        // Filtrer le QueryBuilder pour ne montrer que les séances récupérées
+        if (!empty($seanceIds)) {
+            $qb->andWhere('entity.id IN (:seanceIds)')
+                ->setParameter('seanceIds', $seanceIds);
+        } else {
+            // Si aucune séance n'est trouvée, ne montrer aucune séance
+            $qb->andWhere('1 = 0');
+        }
+
+        return $qb;
     }
 
     public function createNewFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
@@ -211,11 +292,21 @@ class SeanceCrudController extends AbstractCrudController
 
     public function createEditFormBuilder(EntityDto $entityDto, KeyValueStore $formOptions, AdminContext $context): FormBuilderInterface
     {
+        $seance = $entityDto->getInstance();
+
+        // Vérifier si la séance est validée
+        if ($seance instanceof Seance && $seance->getStatut() === StatutSeance::VALIDEE) {
+            $this->addFlash('warning', 'Une séance validée ne peut plus être modifiée.');
+            // Au lieu de rediriger, on continue mais on désactive les champs
+            $formOptions->set('disabled', true);
+        }
+
         $formBuilder = parent::createEditFormBuilder($entityDto, $formOptions, $context);
         return $formBuilder
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleDateTimeFields())
             ->addEventListener(FormEvents::POST_SUBMIT, $this->handleImageUpload())
-            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleSportifs());
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleSportifs())
+            ->addEventListener(FormEvents::POST_SUBMIT, $this->handleAnnulation());
     }
 
     private function handleDateTimeFields()
@@ -241,21 +332,6 @@ class SeanceCrudController extends AbstractCrudController
 
                 // Vérifier les conflits de séances pour le coach
                 $this->checkCoachAvailability($form, $seance, $dateTime);
-                
-                // Vérifier les conflits d'horaires pour les sportifs
-                // Nous ne vérifions les sportifs que s'il y a au moins une participation
-                if (!$seance->getParticipations()->isEmpty()) {
-                    $conflicts = $this->checkSportifsAvailability($seance);
-                    foreach ($conflicts as $conflict) {
-                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
-                    }
-                    
-                    // Vérifier le nombre de séances futures par sportif
-                    $maxFutureSessionsConflicts = $this->checkMaxFutureSessions($seance);
-                    foreach ($maxFutureSessionsConflicts as $conflict) {
-                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
-                    }
-                }
             }
         };
     }
@@ -277,86 +353,11 @@ class SeanceCrudController extends AbstractCrudController
 
             if ($hasConflict) {
                 $form->addError(new \Symfony\Component\Form\FormError(
-                    'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                    'Vous avez déjà une séance programmée à un horaire trop proche. ' .
                         'Il doit y avoir au moins 1h30 entre deux séances.'
                 ));
             }
         }
-    }
-
-    /**
-     * Vérifie si les sportifs peuvent être ajoutés à la séance
-     */
-    private function checkSportifsAvailability(Seance $seance): array
-    {
-        $conflicts = [];
-        $repository = $this->entityManager->getRepository(Seance::class);
-        
-        if ($repository instanceof \App\Repository\SeanceRepository) {
-            foreach ($seance->getParticipations() as $participation) {
-                $sportif = $participation->getSportif();
-                if (!$sportif) continue;
-                
-                // Vérifier les conflits d'horaires
-                $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
-                if ($hasConflict) {
-                    $conflicts[] = sprintf(
-                        'Le sportif %s a déjà une séance programmée, il doit y avoir au moins 1h30 entre deux séances',
-                        $sportif->__toString()
-                    );
-                }
-                
-                // Vérifier le nombre d'annulations
-                $historiqueRepo = $this->entityManager->getRepository(\App\Entity\HistoriqueAnnulation::class);
-                $historique = $historiqueRepo->findOneBy([
-                    'sportif' => $sportif,
-                    'seance' => $seance
-                ]);
-                
-                if ($historique && $historique->getNbAnnulation() >= 2) {
-                    $conflicts[] = sprintf(
-                        'Le sportif %s a déjà annulé cette séance 2 fois et ne peut plus y être inscrit',
-                        $sportif->__toString()
-                    );
-                }
-            }
-        }
-        
-        return $conflicts;
-    }
-
-    /**
-     * Vérifie que les sportifs n'ont pas plus de 3 séances réservées à l'avance
-     */
-    private function checkMaxFutureSessions(Seance $seance): array
-    {
-        $conflicts = [];
-        $repository = $this->entityManager->getRepository(Seance::class);
-        
-        if ($repository instanceof \App\Repository\SeanceRepository) {
-            foreach ($seance->getParticipations() as $participation) {
-                $sportif = $participation->getSportif();
-                if (!$sportif) continue;
-                
-                // Ne pas compter la séance actuelle si c'est une mise à jour
-                $countFutureSessions = $repository->countFutureSessionsForSportif($sportif, $seance->getId());
-                
-                // Si nouvelle séance, on ajoute 1 au compte
-                if (!$seance->getId()) {
-                    $countFutureSessions++;
-                }
-                
-                if ($countFutureSessions > 3) {
-                    $conflicts[] = sprintf(
-                        'Le sportif %s %s ne peut pas avoir plus de 3 séances réservées à l\'avance.',
-                        $sportif->getNom(),
-                        $sportif->getPrenom()
-                    );
-                }
-            }
-        }
-        
-        return $conflicts;
     }
 
     private function handleImageUpload()
@@ -433,13 +434,32 @@ class SeanceCrudController extends AbstractCrudController
                     )
                 ));
             }
-            
-            // Vérifier les conflits d'horaires et les annulations pour les sportifs
-            if ($seance->getDateHeure()) {
-                $conflicts = $this->checkSportifsAvailability($seance);
-                foreach ($conflicts as $conflict) {
-                    $form->addError(new \Symfony\Component\Form\FormError($conflict));
-                }
+        };
+    }
+
+    private function handleAnnulation()
+    {
+        return function (FormEvent $event) {
+            $form = $event->getForm();
+            $seance = $form->getData();
+
+            if (!$seance instanceof Seance || !$seance->getId()) {
+                return;
+            }
+
+            // Vérifier si la séance a été annulée
+            $originalSeance = $this->entityManager->getRepository(Seance::class)->find($seance->getId());
+
+            if (
+                $originalSeance &&
+                $originalSeance->getStatut() !== StatutSeance::ANNULEE &&
+                $seance->getStatut() === StatutSeance::ANNULEE
+            ) {
+                // Ajouter un message pour informer que l'administrateur a été notifié
+                $this->addFlash(
+                    'info',
+                    'L\'administrateur a été informé de l\'annulation de cette séance.'
+                );
             }
         };
     }
@@ -448,46 +468,22 @@ class SeanceCrudController extends AbstractCrudController
     {
         try {
             // Vérifier à nouveau les conflits de séances avant la persistance
-            if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
-                // Vérification du nombre de sportifs selon le type de séance
-                $typeSeance = $entityInstance->getTypeSeance();
-                $maxSportifs = match ($typeSeance) {
-                    TypeSeance::SOLO => 1,
-                    TypeSeance::DUO => 2,
-                    TypeSeance::TRIO => 3,
-                    default => 3
-                };
-
-                if (count($entityInstance->getSportifs()) > $maxSportifs) {
-                    throw new \LogicException(
-                        sprintf(
-                            'Une séance %s ne peut avoir que %d sportif(s) maximum',
-                            $typeSeance->value,
-                            $maxSportifs
-                        )
-                    );
-                }
-                
+            if ($entityInstance instanceof Seance && $entityInstance->getDateHeure()) {
                 $repository = $entityManager->getRepository(Seance::class);
+
+                // Définir le coach comme l'utilisateur connecté
+                $coach = $this->getUser();
+                if ($coach instanceof Coach) {
+                    $entityInstance->setCoach($coach);
+                }
+
                 if ($repository instanceof \App\Repository\SeanceRepository) {
                     $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
                     if ($hasConflict) {
                         throw new \LogicException(
-                            'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                            'Vous avez déjà une séance programmée à un horaire trop proche. ' .
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
-                    }
-                    
-                    // Vérifier les conflits pour les sportifs
-                    $conflicts = $this->checkSportifsAvailability($entityInstance);
-                    if (!empty($conflicts)) {
-                        throw new \LogicException(implode("\n", $conflicts));
-                    }
-                    
-                    // Vérifier le nombre maximum de séances futures
-                    $maxSessionsConflicts = $this->checkMaxFutureSessions($entityInstance);
-                    if (!empty($maxSessionsConflicts)) {
-                        throw new \LogicException(implode("\n", $maxSessionsConflicts));
                     }
                 }
             }
@@ -504,13 +500,30 @@ class SeanceCrudController extends AbstractCrudController
         } catch (\LogicException $e) {
             // Ajouter un flash message pour afficher l'erreur
             $this->addFlash('danger', $e->getMessage());
-            throw $e;
+
+            // Ne pas propager l'exception pour permettre à l'utilisateur de corriger l'erreur
+            // La transaction sera automatiquement annulée par Doctrine
         }
     }
 
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         try {
+            // Si la séance est validée, ne pas permettre la modification
+            if ($entityInstance instanceof Seance && $entityInstance->getStatut() === StatutSeance::VALIDEE) {
+                $this->addFlash('warning', 'Une séance validée ne peut plus être modifiée.');
+                return;
+            }
+
+            // Vérifier si le statut est changé à ANNULEE
+            if ($entityInstance instanceof Seance && $entityInstance->getStatut() === StatutSeance::ANNULEE) {
+                $originalSeance = $entityManager->getRepository(Seance::class)->find($entityInstance->getId());
+                if ($originalSeance && $originalSeance->getStatut() !== StatutSeance::ANNULEE) {
+                    $this->addFlash('info', 'L\'administrateur a été informé de l\'annulation de cette séance.');
+                    // Ici on pourrait envoyer un email à l'administrateur
+                }
+            }
+
             // Vérifier à nouveau les conflits de séances avant la mise à jour
             if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
                 $repository = $entityManager->getRepository(Seance::class);
@@ -518,17 +531,17 @@ class SeanceCrudController extends AbstractCrudController
                     $hasConflict = $repository->hasConflictingSession($entityInstance->getCoach(), $entityInstance->getDateHeure(), $entityInstance->getId());
                     if ($hasConflict) {
                         throw new \LogicException(
-                            'Ce coach a déjà une séance programmée à un horaire trop proche. ' .
+                            'Vous avez déjà une séance programmée à un horaire trop proche. ' .
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
                     }
-                    
-                    // Vérifier les conflits pour les sportifs
-                    $conflicts = $this->checkSportifsAvailability($entityInstance);
-                    if (!empty($conflicts)) {
-                        throw new \LogicException(implode("\n", $conflicts));
-                    }
                 }
+            }
+
+            // S'assurer que le coach reste le même (celui connecté)
+            $coach = $this->getUser();
+            if ($coach instanceof Coach) {
+                $entityInstance->setCoach($coach);
             }
 
             // Récupérer les participations existantes avant modification
@@ -578,5 +591,19 @@ class SeanceCrudController extends AbstractCrudController
             // Ne pas propager l'exception pour permettre à l'utilisateur de corriger l'erreur
             // La transaction sera automatiquement annulée par Doctrine
         }
+    }
+
+    public function createEntity(string $entityFqcn)
+    {
+        $seance = new Seance();
+        $seance->setStatut(StatutSeance::PREVUE);
+
+        // Définir le coach comme l'utilisateur connecté
+        $coach = $this->getUser();
+        if ($coach instanceof Coach) {
+            $seance->setCoach($coach);
+        }
+
+        return $seance;
     }
 }
