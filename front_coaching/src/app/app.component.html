@@ -129,13 +129,13 @@
 
   <!-- Profil utilisateur (visible uniquement si connecté) -->
   <div class="user-profile" *ngIf="currentUser">
-    <div class="user-profile-header">
+    <a routerLink="/profil" class="user-profile-header">
       <img [src]="getAvatarUrl()" alt="Photo de profil" class="avatar" />
       <div class="user-info">
         <div class="user-name text-truncate">{{ getUserDisplayName() }}</div>
         <div class="user-email text-truncate">{{ currentUser.email }}</div>
       </div>
-    </div>
+    </a>
     <a (click)="logout()" class="logout-btn">
       <i class="bi bi-box-arrow-left"></i>
       <span>Déconnexion</span>

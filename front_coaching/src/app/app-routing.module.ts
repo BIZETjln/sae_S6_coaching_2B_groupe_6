@@ -13,6 +13,8 @@ import { MonSuiviComponent } from './mon-suivi/mon-suivi.component';
 import { AProposComponent } from './a-propos/a-propos.component';
 import { ConfidentialiteComponent } from './confidentialite/confidentialite.component';
 import { ConditionsComponent } from './conditions/conditions.component';
+import { ProfilComponent } from './profil/profil.component';
+
 // Composant temporaire pour les routes non encore implémentées
 @Component({
   template: `<div class="container mt-5">
@@ -51,7 +53,7 @@ const routes: Routes = [
   },
   {
     path: 'profil',
-    component: PlaceholderComponent,
+    component: ProfilComponent,
     canActivate: [RoleGuard],
     data: {
       roles: [

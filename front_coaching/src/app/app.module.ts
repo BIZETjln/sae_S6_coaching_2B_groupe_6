@@ -18,6 +18,7 @@ import { MonSuiviComponent } from './mon-suivi/mon-suivi.component';
 import { AProposComponent } from './a-propos/a-propos.component';
 import { ConfidentialiteComponent } from './confidentialite/confidentialite.component';
 import { ConditionsComponent } from './conditions/conditions.component';
+import { ProfilComponent } from './profil/profil.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +33,7 @@ import { ConditionsComponent } from './conditions/conditions.component';
     AProposComponent,
     ConfidentialiteComponent,
     ConditionsComponent,
+    ProfilComponent,
   ],
   imports: [
     BrowserModule,

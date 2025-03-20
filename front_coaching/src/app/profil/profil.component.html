@@ -1,0 +1,100 @@
+<!-- Profil Section -->
+<section class="profile-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        INFORMATIONS <span>PERSONNELLES</span>
+      </h2>
+    </div>
+
+    <!-- Message si l'utilisateur n'est pas connecté -->
+    <div *ngIf="!currentUser" class="alert alert-warning mt-3">
+      <p>Vous devez être connecté pour accéder à votre profil.</p>
+      <a routerLink="/connexion" class="btn btn-primary mt-3">Se connecter</a>
+    </div>
+
+    <div *ngIf="currentUser" class="profile-content">
+      <!-- Section Photo et Informations de base -->
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <img [src]="userAvatarUrl" class="img-fluid rounded-circle" alt="Photo de profil">
+        </div>
+        <div class="profile-info">
+          <h3>{{ currentUser.prenom }} {{ currentUser.nom }}</h3>
+          <p class="email">{{ currentUser.email }}</p>
+          <div class="profile-badges">
+            <span class="badge">{{ currentUser.role }}</span>
+            <span class="badge">Inscrit depuis {{ dateInscription }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations détaillées sportifs -->
+      <div *ngIf="currentUser?.role === 'CLIENT'" class="profile-details">
+        <div class="section-subheader">
+          <h3>Informations sportives</h3>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-stat">
+            <i class="bi bi-award"></i>
+            <h4>Niveau sportif</h4>
+            <p>{{ niveauSportif }}</p>
+          </div>
+          <div class="profile-stat">
+            <i class="bi bi-graph-up"></i>
+            <h4>Progression</h4>
+            <a routerLink="/mon-suivi" class="btn btn-outline-primary btn-sm">Voir mon suivi</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations détaillées coachs -->
+      <div *ngIf="currentUser?.role === 'COACH'" class="profile-details">
+        <div class="section-subheader">
+          <h3>Informations professionnelles</h3>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-stat">
+            <i class="bi bi-briefcase"></i>
+            <h4>Spécialité</h4>
+            <p>{{ specialiteCoach }}</p>
+          </div>
+          <div class="profile-stat">
+            <i class="bi bi-calendar-week"></i>
+            <h4>Séances programmées</h4>
+            <p>{{ currentUser?.seances?.length || 0 }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autres rôles -->
+      <div *ngIf="currentUser?.role === 'AGENT' || currentUser?.role === 'RESPONSABLE'" class="profile-details">
+        <div class="section-subheader">
+          <h3>Informations administratives</h3>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-stat">
+            <i class="bi bi-person-badge"></i>
+            <h4>Fonction</h4>
+            <p>{{ currentUser?.role }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section *ngIf="currentUser?.role === 'CLIENT'" class="cta-section">
+  <div class="container">
+    <div class="cta">
+      <h2 class="cta-title">
+        ENVIE DE <span>PROGRESSER</span> DAVANTAGE ?
+      </h2>
+      <p class="cta-text">
+        Réservez dès maintenant de nouvelles séances avec nos coachs experts
+      </p>
+      <a routerLink="/seances" class="btn btn-white btn-lg">DÉCOUVRIR LES SÉANCES</a>
+    </div>
+  </div>
+</section> 

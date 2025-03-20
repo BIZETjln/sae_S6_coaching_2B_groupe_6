@@ -333,6 +333,7 @@ export class SeanceService {
   private mapApiSeanceToModel(apiSeance: any): Seance {
     // Récupérer les informations du coach
     let coachData: Coach = { id: '' };
+    console.log('apiSeance', apiSeance);
 
     if (apiSeance.coach) {
       if (typeof apiSeance.coach === 'string') {
