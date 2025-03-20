@@ -32,7 +32,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use App\Form\ParticipationType;
 use Doctrine\Common\Collections\ArrayCollection;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -43,12 +42,10 @@ use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 class CoachSeanceCrudController extends AbstractCrudController
 {
     private EntityManagerInterface $entityManager;
-    private LoggerInterface $logger;
 
-    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
-        $this->logger = $logger;
     }
 
     public static function getEntityFqcn(): string
@@ -267,7 +264,6 @@ class CoachSeanceCrudController extends AbstractCrudController
         $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
         if (!$user instanceof Coach) {
-            $this->logger->warning('Utilisateur non-coach connecté: ' . get_class($user));
             // Si l'utilisateur n'est pas un coach, ne montrer aucune séance
             $qb->andWhere('1 = 0');
             return $qb;
@@ -276,7 +272,6 @@ class CoachSeanceCrudController extends AbstractCrudController
         // Récupérer l'ID du coach et le convertir au format sans tirets
         $coachId = $user->getId();
         $coachIdHex = str_replace('-', '', $coachId->__toString());
-        $this->logger->info('Coach connecté: ID=' . $coachId . ', Hex=' . $coachIdHex);
 
         // Récupérer les séances via une requête SQL native
         $conn = $this->entityManager->getConnection();
@@ -289,8 +284,6 @@ class CoachSeanceCrudController extends AbstractCrudController
         $stmt = $conn->prepare($sql);
         $resultSet = $stmt->executeQuery(['coachIdHex' => $coachIdHex]);
         $seanceIds = array_column($resultSet->fetchAllAssociative(), 'id');
-
-        $this->logger->info('Séances trouvées: ' . implode(', ', $seanceIds));
 
         // Filtrer le QueryBuilder pour ne montrer que les séances récupérées
         if (!empty($seanceIds)) {
@@ -581,12 +574,6 @@ class CoachSeanceCrudController extends AbstractCrudController
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         try {
-            // Si la séance est validée, ne pas permettre la modification
-            if ($entityInstance instanceof Seance && $entityInstance->getStatut() === StatutSeance::VALIDEE) {
-                $this->addFlash('warning', 'Une séance validée ne peut plus être modifiée.');
-                return;
-            }
-
             // Vérifier à nouveau les conflits de séances avant la mise à jour
             if ($entityInstance instanceof Seance && $entityInstance->getCoach() && $entityInstance->getDateHeure()) {
                 $repository = $entityManager->getRepository(Seance::class);

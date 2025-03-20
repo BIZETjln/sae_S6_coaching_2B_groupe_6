@@ -176,6 +176,11 @@ class Sportif extends Utilisateur
 
     public function __toString(): string
     {
-        return $this->getNom() . ' ' . $this->getPrenom();
+        return sprintf(
+            '%s %s - Niveau %s',
+            $this->getNom(),
+            $this->getPrenom(),
+            $this->getNiveauSportif()->value
+        );
     }
 }
