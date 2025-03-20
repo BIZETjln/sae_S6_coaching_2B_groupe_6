@@ -306,6 +306,18 @@ class SeanceCrudController extends AbstractCrudController
                     );
                 }
                 
+                // Vérifier la correspondance des niveaux
+                $niveauSportif = $sportif->getNiveauSportif();
+                $niveauSeance = $seance->getNiveauSeance();
+                if ($niveauSportif !== $niveauSeance) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s de niveau %s ne peut pas être inscrit à une séance de niveau %s',
+                        $sportif->__toString(),
+                        $niveauSportif->value,
+                        $niveauSeance->value
+                    );
+                }
+                
                 // Vérifier le nombre d'annulations
                 $historiqueRepo = $this->entityManager->getRepository(\App\Entity\HistoriqueAnnulation::class);
                 $historique = $historiqueRepo->findOneBy([
