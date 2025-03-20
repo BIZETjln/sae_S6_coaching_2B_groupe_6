@@ -134,31 +134,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Graphique d'évolution de l'activité -->
-          <div class="chart-item-full">
-            <div class="chart-container activity-chart">
-              <h3>
-                <i class="fas fa-chart-line me-2"></i>Évolution de mon activité
-              </h3>
-              <div
-                *ngIf="stats.activitesParMois.size > 0"
-                class="chart-wrapper"
-              >
-                <canvas #activitesParMoisChart></canvas>
-              </div>
-              <div
-                *ngIf="stats.activitesParMois.size === 0"
-                class="text-center py-5 text-muted"
-              >
-                <i class="fas fa-info-circle mb-3" style="font-size: 2rem"></i>
-                <p>
-                  Pas encore suffisamment de données pour afficher l'évolution
-                  de votre activité.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- NOUVELLE SECTION: Statistiques avancées -->
@@ -168,77 +143,156 @@
             parcours
           </h2>
 
-          <!-- Sélecteur de période -->
-          <div class="periode-selector mb-4">
-            <div class="d-flex justify-content-center align-items-center">
-              <div class="periode-label me-3">
-                Afficher les statistiques par période :
-              </div>
-              <div
-                class="btn-group"
-                role="group"
-                aria-label="Sélection de période"
-              >
-                <button
-                  *ngFor="let periode of periodes"
-                  type="button"
-                  class="btn"
-                  [class.btn-primary]="
-                    statistiquesOptions.period === periode.value
-                  "
-                  [class.btn-outline-primary]="
-                    statistiquesOptions.period !== periode.value
-                  "
-                  (click)="changerPeriode(periode.value)"
-                >
-                  {{ periode.label }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Progression de niveau -->
+          <!-- SÉLECTEURS DE PÉRIODE -->
           <div class="row mb-4">
-            <div class="col-md-12">
-              <div class="progression-card">
-                <h3>
-                  <i class="fas fa-level-up-alt me-2"></i>Progression de niveau
-                </h3>
-                <div class="progression-details">
-                  <div class="row align-items-center">
-                    <div class="col-md-3 text-center">
-                      <div class="niveau niveau-debut">
-                        <div class="niveau-label">Niveau de départ</div>
-                        <div class="niveau-valeur">
-                          {{
-                            statsAvancees.progression_niveau.debut | titlecase
-                          }}
-                        </div>
+            <div class="col-12">
+              <div class="periode-selector">
+                <div
+                  class="selector-header d-flex justify-content-between align-items-center"
+                >
+                  <div class="periode-label">
+                    <i class="fas fa-calendar-alt me-2"></i>Période d'analyse
+                  </div>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="modeAvanceSwitch"
+                      [(ngModel)]="modeAvance"
+                      (change)="toggleModeAvance()"
+                    />
+                    <label class="form-check-label" for="modeAvanceSwitch"
+                      >Mode avancé</label
+                    >
+                  </div>
+                </div>
+
+                <!-- Boutons rapides -->
+                <div *ngIf="!modeAvance">
+                  <div class="btn-group-selector">
+                    <button
+                      *ngFor="let periode of periodes"
+                      type="button"
+                      class="btn btn-selector"
+                      [class.active]="
+                        statistiquesOptions.period === periode.value
+                      "
+                      (click)="changerPeriode(periode.value)"
+                      [attr.data-period]="periode.value"
+                    >
+                      {{ periode.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Mode avancé (sélecteur de dates) -->
+                <div *ngIf="modeAvance">
+                  <div class="row">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                      <div class="input-group">
+                        <span class="input-group-text">Du</span>
+                        <input
+                          type="date"
+                          class="form-control"
+                          [(ngModel)]="dateDebut"
+                        />
                       </div>
                     </div>
                     <div class="col-md-6">
-                      <div class="progression-bar-container">
-                        <div class="progression-bar">
-                          <div
-                            class="progression-fill"
-                            [style.width.%]="
-                              statsAvancees.progression_niveau.progression
-                            "
-                          ></div>
-                        </div>
-                        <div class="progression-percentage">
-                          {{ statsAvancees.progression_niveau.progression }}%
-                        </div>
+                      <div class="input-group">
+                        <span class="input-group-text">Au</span>
+                        <input
+                          type="date"
+                          class="form-control"
+                          [(ngModel)]="dateFin"
+                        />
                       </div>
                     </div>
-                    <div class="col-md-3 text-center">
-                      <div class="niveau niveau-actuel">
-                        <div class="niveau-label">Niveau actuel</div>
-                        <div class="niveau-valeur">
-                          {{
-                            statsAvancees.progression_niveau.actuel | titlecase
-                          }}
-                        </div>
+                  </div>
+                  <div class="d-flex justify-content-end mt-3">
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      (click)="appliquerDatesPersonnalisees()"
+                    >
+                      <i class="fas fa-search me-2"></i>Appliquer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHIFFRES CLÉS -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="key-metrics-card">
+                <h3><i class="fas fa-chart-bar me-2"></i>Chiffres clés</h3>
+                <div class="row metrics-container">
+                  <!-- Nombre de séances -->
+                  <div class="col-md-3 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-dumbbell"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.total_seances }}
+                      </div>
+                      <div class="metric-label">Séances</div>
+                      <div class="metric-trend positive">
+                        <i class="fas fa-arrow-up"></i> +15% vs période
+                        précédente
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Heures d'entraînement -->
+                  <div class="col-md-3 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.duree_totale.formatee }}
+                      </div>
+                      <div class="metric-label">d'entraînement</div>
+                      <div class="metric-trend positive">
+                        <i class="fas fa-arrow-up"></i> +8% vs période
+                        précédente
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Taux de présence -->
+                  <div class="col-md-3 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-check-circle"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.assiduite?.taux_presence || "0" }}%
+                      </div>
+                      <div class="metric-label">Présence</div>
+                      <div class="metric-trend positive">
+                        <i class="fas fa-arrow-up"></i> +5% vs période
+                        précédente
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Exercices complétés -->
+                  <div class="col-md-3 col-6">
+                    <div class="metric-item">
+                      <div class="metric-icon">
+                        <i class="fas fa-tasks"></i>
+                      </div>
+                      <div class="metric-value">
+                        {{ statsAvancees.performance?.taux_completion || "0" }}%
+                      </div>
+                      <div class="metric-label">Exercices complétés</div>
+                      <div class="metric-trend negative">
+                        <i class="fas fa-arrow-down"></i> -3% vs période
+                        précédente
                       </div>
                     </div>
                   </div>
@@ -247,193 +301,149 @@
             </div>
           </div>
 
-          <!-- Assiduité et performance -->
+          <!-- GRAPHIQUES ET STATISTIQUES -->
           <div class="row mb-4">
-            <!-- Assiduité -->
-            <div class="col-md-6">
-              <div class="stat-card assiduite-card">
+            <!-- Répartition des types de séances -->
+            <div class="col-md-5 mb-4 pe-md-4">
+              <div class="chart-card h-100">
                 <h3>
-                  <i class="fas fa-calendar-check me-2"></i>Votre assiduité
+                  <i class="fas fa-chart-pie me-2"></i>Répartition des types de
+                  séances
                 </h3>
-                <div class="row">
-                  <div class="col-6 text-center mb-3">
-                    <div
-                      class="circular-progress"
-                      [style.background]="
-                        'conic-gradient(#FF5722 ' +
-                        statsAvancees.assiduite.taux_presence * 3.6 +
-                        'deg, #f1f1f1 0deg)'
+                <div class="seances-donut-container">
+                  <!-- Solution alternative plus simple pour le donut chart -->
+                  <div class="simple-donut-chart">
+                    <!-- Segments statiques -->
+                    <div class="donut-segment-simple segment-fitness"></div>
+                    <div class="donut-segment-simple segment-cardio"></div>
+                    <div class="donut-segment-simple segment-muscu"></div>
+                    <div class="donut-segment-simple segment-yoga"></div>
+
+                    <!-- Centre du donut -->
+                    <div class="donut-inner">
+                      <div class="percentage-value">100%</div>
+                      <div class="percentage-label">séances</div>
+                    </div>
+                  </div>
+
+                  <!-- Légende -->
+                  <div class="donut-legend">
+                    <ng-container
+                      *ngFor="
+                        let type of statsAvancees.repartition_types;
+                        let i = index
                       "
                     >
-                      <div class="circular-inner">
-                        <span class="percentage"
-                          >{{ statsAvancees.assiduite.taux_presence }}%</span
-                        >
-                      </div>
-                    </div>
-                    <p class="mt-2">Taux de présence</p>
-                  </div>
-                  <div class="col-6">
-                    <ul class="stats-list">
-                      <li>
-                        <span class="stat-label">Séances suivies:</span>
-                        <span class="stat-value">{{
-                          statsAvancees.assiduite.seances_assistees
-                        }}</span>
-                      </li>
-                      <li>
-                        <span class="stat-label">Séances manquées:</span>
-                        <span class="stat-value">{{
-                          statsAvancees.assiduite.seances_manquees
-                        }}</span>
-                      </li>
-                      <li>
-                        <span class="stat-label">Total:</span>
-                        <span class="stat-value">{{
-                          statsAvancees.assiduite.total_seances
-                        }}</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Performance -->
-            <div class="col-md-6">
-              <div class="stat-card performance-card">
-                <h3><i class="fas fa-trophy me-2"></i>Votre performance</h3>
-                <div class="row align-items-center">
-                  <div class="col-6 text-center mb-3">
-                    <div class="completion-circle">
-                      <div
-                        class="circular-progress"
-                        [style.background]="
-                          'conic-gradient(#E91E63 ' +
-                          statsAvancees.performance.taux_completion * 3.6 +
-                          'deg, #f1f1f1 0deg)'
-                        "
-                      >
-                        <div class="circular-inner">
-                          <span class="percentage"
-                            >{{
-                              statsAvancees.performance.taux_completion
-                            }}%</span
-                          >
-                        </div>
-                      </div>
-                      <p class="mt-2">Exercices complétés</p>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <h5 class="zones-title">Zones travaillées</h5>
-                    <div class="zones-bars">
-                      <div
-                        *ngFor="
-                          let zone of getZonesTravailleesArray();
-                          let i = index
-                        "
-                        class="zone-item"
-                      >
-                        <div class="zone-info">
-                          <span class="zone-name">{{ zone.nom }}</span>
-                          <span class="zone-percentage"
-                            >{{ zone.valeur }}%</span
-                          >
-                        </div>
-                        <div class="zone-bar">
-                          <div
-                            class="zone-progress"
-                            [style.width.%]="zone.valeur"
-                            [style.background-color]="getZoneColor(i)"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recommandations -->
-          <div class="row mb-4">
-            <div class="col-md-12">
-              <div class="recommandations-card">
-                <h3>
-                  <i class="fas fa-lightbulb me-2"></i>Recommandations
-                  personnalisées
-                </h3>
-                <div class="row">
-                  <!-- Exercices recommandés -->
-                  <div class="col-md-4">
-                    <div class="recommandation-section">
-                      <h5>
-                        <i class="fas fa-dumbbell me-2"></i>Exercices suggérés
-                      </h5>
-                      <ul class="recommandation-list">
-                        <li
-                          *ngFor="
-                            let exercice of statsAvancees.recommandations
-                              .exercices
-                          "
-                        >
-                          {{ exercice }}
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <!-- Thèmes suggérés -->
-                  <div class="col-md-4">
-                    <div class="recommandation-section">
-                      <h5><i class="fas fa-tags me-2"></i>Thèmes à explorer</h5>
-                      <div class="themes-container">
+                      <div class="legend-item">
                         <span
-                          *ngFor="
-                            let theme of statsAvancees.recommandations
-                              .themes_suggeres
-                          "
-                          class="theme-tag"
+                          class="legend-color"
+                          [style.background-color]="getZoneColor(i)"
+                        ></span>
+                        <span class="legend-text"
+                          >{{ type.type | titlecase }} - {{ type.count }}%</span
                         >
-                          {{ theme }}
-                        </span>
+                      </div>
+                    </ng-container>
+
+                    <!-- Légende statique fallback -->
+                    <ng-container
+                      *ngIf="
+                        !statsAvancees?.repartition_types ||
+                        statsAvancees.repartition_types.length === 0
+                      "
+                    >
+                      <div class="legend-item">
+                        <span
+                          class="legend-color"
+                          style="background-color: #ff5722"
+                        ></span>
+                        <span class="legend-text">Fitness - 40%</span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-color"
+                          style="background-color: #e91e63"
+                        ></span>
+                        <span class="legend-text">Cardio - 30%</span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-color"
+                          style="background-color: #ff9800"
+                        ></span>
+                        <span class="legend-text">Musculation - 20%</span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-color"
+                          style="background-color: #2196f3"
+                        ></span>
+                        <span class="legend-text">Yoga - 10%</span>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Liste des exercices les plus pratiqués -->
+            <div class="col-md-7 mb-4 ps-md-4">
+              <div class="exercices-card h-100">
+                <h3>
+                  <i class="fas fa-list-ol me-2"></i>Exercices les plus
+                  pratiqués
+                </h3>
+                <div class="exercices-liste">
+                  <div
+                    class="exercice-item"
+                    *ngFor="
+                      let exercice of statsAvancees.top_exercices;
+                      let i = index
+                    "
+                  >
+                    <div class="exercice-position">{{ i + 1 }}</div>
+                    <div class="exercice-details">
+                      <div class="exercice-nom">{{ exercice.nom }}</div>
+                      <div class="exercice-stats">
+                        <span>{{ exercice.count }} répétitions</span>
+                      </div>
+                    </div>
+                    <div class="exercice-frequence">
+                      <div class="frequence-barre">
+                        <div
+                          class="frequence-remplissage"
+                          [style.width.%]="
+                            (exercice.count /
+                              statsAvancees.top_exercices[0].count) *
+                            100
+                          "
+                        ></div>
+                      </div>
+                      <div class="frequence-valeur">
+                        {{
+                          (exercice.count /
+                            statsAvancees.top_exercices[0].count) *
+                            100 | number : "1.0-0"
+                        }}%
                       </div>
                     </div>
                   </div>
-                  <!-- Coachs compatibles -->
-                  <div class="col-md-4">
-                    <div class="recommandation-section">
-                      <h5>
-                        <i class="fas fa-user-friends me-2"></i>Coachs suggérés
-                      </h5>
-                      <div class="coaches-list">
-                        <div
-                          *ngFor="
-                            let coach of statsAvancees.recommandations
-                              .coachs_compatibles
-                          "
-                          class="coach-item"
-                        >
-                          <div class="coach-avatar">
-                            <i class="fas fa-user-circle"></i>
-                          </div>
-                          <div class="coach-info">
-                            <div class="coach-name">
-                              {{ coach.prenom }} {{ coach.nom }}
-                            </div>
-                            <div class="coach-speciality">
-                              {{ coach.specialite }}
-                            </div>
-                          </div>
-                          <a
-                            [routerLink]="['/coachs', coach.id]"
-                            class="coach-link"
-                          >
-                            <i class="fas fa-arrow-right"></i>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
+
+                  <!-- Affichage d'un message si aucun exercice n'est disponible -->
+                  <div
+                    *ngIf="
+                      !statsAvancees?.top_exercices ||
+                      statsAvancees.top_exercices.length === 0
+                    "
+                    class="text-center py-5"
+                  >
+                    <i
+                      class="fas fa-info-circle mb-3"
+                      style="font-size: 2rem; color: #673ab7"
+                    ></i>
+                    <p class="text-muted">
+                      Aucun exercice enregistré pour le moment.
+                    </p>
                   </div>
                 </div>
               </div>

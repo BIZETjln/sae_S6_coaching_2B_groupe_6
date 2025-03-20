@@ -62,7 +62,8 @@
 
 /* Section des statistiques - nouvelle version moderne */
 .stats-section {
-  margin-bottom: 35px;
+  margin-bottom: 50px;
+  margin-top: 20px;
   display: flex;
   gap: 20px;
 }
@@ -71,7 +72,7 @@
 .statistic-card {
   background-color: white;
   border-radius: 12px;
-  padding: 30px 20px;
+  padding: 40px 20px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   flex: 1;
@@ -83,6 +84,7 @@
   align-items: center;
   justify-content: center;
   border: none;
+  height: 200px;
 }
 
 .statistic-card::before {
@@ -120,16 +122,22 @@
 .chart-container {
   background-color: white;
   border-radius: 12px;
-  padding: 25px;
+  padding: 30px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 35px;
+  margin-bottom: 40px;
   position: relative;
-  min-height: 350px;
+  min-height: 400px;
   border-top: 3px solid #ff5722;
   overflow: hidden;
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .chart-container h3 {
@@ -144,20 +152,25 @@
 
 .chart-wrapper {
   position: relative;
-  height: 300px;
+  height: 350px;
   margin-top: 20px;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Disposition des graphiques en grille avec espacement */
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-  margin-bottom: 30px;
+  gap: 40px;
+  margin-bottom: 60px;
+  margin-top: 20px;
 }
 
 .chart-grid .chart-item {
-  min-height: 400px;
+  min-height: 450px;
 }
 
 .chart-grid .chart-item-full {
@@ -194,12 +207,13 @@ canvas {
 .exercises-container {
   background-color: white;
   border-radius: 12px;
-  padding: 25px;
+  padding: 30px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 40px;
+  margin-bottom: 60px;
   position: relative;
   overflow: hidden;
   border-top: 3px solid #e91e63;
+  margin-top: 60px;
 }
 
 .exercises-container h3 {
@@ -364,10 +378,11 @@ canvas {
 
 /* Titre de section */
 .section-title {
-  font-size: 1.8rem;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  font-size: 2rem;
   font-weight: 600;
   color: #333;
-  margin-bottom: 25px;
   text-align: center;
   position: relative;
   padding-bottom: 15px;
@@ -389,39 +404,140 @@ canvas {
 .periode-selector {
   background-color: white;
   border-radius: 12px;
-  padding: 15px;
+  padding: 15px 20px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 25px;
+  border-top: 3px solid #ff9800;
+  width: 100%;
+}
+
+.selector-header {
+  border-bottom: 1px solid #f1f1f1;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
 }
 
 .periode-label {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 500;
   color: #555;
 }
 
-.btn-group .btn {
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-primary {
+.form-check-input:checked {
   background-color: #ff5722;
   border-color: #ff5722;
 }
 
-.btn-outline-primary {
-  color: #ff5722;
+.btn-group-selector {
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-selector {
+  flex: 1;
+  min-width: 120px;
+  background-color: #f8f9fa;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn-selector:hover {
+  background-color: #f1f1f1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-selector.active {
+  background-color: #ff5722;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   border-color: #ff5722;
 }
 
-.btn-primary:hover,
-.btn-outline-primary:hover,
-.btn-primary:focus,
-.btn-outline-primary:focus {
-  background-color: #e64a19;
-  border-color: #e64a19;
+/* Chiffres clés */
+.key-metrics-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  border-top: 3px solid #4caf50;
+}
+
+.key-metrics-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.metrics-container {
+  padding: 10px 0;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 15px 10px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+  height: 100%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.metric-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.metric-icon {
+  font-size: 1.8rem;
+  color: #ff5722;
+  margin-bottom: 10px;
+}
+
+.metric-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 0.95rem;
+  color: #6c757d;
+  margin-bottom: 10px;
+}
+
+.metric-trend {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 20px;
+  margin-top: auto;
+}
+
+.metric-trend.positive {
+  color: #4caf50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.metric-trend.negative {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
 }
 
 /* Carte de progression */
@@ -432,6 +548,9 @@ canvas {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
   border-top: 3px solid #ff9800;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .progression-card h3 {
@@ -444,87 +563,105 @@ canvas {
 }
 
 .progression-details {
-  padding: 20px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.niveau {
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  transition: transform 0.3s ease;
-}
-
-.niveau:hover {
-  transform: translateY(-5px);
-}
-
-.niveau-debut {
-  border-left: 4px solid #ff9800;
-}
-
+.niveau-debut,
 .niveau-actuel {
-  border-left: 4px solid #e91e63;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  margin-bottom: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 80px;
+  text-align: center;
 }
 
 .niveau-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #6c757d;
-  font-weight: 500;
   margin-bottom: 5px;
 }
 
 .niveau-valeur {
-  font-size: 1.2rem;
-  color: #333;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: #333;
 }
 
-.progression-bar-container {
-  padding: 20px 30px;
-}
-
-.progression-bar {
-  height: 12px;
-  background-color: #f1f1f1;
-  border-radius: 10px;
+.progression-percentage-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
   position: relative;
-  overflow: hidden;
+  margin: 0 auto;
+  background: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 10px;
 }
 
+.percentage-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.percentage-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.progression-bar-container {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.progression-bar {
+  height: 8px;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
 .progression-fill {
-  position: absolute;
   height: 100%;
-  top: 0;
-  left: 0;
-  background: linear-gradient(90deg, #ff9800, #e91e63);
-  border-radius: 10px;
-  transition: width 1s ease-in-out;
+  background: linear-gradient(90deg, #ff9800, #ffc107);
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
 }
 
-.progression-percentage {
-  text-align: center;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #e91e63;
-}
-
-/* Cartes de statistiques */
-.stat-card {
+/* Graphique circulaire des types de séances */
+.chart-card {
   background-color: white;
   border-radius: 12px;
-  padding: 25px;
+  padding: 30px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  border-top: 3px solid #e91e63;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 500px;
 }
 
-.stat-card:hover {
+.chart-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card h3 {
+.chart-card h3 {
   font-size: 1.3rem;
   font-weight: 600;
   color: #333;
@@ -533,84 +670,384 @@ canvas {
   border-bottom: 1px solid #f1f1f1;
 }
 
-.assiduite-card {
-  border-top: 3px solid #ff5722;
-}
-
-.performance-card {
-  border-top: 3px solid #e91e63;
-}
-
-/* Circular progress */
-.circular-progress {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
+.seances-donut-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  margin: 0 auto;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px 0;
+  flex: 1;
 }
 
-.circular-inner {
+.seances-donut {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin-bottom: 20px;
+}
+
+/* Adaptations pour les éléments de donut dynamiques */
+.donut-segments {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f1f1;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.donut-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  clip-path: polygon(
+    50% 50%,
+    50% 0%,
+    calc(50% + 50% * sin(var(--start-angle, 0deg)))
+      calc(50% - 50% * cos(var(--start-angle, 0deg))),
+    calc(50% + 50% * sin(var(--end-angle, 90deg)))
+      calc(50% - 50% * cos(var(--end-angle, 90deg)))
+  );
+  background-color: var(--color, #ff5722);
+  transform-origin: center;
+}
+
+.donut-segment:nth-child(1) {
+  --start-angle: 0deg;
+  --end-angle: calc(3.6deg * var(--percentage, 0));
+}
+
+.donut-segment:nth-child(2) {
+  --start-angle: calc(3.6deg * var(--percentage-prev-1, 0));
+  --end-angle: calc(
+    3.6deg * (var(--percentage-prev-1, 0) + var(--percentage, 0))
+  );
+}
+
+.donut-segment:nth-child(3) {
+  --start-angle: calc(
+    3.6deg * (var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0))
+  );
+  --end-angle: calc(
+    3.6deg *
+      (
+        var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0) +
+          var(--percentage, 0)
+      )
+  );
+}
+
+.donut-segment:nth-child(4) {
+  --start-angle: calc(
+    3.6deg *
+      (
+        var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0) +
+          var(--percentage-prev-3, 0)
+      )
+  );
+  --end-angle: calc(
+    3.6deg *
+      (
+        var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0) +
+          var(--percentage-prev-3, 0) + var(--percentage, 0)
+      )
+  );
+}
+
+.donut-segment:nth-child(5) {
+  --start-angle: calc(
+    3.6deg *
+      (
+        var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0) +
+          var(--percentage-prev-3, 0) + var(--percentage-prev-4, 0)
+      )
+  );
+  --end-angle: calc(
+    3.6deg *
+      (
+        var(--percentage-prev-1, 0) + var(--percentage-prev-2, 0) +
+          var(--percentage-prev-3, 0) + var(--percentage-prev-4, 0) +
+          var(--percentage, 0)
+      )
+  );
+}
+
+.donut-label {
+  position: absolute;
+  font-size: 0.85rem;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  text-align: center;
   width: 100px;
-  height: 100px;
+  white-space: nowrap;
+  transform: translate(70px, 20px);
+  z-index: 10;
+}
+
+/* Styles pour une solution alternative plus simple pour le donut chart */
+.simple-donut-chart {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto;
   border-radius: 50%;
-  background-color: white;
+  background: #f1f1f1;
+  overflow: hidden;
+}
+
+.donut-inner {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: white;
+  border-radius: 50%;
+  top: 45px;
+  left: 45px;
+  z-index: 10;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.percentage {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #333;
+.donut-segment-simple {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transform-origin: center;
 }
 
-/* Liste de statistiques */
-.stats-list {
-  list-style-type: none;
-  padding: 0;
-  margin-top: 10px;
+/* Fallback simples pour les segments colorés */
+.segment-fitness {
+  background-color: #ff5722;
+  clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 50%);
 }
 
-.stats-list li {
+.segment-cardio {
+  background-color: #e91e63;
+  clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%);
+}
+
+.segment-muscu {
+  background-color: #ff9800;
+  clip-path: polygon(50% 50%, 50% 100%, 0% 100%, 0% 50%);
+}
+
+.segment-yoga {
+  background-color: #2196f3;
+  clip-path: polygon(50% 50%, 0% 50%, 0% 0%, 50% 0%);
+}
+
+/* Styles pour la légende du graphique */
+.donut-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.legend-item {
   display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px dashed #f1f1f1;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  transition: transform 0.2s ease;
 }
 
-.stats-list li:last-child {
-  border-bottom: none;
+.legend-item:hover {
+  transform: translateX(5px);
+  background-color: #f0f0f0;
 }
 
-.stat-label {
-  color: #6c757d;
-  font-weight: 500;
+.legend-color {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
-.stat-value {
+.legend-text {
+  font-size: 0.9rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Exercices les plus pratiqués */
+.exercices-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+  border-top: 3px solid #673ab7;
+  height: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 500px;
+}
+
+.exercices-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.exercices-card h3 {
+  font-size: 1.3rem;
   font-weight: 600;
   color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* Styles pour les exercices */
+.exercices-liste {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.exercice-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.exercice-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exercice-position {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #673ab7;
+  color: white;
+  font-weight: 600;
+  border-radius: 50%;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.exercice-details {
+  flex-grow: 1;
+  min-width: 0;
+  margin-right: 10px;
+}
+
+.exercice-nom {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exercice-stats {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.exercice-frequence {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.frequence-barre {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.frequence-remplissage {
+  height: 100%;
+  background: linear-gradient(90deg, #673ab7, #9c27b0);
+  border-radius: 4px;
+}
+
+.frequence-valeur {
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #673ab7;
 }
 
 /* Zones travaillées */
-.zones-title {
-  font-size: 1rem;
+.zones-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  border-top: 3px solid #2196f3;
+  height: 100%;
+}
+
+.zones-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 15px;
-  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.zones-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 250px;
+  width: 100%;
+}
+
+.body-zones-fallback {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.body-zone {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 87, 34, var(--intensity, 0.5));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px rgba(255, 87, 34, var(--intensity, 0.3));
 }
 
 .zones-bars {
-  margin-top: 10px;
+  padding-top: 15px;
 }
 
 .zone-item {
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .zone-info {
@@ -620,19 +1057,16 @@ canvas {
 }
 
 .zone-name {
-  font-size: 0.9rem;
-  color: #6c757d;
+  font-weight: 500;
 }
 
 .zone-percentage {
-  font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
 }
 
 .zone-bar {
   height: 8px;
-  background-color: #f1f1f1;
+  background-color: #e9ecef;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -640,171 +1074,104 @@ canvas {
 .zone-progress {
   height: 100%;
   border-radius: 4px;
-  transition: width 0.8s ease;
 }
 
-/* Recommandations */
-.recommandations-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  border-top: 3px solid #ff5722;
+/* Styles spécifiques pour la section des statistiques avancées */
+.statistiques-avancees-section {
+  margin-top: 60px;
+  margin-bottom: 60px;
 }
 
-.recommandations-card h3 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f1f1;
-}
+@media (max-width: 768px) {
+  .col-md-5,
+  .col-md-7 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
 
-.recommandation-section {
-  height: 100%;
-  padding: 15px;
-  border-radius: 10px;
-  background-color: #f8f9fa;
-  position: relative;
-}
-
-.recommandation-section h5 {
-  font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-.recommandation-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.recommandation-list li {
-  padding: 8px 10px;
-  margin-bottom: 8px;
-  background-color: white;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  border-left: 3px solid #ff9800;
-  transition: transform 0.2s ease;
-}
-
-.recommandation-list li:hover {
-  transform: translateX(5px);
-}
-
-/* Thèmes */
-.themes-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.theme-tag {
-  padding: 8px 12px;
-  background-color: white;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: #333;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  border: 1px solid #ff9800;
-  transition: all 0.2s ease;
-}
-
-.theme-tag:hover {
-  background-color: #ff9800;
-  color: white;
-}
-
-/* Coachs */
-.coaches-list {
-  margin-top: 10px;
-}
-
-.coach-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
-}
-
-.coach-item:hover {
-  transform: translateY(-3px);
-}
-
-.coach-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #f1f1f1;
-  margin-right: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #6c757d;
-  font-size: 1.3rem;
-}
-
-.coach-info {
-  flex-grow: 1;
-}
-
-.coach-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.coach-speciality {
-  font-size: 0.85rem;
-  color: #6c757d;
-}
-
-.coach-link {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #f1f1f1;
-  color: #ff5722;
-  transition: all 0.2s ease;
-}
-
-.coach-link:hover {
-  background-color: #ff5722;
-  color: white;
+  .chart-card,
+  .exercices-card {
+    margin-bottom: 30px;
+  }
 }
 
 /* Responsive pour les statistiques avancées */
 @media (max-width: 768px) {
-  .progression-bar-container {
-    padding: 20px 10px;
+  .periode-selector {
+    padding: 15px;
   }
 
-  .circular-progress {
-    width: 100px;
-    height: 100px;
+  .btn-group-selector {
+    flex-wrap: wrap;
   }
 
-  .circular-inner {
+  .btn-selector {
+    min-width: calc(50% - 5px);
+    margin-bottom: 10px;
+  }
+
+  .metric-item {
+    min-height: 120px;
+  }
+
+  .metric-value {
+    font-size: 1.8rem;
+  }
+
+  .seances-donut {
+    width: 200px;
+    height: 200px;
+  }
+
+  .donut-label {
+    font-size: 0.75rem;
+  }
+
+  .exercice-frequence {
     width: 80px;
-    height: 80px;
   }
+}
 
-  .percentage {
-    font-size: 1.5rem;
-  }
+/* Ajustements pour créer de l'espace entre les deux cartes principales */
+.pe-md-4 {
+  padding-right: 30px !important;
+}
 
-  .recommandation-section {
-    margin-bottom: 20px;
-  }
+.ps-md-4 {
+  padding-left: 30px !important;
+}
+
+/* Style pour le fallback du donut */
+.simple-donut-chart {
+  margin-bottom: 20px;
+}
+
+/* Amélioration des légendes */
+.donut-legend {
+  margin-top: 15px;
+}
+
+.legend-item {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+}
+
+/* Amélioration des exercices */
+.exercices-liste {
+  max-height: 400px; /* Plus d'espace pour les exercices */
+}
+
+.exercice-item {
+  margin-bottom: 15px;
+  padding: 15px;
+}
+
+/* Amélioration de l'aspect général */
+.section-title {
+  margin-top: 30px;
+}
+
+/* Espace autour des cartes de statistiques avancées */
+.row.mb-4 {
+  margin-bottom: 40px !important;
 }

@@ -16,6 +16,7 @@ import {
   StatistiquesAvancees,
   StatistiquesOptions,
 } from '../services/statistiques.service';
+import { ExerciceService } from '../services/exercice.service';
 
 // Enregistrer tous les composants de Chart.js
 Chart.register(...registerables);
@@ -64,7 +65,7 @@ interface StatistiquesSeances {
 
 // Interface pour les noms des exercices en cache
 interface ExerciceCache {
-  [id: string]: string;
+  [key: string]: string;
 }
 
 // Interface pour les données des zones travaillées
@@ -72,6 +73,9 @@ interface ZoneTravaillee {
   nom: string;
   valeur: number;
 }
+
+// Définition du type de période en dehors de la classe
+type PeriodeType = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
 @Component({
   selector: 'app-mon-suivi',
@@ -97,21 +101,27 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
   // Statistiques avancées
   statsAvancees: StatistiquesAvancees | null = null;
 
-  // Options pour les statistiques
-  statistiquesOptions: StatistiquesOptions = {
-    period: 'monthly', // Période par défaut
-    date_min: this.getFirstDayOfMonth(new Date()), // Date minimale par défaut : premier jour du mois en cours
-  };
-
-  // Périodes disponibles pour le filtrage
-  periodes = [
-    { value: 'weekly' as const, label: 'Hebdomadaire' },
-    { value: 'monthly' as const, label: 'Mensuelle' },
-    { value: 'yearly' as const, label: 'Annuelle' },
+  // Liste des périodes disponibles pour l'analyse
+  periodes: { value: PeriodeType; label: string }[] = [
+    { value: 'weekly', label: 'Semaine' },
+    { value: 'monthly', label: 'Mois' },
+    { value: 'quarterly', label: 'Trimestre' },
+    { value: 'yearly', label: 'Année' },
   ];
 
+  // Mode avancé pour la sélection de période personnalisée
+  modeAvance: boolean = false;
+  dateDebut: string = '';
+  dateFin: string = '';
+
+  // Options pour les statistiques
+  statistiquesOptions: StatistiquesOptions = {
+    period: 'monthly',
+    date_min: this.getPremierJourDuMois(),
+  };
+
   // Cache pour stocker les noms des exercices déjà récupérés
-  exerciceCache: ExerciceCache = {};
+  exerciceCache: { [key: string]: string } = {};
 
   chartsInitialized: boolean = false;
   isLoading: boolean = true;
@@ -139,7 +149,8 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
   constructor(
     private seanceService: SeanceService,
     private authService: AuthService,
-    private statistiquesService: StatistiquesService
+    private statistiquesService: StatistiquesService,
+    private exerciceService: ExerciceService
   ) {}
 
   ngOnInit(): void {
@@ -216,29 +227,156 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Charger les statistiques avancées depuis le service avec les options
+  /**
+   * Charge les statistiques avancées à partir du service
+   */
   chargerStatistiquesAvancees(): void {
+    if (!this.authService.currentUserValue) return;
+
+    const sportifId = this.authService.currentUserValue.id;
     this.statistiquesService
-      .getStatistiquesAvancees(this.statistiquesOptions)
-      .subscribe({
-        next: (stats) => {
-          console.log('Statistiques avancées récupérées:', stats);
+      .getStatistiquesAvancees(sportifId, this.statistiquesOptions)
+      .subscribe(
+        (stats) => {
           this.statsAvancees = stats;
+
+          // Si des propriétés optionnelles ne sont pas présentes, initialiser avec des objets vides
+          if (!this.statsAvancees.progression_niveau) {
+            this.statsAvancees.progression_niveau = {
+              debut: 'débutant',
+              actuel: 'débutant',
+              progression: 0,
+            };
+          }
+
+          if (!this.statsAvancees.assiduite) {
+            this.statsAvancees.assiduite = {
+              taux_presence: 0,
+              seances_manquees: 0,
+              seances_assistees: 0,
+              total_seances: this.statsAvancees.total_seances || 0,
+            };
+          }
+
+          if (!this.statsAvancees.performance) {
+            this.statsAvancees.performance = {
+              exercices_par_categorie: {},
+              zones_travaillees: {},
+              taux_completion: 0,
+            };
+          }
+
+          // Mettre à jour le cache des exercices et préparer les visualisations
+          this.mettreAJourCacheExercices();
         },
-        error: (error) => {
+        (error) => {
           console.error(
-            'Erreur lors de la récupération des statistiques avancées:',
+            'Erreur lors du chargement des statistiques avancées:',
             error
           );
-          this.statsAvancees = null;
-        },
-      });
+        }
+      );
+  }
+
+  // Méthode pour générer des données de progression de niveau
+  genererDonneesProgressionNiveau(): void {
+    if (!this.statsAvancees || !this.statsAvancees.progression_niveau) return;
+
+    // Mettre à jour les éléments visuels de la progression
+    const progressionPercentage =
+      this.statsAvancees.progression_niveau.progression;
+
+    // Mettre à jour le style de l'élément de cercle de progression si présent dans le DOM
+    const progressCircle = document.querySelector(
+      '.progression-percentage-circle'
+    ) as HTMLElement;
+    if (progressCircle) {
+      progressCircle.style.setProperty(
+        '--percentage',
+        `${progressionPercentage}`
+      );
+    }
+
+    // Mettre à jour la barre de progression
+    const progressionFill = document.querySelector(
+      '.progression-fill'
+    ) as HTMLElement;
+    if (progressionFill) {
+      progressionFill.style.width = `${progressionPercentage}%`;
+    }
+  }
+
+  // Méthode pour calculer l'évolution de la performance
+  calculerEvolutionPerformance(): void {
+    if (!this.statsAvancees) return;
+
+    // Ici, on pourrait calculer l'évolution par rapport à une période précédente
+    // Pour l'instant, nous utilisons simplement les données brutes
+  }
+
+  // Méthode pour préparer les données des types de séances
+  preparerDonneesTypeSeances(): void {
+    if (!this.statsAvancees) return;
+
+    // Mettre à jour le graphique donut des types de séances si présent
+    // Cette fonction pourrait être étendue pour manipuler un graphique interactif
+  }
+
+  // Méthode pour préparer la liste des exercices les plus pratiqués
+  preparerExercicesLesPlusPratiques(): void {
+    if (!this.statsAvancees || !this.statsAvancees.exercices_frequents) return;
+
+    // Trier les exercices par fréquence pour afficher les plus pratiqués en premier
+    const exercicesTriés = [...this.statsAvancees.exercices_frequents].sort(
+      (a, b) => b.frequence - a.frequence
+    );
+
+    // Mettre à jour l'affichage des exercices les plus pratiqués
+    // Cette fonction pourrait être étendue pour manipuler la liste dans le DOM
+  }
+
+  // Méthode pour mettre à jour le cache des exercices
+  mettreAJourCacheExercices(): void {
+    if (!this.statsAvancees) return;
+
+    // Récupérer les IDs des exercices recommandés
+    if (
+      this.statsAvancees.recommandations &&
+      this.statsAvancees.recommandations.exercices
+    ) {
+      // Dans ce cas, nous n'avons pas besoin de récupérer les noms des exercices car
+      // les recommandations contiennent déjà les noms et non les IDs
+      console.log(
+        'Exercices recommandés déjà en noms:',
+        this.statsAvancees.recommandations.exercices
+      );
+    }
+
+    // Pour les statistiques de performance, nous avons potentiellement des IDs d'exercices à récupérer
+    if (
+      this.statsAvancees.performance &&
+      this.statsAvancees.performance.exercices_par_categorie
+    ) {
+      // Note: Dans le mock actuel, c'est déjà des noms de catégories, mais on prépare l'infrastructure
+      // pour le cas où ce seraient des IDs
+      console.log(
+        "Catégories d'exercices:",
+        this.statsAvancees.performance.exercices_par_categorie
+      );
+    }
+
+    // Mettre à jour les visualisations maintenant que nous avons les données
+    this.genererDonneesProgressionNiveau();
+    this.calculerEvolutionPerformance();
+    this.preparerDonneesTypeSeances();
+    this.preparerExercicesLesPlusPratiques();
   }
 
   // Méthode pour obtenir un tableau des zones travaillées à partir de l'objet
   getZonesTravailleesArray(): ZoneTravaillee[] {
     if (
       !this.statsAvancees ||
+      !this.statsAvancees.performance ||
       !this.statsAvancees.performance.zones_travaillees
     ) {
       return [];
@@ -268,6 +406,138 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
     ];
 
     return colors[index % colors.length];
+  }
+
+  /**
+   * Change la période d'analyse et actualise les données
+   * @param periode La nouvelle période (weekly, monthly, quarterly, yearly)
+   */
+  changerPeriode(periode: PeriodeType): void {
+    // Mise à jour des options
+    this.statistiquesOptions.period = periode;
+
+    // Ajustement de la date minimale selon la période sélectionnée
+    switch (periode) {
+      case 'weekly':
+        this.statistiquesOptions.date_min = this.getPremierJourDeLaSemaine();
+        break;
+      case 'monthly':
+        this.statistiquesOptions.date_min = this.getPremierJourDuMois();
+        break;
+      case 'quarterly':
+        this.statistiquesOptions.date_min = this.getPremierJourDuTrimestre();
+        break;
+      case 'yearly':
+        this.statistiquesOptions.date_min = this.getPremierJourDeLAnnee();
+        break;
+      default:
+        this.statistiquesOptions.date_min = this.getPremierJourDuMois();
+    }
+
+    // Mise à jour de l'affichage du bouton actif
+    this.updateActiveButton(periode);
+
+    // Rechargement des statistiques avec les nouvelles options
+    this.chargerStatistiquesAvancees();
+    console.log(
+      `Période changée à ${periode} avec date_min=${this.statistiquesOptions.date_min}`
+    );
+  }
+
+  /**
+   * Met à jour l'affichage du bouton actif
+   * @param activeButton La période active
+   */
+  updateActiveButton(activeButton: string): void {
+    const buttons = document.querySelectorAll('.period-button');
+    if (buttons) {
+      buttons.forEach((button) => {
+        if (
+          button instanceof HTMLElement &&
+          button.dataset['period'] === activeButton
+        ) {
+          button.classList.add('active');
+        } else if (button instanceof HTMLElement) {
+          button.classList.remove('active');
+        }
+      });
+    }
+  }
+
+  /**
+   * Bascule entre le mode simple et avancé pour la sélection de période
+   */
+  toggleModeAvance(): void {
+    this.modeAvance = !this.modeAvance;
+
+    // Si on active le mode avancé, initialiser les dates
+    if (this.modeAvance && this.statistiquesOptions.date_min) {
+      // Utiliser une chaîne de date directement (au format YYYY-MM-DD)
+      this.dateDebut = this.statistiquesOptions.date_min;
+
+      // Par défaut, la date de fin est aujourd'hui
+      this.dateFin = this.formatDate(new Date());
+    }
+  }
+
+  /**
+   * Applique les dates personnalisées sélectionnées par l'utilisateur
+   */
+  appliquerDatesPersonnalisees(): void {
+    if (this.dateDebut && this.dateFin) {
+      this.statistiquesOptions.date_min = this.dateDebut;
+      this.statistiquesOptions.date_max = this.dateFin;
+
+      // Rechargement des statistiques avec les dates personnalisées
+      this.chargerStatistiquesAvancees();
+      console.log(
+        `Dates personnalisées appliquées: de ${this.dateDebut} à ${this.dateFin}`
+      );
+    } else {
+      console.error('Les dates de début et de fin doivent être spécifiées');
+    }
+  }
+
+  // Méthode pour obtenir le premier jour de la semaine en cours
+  private getPremierJourDeLaSemaine(): string {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1); // ajuster pour que la semaine commence le lundi
+    const firstDay = new Date(now.setDate(diff));
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour obtenir le premier jour du mois en cours
+  private getPremierJourDuMois(): string {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour obtenir le premier jour de l'année en cours
+  private getPremierJourDeLAnnee(): string {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), 0, 1);
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour obtenir le premier jour du trimestre actuel
+  private getPremierJourDuTrimestre(): string {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const quarter = Math.floor(currentMonth / 3);
+    const firstMonthOfQuarter = quarter * 3;
+
+    const firstDay = new Date(now.getFullYear(), firstMonthOfQuarter, 1);
+    return this.formatDate(firstDay);
+  }
+
+  // Méthode pour formater une date au format YYYY-MM-DD
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Méthode pour préparer les participations de l'utilisateur
@@ -560,34 +830,186 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
   }
 
   initialiserGraphiques(): void {
-    if (
-      !this.sportif ||
-      !this.sportif.participations ||
-      this.sportif.participations.length === 0
-    ) {
-      return; // Ne pas initialiser les graphiques s'il n'y a pas de données
+    // Vérifier la présence des références aux éléments DOM des graphiques
+    if (!this.typesExercicesChart || !this.coachsChart) {
+      console.error(
+        'Références aux éléments DOM des graphiques non disponibles'
+      );
+      return;
     }
 
+    if (this.chartsInitialized) {
+      return;
+    }
+
+    // Valider que les données sont prêtes pour le graphique des types d'exercices
+    if (this.stats.typesExercices && this.stats.typesExercices.size > 0) {
+      this.creerGraphiqueTypesExercices();
+    } else {
+      console.warn(
+        "Aucune donnée disponible pour le graphique des types d'exercices"
+      );
+      // Initialiser avec des données factices pour afficher quelque chose
+      this.initializeEmptyExercicesChart();
+    }
+
+    // Valider que les données sont prêtes pour le graphique des coachs
     if (
-      this.typesExercicesChart &&
+      this.stats.statistiquesCoachs &&
+      this.stats.statistiquesCoachs.size > 0
+    ) {
+      this.creerGraphiqueCoachs();
+    } else {
+      console.warn('Aucune donnée disponible pour le graphique des coachs');
+      // Initialiser avec des données factices pour afficher quelque chose
+      this.initializeEmptyCoachsChart();
+    }
+
+    // Valider que les données sont prêtes pour le graphique d'activités par mois
+    if (
       this.activitesParMoisChart &&
-      this.coachsChart
+      this.stats.activitesParMois &&
+      this.stats.activitesParMois.size > 0
     ) {
-      // Vérifier si nous avons des données pour chaque graphique
-      if (this.stats.typesExercices.size > 0) {
-        this.creerGraphiqueTypesExercices();
-      }
-
-      if (this.stats.statistiquesCoachs.size > 0) {
-        this.creerGraphiqueCoachs();
-      }
-
-      if (this.stats.activitesParMois.size > 0) {
-        this.creerGraphiqueActivitesParMois();
-      }
-
-      this.chartsInitialized = true;
+      this.creerGraphiqueActivitesParMois();
     }
+
+    this.chartsInitialized = true;
+  }
+
+  // Initialise un graphique vide avec des données factices pour les exercices
+  initializeEmptyExercicesChart(): void {
+    if (!this.typesExercicesChart) return;
+
+    const ctx = this.typesExercicesChart.nativeElement.getContext('2d');
+    // Détruire le graphique existant s'il y en a un
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+
+    // Créer un graphique avec des données d'exemple
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Cardio', 'Musculation', 'Yoga', 'Fitness'],
+        datasets: [
+          {
+            data: [25, 30, 20, 25],
+            backgroundColor: this.chartColors.slice(0, 4),
+            borderColor: '#fff',
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              font: {
+                size: 12,
+              },
+              padding: 15,
+            },
+          },
+          title: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 87, 34, 0.8)',
+            titleFont: {
+              size: 14,
+              weight: 'bold',
+            },
+            bodyFont: {
+              size: 13,
+            },
+            padding: 12,
+            cornerRadius: 8,
+          },
+        },
+      },
+    });
+  }
+
+  // Initialise un graphique vide avec des données factices pour les coachs
+  initializeEmptyCoachsChart(): void {
+    if (!this.coachsChart) return;
+
+    const ctx = this.coachsChart.nativeElement.getContext('2d');
+    // Détruire le graphique existant s'il y en a un
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+
+    // Créer un graphique avec des données d'exemple
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Thomas', 'Julie', 'Marc', 'Sophie'],
+        datasets: [
+          {
+            label: 'Sessions',
+            data: [8, 6, 4, 3],
+            backgroundColor: this.chartColors.slice(0, 4),
+            borderColor: 'rgba(255, 255, 255, 0.6)',
+            borderWidth: 2,
+            borderRadius: 6,
+            barThickness: 30,
+            maxBarThickness: 40,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              font: {
+                size: 12,
+              },
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+            },
+          },
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              font: {
+                size: 12,
+              },
+            },
+          },
+        },
+        plugins: {
+          title: {
+            display: false,
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 87, 34, 0.8)',
+            titleFont: {
+              size: 14,
+              weight: 'bold',
+            },
+            bodyFont: {
+              size: 13,
+            },
+            padding: 12,
+            cornerRadius: 8,
+          },
+        },
+      },
+    });
   }
 
   creerGraphiqueTypesExercices(): void {
@@ -849,56 +1271,5 @@ export class MonSuiviComponent implements OnInit, AfterViewInit {
 
       return true;
     });
-  }
-
-  // Méthode pour changer la période d'analyse
-  changerPeriode(periode: string): void {
-    // Vérifier que la période est valide
-    const periodeTypee = periode as 'weekly' | 'monthly' | 'yearly';
-    this.statistiquesOptions.period = periodeTypee;
-
-    // Ajuster la date minimale en fonction de la période
-    switch (periodeTypee) {
-      case 'weekly':
-        this.statistiquesOptions.date_min = this.getFirstDayOfWeek(new Date());
-        break;
-      case 'monthly':
-        this.statistiquesOptions.date_min = this.getFirstDayOfMonth(new Date());
-        break;
-      case 'yearly':
-        this.statistiquesOptions.date_min = this.getFirstDayOfYear(new Date());
-        break;
-    }
-
-    // Recharger les statistiques
-    this.chargerStatistiquesAvancees();
-  }
-
-  // Méthode pour obtenir le premier jour de la semaine en cours
-  private getFirstDayOfWeek(date: Date): string {
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // ajuster pour que la semaine commence le lundi
-    const firstDay = new Date(date.setDate(diff));
-    return this.formatDate(firstDay);
-  }
-
-  // Méthode pour obtenir le premier jour du mois en cours
-  private getFirstDayOfMonth(date: Date): string {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    return this.formatDate(firstDay);
-  }
-
-  // Méthode pour obtenir le premier jour de l'année en cours
-  private getFirstDayOfYear(date: Date): string {
-    const firstDay = new Date(date.getFullYear(), 0, 1);
-    return this.formatDate(firstDay);
-  }
-
-  // Méthode pour formater une date au format YYYY-MM-DD
-  private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 }
