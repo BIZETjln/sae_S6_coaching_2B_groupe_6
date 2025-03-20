@@ -1380,3 +1380,116 @@ canvas {
 .mode-btn-active::before {
   width: 100%;
 }
+
+/* Styles communs pour toutes les cartes */
+.card-base,
+.chart-container,
+.chart-card,
+.exercices-card,
+.exercises-container,
+.sportif-info,
+.key-metrics-card,
+.progression-card,
+.zones-card,
+.periode-selector {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+/* Uniformisation du padding des cartes */
+.sportif-info,
+.chart-container,
+.chart-card,
+.exercices-card,
+.exercises-container,
+.key-metrics-card,
+.progression-card,
+.zones-card,
+.periode-selector {
+  padding: 25px;
+}
+
+/* Animation au survol pour toutes les cartes principales */
+.chart-container,
+.chart-card,
+.exercices-card,
+.statistic-card,
+.key-metrics-card,
+.progression-card,
+.zones-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-container:hover,
+.chart-card:hover,
+.exercices-card:hover,
+.statistic-card:hover,
+.key-metrics-card:hover,
+.progression-card:hover,
+.zones-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajustements pour les titres des cartes */
+.chart-container h3,
+.chart-card h3,
+.exercices-card h3,
+.exercises-container h3,
+.key-metrics-card h3,
+.progression-card h3,
+.zones-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* Uniformisation des colonnes pour les cartes en statistiques avancées */
+.statistiques-avancees-section .row > div[class^="col-"] {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Spécifique pour la grille de graphiques principale */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+/* Garantir une hauteur minimale cohérente */
+.chart-card,
+.exercices-card {
+  min-height: 500px;
+}
+
+/* Responsive pour les colonnes */
+@media (max-width: 768px) {
+  .statistiques-avancees-section .row > div[class^="col-"] {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .sportif-info,
+  .chart-container,
+  .chart-card,
+  .exercices-card,
+  .exercises-container,
+  .key-metrics-card,
+  .progression-card,
+  .zones-card,
+  .periode-selector {
+    padding: 20px;
+  }
+}
