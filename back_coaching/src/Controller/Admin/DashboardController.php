@@ -37,24 +37,29 @@ class DashboardController extends AbstractDashboardController
             yield MenuItem::linkToRoute('Tableau de bord', 'fa fa-chart-bar', 'admin_stats')->setPermission('ROLE_ADMIN');
         }
         // Menu pour les coachs
-        if ($this->isGranted('ROLE_COACH')) {
+        if ($this->isGranted('ROLE_COACH') && !$this->isGranted('ROLE_ADMIN')) {
             yield MenuItem::section('Mon espace coach');
-            yield MenuItem::linktoRoute('Mes Séances', 'fas fa-calendar-check', 'route_coach_seances')->setPermission('ROLE_COACH');
+            yield MenuItem::linktoRoute('Calendrier', 'fas fa-calendar-check', 'route_coach_calendar');
+            yield MenuItem::linkToCrud('Mes Séances', 'fas fa-calendar-check', Seance::class)
+                ->setController(CoachSeanceCrudController::class);
+            yield MenuItem::linkToCrud('Exercices', 'fas fa-dumbbell', Exercice::class);
         }
 
-        // Section Gestion des comptes
-        yield MenuItem::section('Gestion des comptes');
-        yield MenuItem::linkToCrud('Coachs', 'fas fa-user-tie', Coach::class);
-        yield MenuItem::linkToCrud('Sportifs', 'fas fa-running', Sportif::class);
+        if ($this->isGranted('ROLE_ADMIN')) {
+            // Section Gestion des comptes
+            yield MenuItem::section('Gestion des comptes');
+            yield MenuItem::linkToCrud('Coachs', 'fas fa-user-tie', Coach::class);
+            yield MenuItem::linkToCrud('Sportifs', 'fas fa-running', Sportif::class);
 
-        // Section Gestion des séances et exercices
-        yield MenuItem::section('Gestion des séances');
-        yield MenuItem::linkToCrud('Séances', 'fas fa-calendar-alt', Seance::class);
-        yield MenuItem::linkToCrud('Exercices', 'fas fa-dumbbell', Exercice::class);
+            // Section Gestion des séances et exercices
+            yield MenuItem::section('Gestion des séances');
+            yield MenuItem::linkToCrud('Séances', 'fas fa-calendar-alt', Seance::class);
+            yield MenuItem::linkToCrud('Exercices', 'fas fa-dumbbell', Exercice::class);
 
-        // Section Gestion des fiches de paie (pour les responsables)
-        yield MenuItem::section('Administration');
-        yield MenuItem::linkToCrud('Responsables', 'fas fa-user-tie', Utilisateur::class);
-        yield MenuItem::linkToCrud('Fiches de paie', 'fas fa-file-invoice-dollar', FicheDePaie::class);
+            // Section Gestion des fiches de paie (pour les responsables)
+            yield MenuItem::section('Administration');
+            yield MenuItem::linkToCrud('Responsables', 'fas fa-user-tie', Utilisateur::class);
+            yield MenuItem::linkToCrud('Fiches de paie', 'fas fa-file-invoice-dollar', FicheDePaie::class);
+        }
     }
 }

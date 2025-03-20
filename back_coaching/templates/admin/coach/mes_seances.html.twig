@@ -160,7 +160,7 @@
                         id: '{{ seance.id }}',
                         title: '{{ seance.typeSeance.value }} - {{ seance.themeSeance.value }}',
                         start: '{{ seance.dateHeure|date('Y-m-d\\TH:i:s') }}',
-                        end: '{{ seance.dateHeure|date_modify('+1 hour')|date('Y-m-d\\TH:i:s') }}',
+                        end: '{{ seance.dateHeure|date_modify('+1 hour 30 minutes')|date('Y-m-d\\TH:i:s') }}',
                         allDay: false,
                         extendedProps: {
                             type: '{{ seance.typeSeance.value }}',

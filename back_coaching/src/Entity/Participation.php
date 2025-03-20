@@ -27,7 +27,7 @@ class Participation
 
     #[ORM\Column(type: 'boolean')]
     #[Groups(['sportif:read'])]
-    private bool $presence = false; // Par défaut, le sportif est absent
+    private bool $presence = false;
 
     public function getId(): ?int
     {

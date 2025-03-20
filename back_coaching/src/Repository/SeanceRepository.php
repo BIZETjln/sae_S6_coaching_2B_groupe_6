@@ -140,6 +140,36 @@ class SeanceRepository extends ServiceEntityRepository
         return $result['conflict_count'] > 0;
     }
 
+    /**
+     * Compte le nombre de séances futures pour un sportif donné
+     */
+    public function countFutureSessionsForSportif(Sportif $sportif, ?Uuid $excludeSeanceId = null): int
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sportifIdHex = bin2hex($sportif->getId()->toBinary());
+        $excludeCondition = '';
+        $params = ['sportifIdHex' => $sportifIdHex];
+        
+        if ($excludeSeanceId) {
+            $excludeCondition = 'AND HEX(s.id) != :excludeSeanceIdHex';
+            $params['excludeSeanceIdHex'] = bin2hex($excludeSeanceId->toBinary());
+        }
+        
+        $sql = "
+            SELECT COUNT(*) as future_sessions_count
+            FROM participation p
+            JOIN seance s ON p.seance_id = s.id
+            WHERE HEX(p.sportif_id) = :sportifIdHex
+            AND s.date_heure > NOW()
+            $excludeCondition
+        ";
+        
+        $stmt = $conn->executeQuery($sql, $params);
+        $result = $stmt->fetchAssociative();
+        
+        return (int) $result['future_sessions_count'];
+    }
+
     //    /**
     //     * @return Seance[] Returns an array of Seance objects
     //     */
