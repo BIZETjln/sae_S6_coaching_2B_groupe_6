@@ -366,6 +366,15 @@ class CoachSeanceCrudController extends AbstractCrudController
 
                 // Vérifier les conflits de séances pour le coach
                 $this->checkCoachAvailability($form, $seance, $dateTime);
+                
+                // Ajouter cette vérification pour les sportifs
+                if (!$seance->getParticipations()->isEmpty()) {
+                    // Vérifier le nombre de séances futures par sportif
+                    $maxFutureSessionsConflicts = $this->checkMaxFutureSessions($seance);
+                    foreach ($maxFutureSessionsConflicts as $conflict) {
+                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
+                    }
+                }
             }
         };
     }
@@ -392,6 +401,40 @@ class CoachSeanceCrudController extends AbstractCrudController
                 ));
             }
         }
+    }
+
+    /**
+     * Vérifie que les sportifs n'ont pas plus de 3 séances réservées à l'avance
+     */
+    private function checkMaxFutureSessions(Seance $seance): array
+    {
+        $conflicts = [];
+        $repository = $this->entityManager->getRepository(Seance::class);
+        
+        if ($repository instanceof \App\Repository\SeanceRepository) {
+            foreach ($seance->getParticipations() as $participation) {
+                $sportif = $participation->getSportif();
+                if (!$sportif) continue;
+                
+                // Ne pas compter la séance actuelle si c'est une mise à jour
+                $countFutureSessions = $repository->countFutureSessionsForSportif($sportif, $seance->getId());
+                
+                // Si nouvelle séance, on ajoute 1 au compte
+                if (!$seance->getId()) {
+                    $countFutureSessions++;
+                }
+                
+                if ($countFutureSessions > 3) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s %s ne peut pas avoir plus de 3 séances réservées à l\'avance.',
+                        $sportif->getNom(),
+                        $sportif->getPrenom()
+                    );
+                }
+            }
+        }
+        
+        return $conflicts;
     }
 
     private function handleImageUpload()
