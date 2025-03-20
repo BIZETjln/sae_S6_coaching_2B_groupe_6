@@ -45,12 +45,16 @@ class StatsController extends AbstractController
         // 5. Évolution des inscriptions de sportifs
         $registrationStats = $this->getRegistrationStats();
 
+        // 6. Taux d'occupation par créneau horaire
+        $timeSlotStats = $this->getTimeSlotStats();
+
         return $this->render('admin/stats/index.html.twig', [
             'attendanceStats' => $attendanceStats,
             'fillRateStats' => $fillRateStats,
             'themeStats' => $themeStats,
             'coachStats' => $coachStats,
-            'registrationStats' => $registrationStats
+            'registrationStats' => $registrationStats,
+            'timeSlotStats' => $timeSlotStats
         ]);
     }
 
@@ -380,5 +384,93 @@ class StatsController extends AbstractController
             'monthly' => $monthlyRegistrations,
             'by_level' => $levelDistribution
         ];
+    }
+
+    private function getTimeSlotStats(): array
+    {
+        $conn = $this->entityManager->getConnection();
+
+        // Créer tous les créneaux possibles de 6h à 21h par pas de 30 minutes
+        $timeSlots = [];
+        for ($hour = 6; $hour <= 21; $hour++) {
+            foreach (['00', '30'] as $minute) {
+                if ($hour == 21 && $minute == '30') continue; // Pas de créneau à 21h30
+                $timeSlot = sprintf('%02d:%s', $hour, $minute);
+                $timeSlots[$timeSlot] = [
+                    'time' => $timeSlot,
+                    'total_sessions' => 0,
+                    'total_capacity' => 0,
+                    'total_participants' => 0,
+                    'by_coach' => []
+                ];
+            }
+        }
+
+        // Requête pour obtenir les statistiques par créneau horaire et par coach
+        $sql = "
+            SELECT 
+                DATE_FORMAT(s.date_heure, '%H:%i') as time_slot,
+                CONCAT(u.prenom, ' ', u.nom) as coach_name,
+                COUNT(DISTINCT s.id) as session_count,
+                COUNT(p.id) as participant_count,
+                s.type_seance,
+                CASE 
+                    WHEN s.type_seance = 'SOLO' THEN 1
+                    WHEN s.type_seance = 'DUO' THEN 2
+                    WHEN s.type_seance = 'TRIO' THEN 3
+                    ELSE 0
+                END * COUNT(DISTINCT s.id) as total_capacity
+            FROM seance s
+            JOIN coach c ON s.coach_id = c.id
+            JOIN utilisateur u ON c.id = u.id
+            LEFT JOIN participation p ON s.id = p.seance_id
+            WHERE s.statut = :statut_validee
+            GROUP BY time_slot, coach_name, s.type_seance
+            ORDER BY time_slot, coach_name
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery([
+            'statut_validee' => StatutSeance::VALIDEE->value
+        ]);
+
+        $results = $resultSet->fetchAllAssociative();
+
+        // Traiter les résultats
+        foreach ($results as $row) {
+            $timeSlot = $row['time_slot'];
+            if (!isset($timeSlots[$timeSlot])) continue;
+
+            $timeSlots[$timeSlot]['total_sessions'] += $row['session_count'];
+            $timeSlots[$timeSlot]['total_capacity'] += $row['total_capacity'];
+            $timeSlots[$timeSlot]['total_participants'] += $row['participant_count'];
+
+            if (!isset($timeSlots[$timeSlot]['by_coach'][$row['coach_name']])) {
+                $timeSlots[$timeSlot]['by_coach'][$row['coach_name']] = [
+                    'sessions' => 0,
+                    'capacity' => 0,
+                    'participants' => 0
+                ];
+            }
+
+            $timeSlots[$timeSlot]['by_coach'][$row['coach_name']]['sessions'] += $row['session_count'];
+            $timeSlots[$timeSlot]['by_coach'][$row['coach_name']]['capacity'] += $row['total_capacity'];
+            $timeSlots[$timeSlot]['by_coach'][$row['coach_name']]['participants'] += $row['participant_count'];
+        }
+
+        // Calculer les taux d'occupation
+        foreach ($timeSlots as &$slot) {
+            $slot['occupation_rate'] = $slot['total_capacity'] > 0
+                ? round(($slot['total_participants'] / $slot['total_capacity']) * 100, 1)
+                : 0;
+
+            foreach ($slot['by_coach'] as $coach => &$stats) {
+                $stats['occupation_rate'] = $stats['capacity'] > 0
+                    ? round(($stats['participants'] / $stats['capacity']) * 100, 1)
+                    : 0;
+            }
+        }
+
+        return array_values($timeSlots);
     }
 }
