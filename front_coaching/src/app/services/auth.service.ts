@@ -120,40 +120,48 @@ export class AuthService {
 
   /**
    * Récupère les séances de l'utilisateur actuellement connecté
+   * @param forceRefresh Force une requête au serveur même si des données sont en cache
    * @returns Un Observable contenant la liste des séances ou un tableau vide si l'utilisateur n'est pas connecté
    */
-  public getUserSeances(): Observable<Seance[]> {
+  public getUserSeances(forceRefresh: boolean = false): Observable<Seance[]> {
     const user = this.currentUserValue;
 
     if (!user) {
       return of([]);
     }
 
-    // Si l'utilisateur a des participations, extraire les séances de ces participations
-    if (
-      (user as any).participations &&
-      (user as any).participations.length > 0
-    ) {
-      const seances = (user as any).participations.map(
-        (participation: any) => participation.seance
-      );
-      return of(seances);
+    // Si forceRefresh est false et que l'utilisateur a des participations ou des séances en cache
+    // On retourne ces données directement
+    if (!forceRefresh) {
+      // Si l'utilisateur a des participations, extraire les séances de ces participations
+      if ((user as any).participations && (user as any).participations.length > 0) {
+        const seances = (user as any).participations.map((participation: any) => participation.seance);
+        return of(seances);
+      }
+      
+      // Sinon, si l'utilisateur a des séances directement en cache
+      if (user.seances && user.seances.length > 0) {
+        return of(user.seances);
+      }
     }
 
+    // Si on arrive ici, soit forceRefresh est true, soit l'utilisateur n'a pas de données en cache
     if (user.role === UserRole.CLIENT) {
       // Extrait l'ID du sportif de l'URL '@id'
-      const sportifId = user.id.includes('/')
-        ? user.id.split('/').pop()
-        : user.id;
+      const sportifId = user.id.includes('/') ? user.id.split('/').pop() : user.id;
+      
+      console.log('Récupération des séances du sportif depuis le serveur, ID:', sportifId);
 
       return this.http.get<any>(`${this.apiUrl}/sportifs/${sportifId}`).pipe(
         map((sportifDetails) => {
+          console.log('Détails du sportif récupérés:', sportifDetails);
+          
           // Extraire les séances des participations
           const seances = sportifDetails.participations
-            ? sportifDetails.participations.map(
-                (participation: any) => participation.seance
-              )
+            ? sportifDetails.participations.map((participation: any) => participation.seance)
             : [];
+
+          console.log('Séances extraites des participations:', seances.length);
 
           // Mettre à jour l'utilisateur avec les participations
           (user as any).participations = sportifDetails.participations;
@@ -165,6 +173,7 @@ export class AuthService {
           return seances;
         }),
         catchError((error) => {
+          console.error('Erreur lors de la récupération des séances du sportif:', error);
           return of([]);
         })
       );

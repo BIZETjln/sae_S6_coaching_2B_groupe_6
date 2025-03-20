@@ -838,3 +838,186 @@
   color: #f44336;
   font-weight: bold;
 }
+
+/* Styles pour les boutons désactivés */
+.btn:disabled,
+.btn[disabled],
+.btn.btn-disabled {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+/* Style pour que le bouton soit toujours visible comme désactivé même avec pointer-events: none */
+button.btn:disabled,
+button.btn[disabled],
+button.btn.btn-disabled {
+  pointer-events: auto;
+  cursor: not-allowed !important;
+}
+
+/* Style spécifique pour le bouton de réservation désactivé */
+.seance-details-footer .btn.btn-primary:disabled,
+.seance-details-footer .btn.btn-primary[disabled],
+.seance-details-footer .btn.btn-primary.btn-disabled {
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  color: #f8f9fa !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.seance-details-footer .btn.btn-primary:disabled i,
+.seance-details-footer .btn.btn-primary[disabled] i,
+.seance-details-footer .btn.btn-primary.btn-disabled i {
+  color: #f8f9fa !important;
+}
+
+/* Style pour améliorer la visualisation du bouton désactivé */
+.btn.btn-disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn.btn-disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.2) 10px,
+    rgba(255, 255, 255, 0.2) 20px
+  );
+}
+
+/* Styles pour maintenir une taille constante du bouton de réservation */
+.seance-details-footer .btn.btn-primary {
+  min-width: 250px;
+  position: relative;
+  padding: 12px 20px;
+  height: 48px; /* Hauteur fixe pour le bouton */
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.seance-details-footer .btn-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+}
+
+.btn-normal-content, 
+.btn-loading-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
+.btn-normal-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn-normal-content.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.btn-loading-content {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.btn-loading-content.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.seance-details-footer .btn-content .bi {
+  margin-right: 8px;
+}
+
+.btn-loading-content .bi {
+  margin-right: 0;
+  font-size: 1.2rem;
+}
+
+.seance-details-footer .btn-text {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Animation du spinner */
+.spinner {
+  display: inline-block;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation de pulsation pour le bouton en chargement */
+.btn-loading {
+  animation: pulse 1.5s infinite ease-in-out !important;
+}
+
+/* Style spécifique pour le bouton en chargement */
+.btn.btn-primary.btn-loading {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  opacity: 0.85;
+}
+
+.btn.btn-primary.btn-loading[disabled],
+.btn.btn-primary.btn-loading:disabled {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+  opacity: 0.85;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0);
+  }
+}
+
+/* Style pour le bouton de contact coach */
+.seance-details-footer .btn.btn-outline-primary {
+  min-width: 200px;
+  height: 48px; /* Même hauteur que le bouton de réservation */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

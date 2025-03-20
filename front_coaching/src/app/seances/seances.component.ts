@@ -326,7 +326,6 @@ export class SeancesComponent implements OnInit {
     
     // Vérifier la capacité et le nombre actuel de participants
     const nombreParticipants = seance.sportifs?.length || 0;
-    console.log('nombreParticipants', seance);
     const capaciteMax = seance.capaciteMax || this.getCapaciteMaxFromType(seance);
     
     return nombreParticipants >= capaciteMax;

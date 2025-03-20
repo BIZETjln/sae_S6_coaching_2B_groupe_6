@@ -798,6 +798,33 @@
   background-color: var(--neutral-100);
 }
 
+/* Style pour les boutons désactivés */
+.btn-secondary.disabled,
+.btn-danger.disabled,
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Style pour le message d'avertissement */
+.warning-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--danger-color);
+  font-size: 14px;
+  margin-top: 10px;
+  background-color: rgba(var(--danger-rgb), 0.1);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--danger-color);
+}
+
+.warning-message i {
+  font-size: 16px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .seances-header {
@@ -1145,4 +1172,179 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Animation pour l'icône de chargement */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.bi-hourglass-split {
+  animation: spin-slow 2s infinite linear;
+  display: inline-block;
+}
+
+/* Styles pour la section des exercices */
+.exercices-info {
+  margin-bottom: 30px;
+  border-top: 1px solid var(--neutral-200);
+  padding-top: 20px;
+}
+
+.exercices-info h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.exercices-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.spinner-mini {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--neutral-200);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.exercices-loader p {
+  color: var(--neutral-600);
+  font-size: 14px;
+}
+
+.exercices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exercice-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--neutral-200);
+}
+
+.exercice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.exercice-header:hover {
+  background-color: var(--neutral-100);
+}
+
+.exercice-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exercice-title h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--neutral-800);
+}
+
+.exercice-difficulty {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+
+.difficulty-facile {
+  background-color: #4caf50; /* vert */
+}
+
+.difficulty-moyen {
+  background-color: #ff9800; /* orange */
+}
+
+.difficulty-difficile {
+  background-color: #f44336; /* rouge */
+}
+
+.exercice-toggle i {
+  font-size: 18px;
+  color: var(--neutral-600);
+  transition: transform 0.2s;
+}
+
+.exercice-details {
+  padding: 0 15px 15px 15px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.exercice-description {
+  margin: 10px 0;
+  color: var(--neutral-700);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.exercice-meta {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.exercice-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--neutral-600);
+}
+
+.exercice-image {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.exercice-image img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.empty-exercices {
+  padding: 20px;
+  text-align: center;
+  color: var(--neutral-600);
+  background-color: var(--neutral-100);
+  border-radius: 8px;
+  font-style: italic;
+}
+
+/* Responsive pour les exercices */
+@media (max-width: 768px) {
+  .exercice-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .exercice-meta {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

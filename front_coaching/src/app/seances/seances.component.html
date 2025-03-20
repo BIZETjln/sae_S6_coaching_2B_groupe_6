@@ -333,13 +333,20 @@
       <div class="seance-details-footer">
         <button 
           class="btn btn-primary btn-lg"
+          [ngClass]="{'btn-disabled': reservationEnCours || (estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee)), 'btn-loading': reservationEnCours}"
           [disabled]="reservationEnCours || (estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee))"
           (click)="toggleReservation(seanceSelectionnee)"
           [title]="estSeancePleine(seanceSelectionnee) && !estInscritASeance(seanceSelectionnee) ? 'Cette séance est complète' : ''"
         >
-          <i class="bi" [ngClass]="estInscritASeance(seanceSelectionnee) ? 'bi-calendar-x' : 'bi-calendar-plus'"></i>
-          {{ estInscritASeance(seanceSelectionnee) ? 'Annuler ma réservation' : 'Réserver cette séance' }}
-          <span *ngIf="reservationEnCours"><i class="bi bi-hourglass-split spinner"></i></span>
+          <div class="btn-content">
+            <div class="btn-normal-content" [class.hidden]="reservationEnCours">
+              <i class="bi" [ngClass]="estInscritASeance(seanceSelectionnee) ? 'bi-calendar-x' : 'bi-calendar-plus'"></i>
+              <span class="btn-text">{{ estInscritASeance(seanceSelectionnee) ? 'Annuler ma réservation' : 'Réserver cette séance' }}</span>
+            </div>
+            <div class="btn-loading-content" [class.visible]="reservationEnCours">
+              <i class="bi bi-hourglass-split spinner"></i>
+            </div>
+          </div>
         </button>
         <a 
           [href]="getCoachEmailLink()"
