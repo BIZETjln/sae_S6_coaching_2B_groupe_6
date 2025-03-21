@@ -9,13 +9,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-final class AuthController extends AbstractController{
+#[Route('/api')]
+final class AuthController extends AbstractController
+{
     public function __construct(
         private Security $security
-    ) { }
+    ) {}
 
-    #[Route('/api/user/me', name: 'api_user_me', methods: ['GET'])]
-    public function me()
+    #[Route('/user/me', name: 'api_user_me', methods: ['GET'])]
+    public function me(): JsonResponse
     {
         /** @var Utilisateur|null $user */
         $user = $this->security->getUser();
@@ -26,16 +28,15 @@ final class AuthController extends AbstractController{
                 [],
                 ['groups' => 'sportif:read']
             );
-        } else {
-            return new JsonResponse(null);
         }
+        return new JsonResponse(null);
     }
 
-    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
-    public function login(): Response
+    #[Route('/login', name: 'api_login', methods: ['POST'])]
+    public function login(): JsonResponse
     {
-        // L'utilisateur est authentifié à ce stade
-        // lexik/jwt-authentication-bundle s'occupe de retourner le JWT
-        return new Response('Logged !');
+        // Cette méthode ne sera jamais exécutée car le système de sécurité
+        // interceptera la requête avant
+        throw new \LogicException('Cette méthode ne devrait pas être appelée.');
     }
 }

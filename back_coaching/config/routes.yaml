@@ -1,5 +1,20 @@
 controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
-    type: attribute
+  resource:
+    path: ../src/Controller/
+    namespace: App\Controller
+  type: attribute
+
+api:
+  resource: .
+  type: api_platform
+  prefix: "/api"
+  exclude:
+    - '@App\Controller\Admin'
+    - '@App\Controller\SecurityController'
+
+# Route pour l'application Angular (tout ce qui commence par /app)
+angular_app:
+  path: /app/{req}
+  defaults: { _controller: App\Controller\DefaultController::index, req: null }
+  requirements:
+    req: ".*"

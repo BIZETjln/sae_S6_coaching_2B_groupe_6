@@ -120,6 +120,7 @@ class SportifStatistiquesController extends AbstractController
             WHERE HEX(p.sportif_id) = :sportifIdHex
             AND s.date_heure BETWEEN :dateMin AND :dateMax
             AND s.statut = 'VALIDEE'
+            AND p.presence = TRUE
         ";
         
         $stmt = $conn->executeQuery($sqlTotalSeances, [
@@ -137,6 +138,7 @@ class SportifStatistiquesController extends AbstractController
             WHERE HEX(p.sportif_id) = :sportifIdHex
             AND s.date_heure BETWEEN :dateMin AND :dateMax
             AND s.statut = 'VALIDEE'
+            AND p.presence = TRUE
             GROUP BY s.type_seance
         ";
         
@@ -157,6 +159,7 @@ class SportifStatistiquesController extends AbstractController
             WHERE HEX(p.sportif_id) = :sportifIdHex
             AND s.date_heure BETWEEN :dateMin AND :dateMax
             AND s.statut = 'VALIDEE'
+            AND p.presence = TRUE
             GROUP BY e.id, e.nom
             ORDER BY count DESC
             LIMIT 3
