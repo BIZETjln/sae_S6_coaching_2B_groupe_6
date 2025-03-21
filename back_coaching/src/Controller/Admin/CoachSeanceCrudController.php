@@ -362,6 +362,12 @@ class CoachSeanceCrudController extends AbstractCrudController
                 
                 // Ajouter cette vérification pour les sportifs
                 if (!$seance->getParticipations()->isEmpty()) {
+                    // Vérifier les conflits d'horaires et de niveaux pour les sportifs
+                    $conflicts = $this->checkSportifsAvailability($seance);
+                    foreach ($conflicts as $conflict) {
+                        $form->addError(new \Symfony\Component\Form\FormError($conflict));
+                    }
+                    
                     // Vérifier le nombre de séances futures par sportif
                     $maxFutureSessionsConflicts = $this->checkMaxFutureSessions($seance);
                     foreach ($maxFutureSessionsConflicts as $conflict) {
@@ -550,6 +556,12 @@ class CoachSeanceCrudController extends AbstractCrudController
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
                     }
+                    
+                    // Vérifier les conflits pour les sportifs
+                    $conflicts = $this->checkSportifsAvailability($entityInstance);
+                    if (!empty($conflicts)) {
+                        throw new \LogicException(implode("\n", $conflicts));
+                    }
                 }
             }
 
@@ -584,6 +596,12 @@ class CoachSeanceCrudController extends AbstractCrudController
                             'Vous avez déjà une séance programmée à un horaire trop proche. ' .
                                 'Il doit y avoir au moins 1h30 entre deux séances.'
                         );
+                    }
+                    
+                    // Vérifier les conflits pour les sportifs
+                    $conflicts = $this->checkSportifsAvailability($entityInstance);
+                    if (!empty($conflicts)) {
+                        throw new \LogicException(implode("\n", $conflicts));
                     }
                 }
             }
@@ -685,5 +703,41 @@ class CoachSeanceCrudController extends AbstractCrudController
         parent::deleteEntity($entityManager, $entityInstance);
 
         $this->addFlash('success', 'La séance a été supprimée avec succès.');
+    }
+
+    private function checkSportifsAvailability(Seance $seance): array
+    {
+        $conflicts = [];
+        $repository = $this->entityManager->getRepository(Seance::class);
+
+        if ($repository instanceof \App\Repository\SeanceRepository) {
+            foreach ($seance->getParticipations() as $participation) {
+                $sportif = $participation->getSportif();
+                if (!$sportif) continue;
+
+                // Vérifier les conflits d'horaires
+                $hasConflict = $repository->hasSportifSessionConflict($sportif, $seance->getDateHeure(), $seance->getId());
+                if ($hasConflict) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s a déjà une séance programmée, il doit y avoir au moins 1h30 entre deux séances',
+                        $sportif->__toString()
+                    );
+                }
+
+                // Vérifier la correspondance des niveaux
+                $niveauSportif = $sportif->getNiveauSportif();
+                $niveauSeance = $seance->getNiveauSeance();
+                if ($niveauSportif !== $niveauSeance) {
+                    $conflicts[] = sprintf(
+                        'Le sportif %s de niveau %s ne peut pas être inscrit à une séance de niveau %s',
+                        $sportif->__toString(),
+                        $niveauSportif->value,
+                        $niveauSeance->value
+                    );
+                }
+            }
+        }
+
+        return $conflicts;
     }
 }
