@@ -85,7 +85,7 @@ export class CoachService {
    */
   getCoachById(id: string): Observable<Coach> {
     const url = `https://127.0.0.1:8000/api/coaches/${id}`;
-    
+
     return this.http.get<ApiCoach>(url, this.httpOptions).pipe(
       map((coach) => {
         // Gestion de l'image du coach

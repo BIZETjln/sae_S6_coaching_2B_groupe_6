@@ -59,46 +59,52 @@ export class SeancesComponent implements OnInit {
 
   // Options de filtre de date
   optionsFilterDate: DateFilterOption[] = [
-    { 
-      label: 'Tous', 
-      value: 'Tous', 
-      filterFn: () => true 
+    {
+      label: 'Tous',
+      value: 'Tous',
+      filterFn: () => true,
     },
-    { 
-      label: 'Aujourd\'hui', 
-      value: 'Aujourd\'hui', 
+    {
+      label: "Aujourd'hui",
+      value: "Aujourd'hui",
       filterFn: (date: Date) => {
         const today = new Date();
-        return date.getDate() === today.getDate() && 
-               date.getMonth() === today.getMonth() && 
-               date.getFullYear() === today.getFullYear();
-      } 
+        return (
+          date.getDate() === today.getDate() &&
+          date.getMonth() === today.getMonth() &&
+          date.getFullYear() === today.getFullYear()
+        );
+      },
     },
-    { 
-      label: 'Cette semaine', 
-      value: 'Cette semaine', 
+    {
+      label: 'Cette semaine',
+      value: 'Cette semaine',
       filterFn: (date: Date) => {
         const today = new Date();
         const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Lundi de la semaine courante
+        startOfWeek.setDate(
+          today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)
+        ); // Lundi de la semaine courante
         startOfWeek.setHours(0, 0, 0, 0);
-        
+
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6); // Dimanche de la semaine courante
         endOfWeek.setHours(23, 59, 59, 999);
-        
+
         return date >= startOfWeek && date <= endOfWeek;
-      } 
+      },
     },
-    { 
-      label: 'Ce mois-ci', 
-      value: 'Ce mois-ci', 
+    {
+      label: 'Ce mois-ci',
+      value: 'Ce mois-ci',
       filterFn: (date: Date) => {
         const today = new Date();
-        return date.getMonth() === today.getMonth() && 
-               date.getFullYear() === today.getFullYear();
-      } 
-    }
+        return (
+          date.getMonth() === today.getMonth() &&
+          date.getFullYear() === today.getFullYear()
+        );
+      },
+    },
   ];
 
   // Séances filtrées à afficher
@@ -106,10 +112,10 @@ export class SeancesComponent implements OnInit {
 
   // Indicateur de chargement
   loading: boolean = true;
-  
+
   // Nouvel indicateur pour les réservations en cours
   reservationEnCours: boolean = false;
-  
+
   // Message de notification
   messageNotification: string = '';
   typeNotification: 'success' | 'error' = 'success';
@@ -128,18 +134,22 @@ export class SeancesComponent implements OnInit {
       next: (seances) => {
         // Filtrer uniquement les séances avec le statut "prevue"
         console.log('seances', seances);
-        this.seances = seances.filter(seance => seance.statut === 'à venir');
+        this.seances = seances.filter((seance) => seance.statut === 'à venir');
         console.log('seances', this.seances);
         this.seancesFiltrees = [...this.seances];
         this.loading = false;
 
         // Log pour vérifier les détails des séances
-        console.log('Séances récupérées (statut prevue uniquement):', this.seances);
+        console.log(
+          'Séances récupérées (statut prevue uniquement):',
+          this.seances
+        );
         this.seances.forEach((seance, index) => {
           console.log(`Séance ${index + 1} - ID: ${seance.id}`, {
             titre: seance.titre,
             theme: seance.theme || seance.themeSeance || seance.theme_seance,
-            niveau: seance.niveau || seance.niveauSeance || seance.niveau_seance,
+            niveau:
+              seance.niveau || seance.niveauSeance || seance.niveau_seance,
             type: seance.type || seance.typeSeance || seance.type_seance,
             statut: seance.statut,
             image: seance.image,
@@ -329,7 +339,9 @@ export class SeancesComponent implements OnInit {
       let dateMatch = true;
       if (this.filtreDateActif !== 'Tous' && seance.date) {
         const seanceDate = new Date(seance.date);
-        const filterOption = this.optionsFilterDate.find(option => option.value === this.filtreDateActif);
+        const filterOption = this.optionsFilterDate.find(
+          (option) => option.value === this.filtreDateActif
+        );
         if (filterOption) {
           dateMatch = filterOption.filterFn(seanceDate);
         }
@@ -381,47 +393,57 @@ export class SeancesComponent implements OnInit {
     if (!user || !user.id || !seance.sportifs) {
       return false;
     }
-    
+
     // Vérifier si l'ID de l'utilisateur est dans la liste des sportifs de la séance
     return seance.sportifs.includes(user.id);
   }
-  
+
   // Méthode pour vérifier si une séance est complète
   estSeancePleine(seance: Seance): boolean {
     // Si l'utilisateur est déjà inscrit, la séance n'est pas considérée comme pleine pour lui
     if (this.estInscritASeance(seance)) {
       return false;
     }
-    
+
     // Vérifier la capacité et le nombre actuel de participants
     const nombreParticipants = seance.sportifs?.length || 0;
-    const capaciteMax = seance.capaciteMax || this.getCapaciteMaxFromType(seance);
-    
+    const capaciteMax =
+      seance.capaciteMax || this.getCapaciteMaxFromType(seance);
+
     return nombreParticipants >= capaciteMax;
   }
-  
+
   // Méthode pour obtenir le message approprié concernant la capacité
   getCapaciteMessage(seance: Seance): string {
     if (!seance) return '';
-    
+
     const nombreParticipants = seance.sportifs?.length || 0;
-    const capaciteMax = seance.capaciteMax || this.getCapaciteMaxFromType(seance);
-    
+    const capaciteMax =
+      seance.capaciteMax || this.getCapaciteMaxFromType(seance);
+
     return `${nombreParticipants}/${capaciteMax} places`;
   }
-  
+
   // Méthode pour déterminer la capacité maximale en fonction du type
   getCapaciteMaxFromType(seance: Seance): number {
-    const type = seance.type?.toLowerCase() || seance.typeSeance?.toLowerCase() || seance.type_seance?.toLowerCase() || '';
-    
+    const type =
+      seance.type?.toLowerCase() ||
+      seance.typeSeance?.toLowerCase() ||
+      seance.type_seance?.toLowerCase() ||
+      '';
+
     switch (type) {
-      case 'solo': return 1;
-      case 'duo': return 2;
-      case 'trio': return 3;
-      default: return 1; // Par défaut
+      case 'solo':
+        return 1;
+      case 'duo':
+        return 2;
+      case 'trio':
+        return 3;
+      default:
+        return 1; // Par défaut
     }
   }
-  
+
   // Méthode pour vérifier si l'utilisateur peut réserver une séance
   peutReserver(seance: Seance): boolean {
     // Vérifier si l'utilisateur est connecté
@@ -429,99 +451,101 @@ export class SeancesComponent implements OnInit {
     if (!user || !user.id) {
       return false;
     }
-    
+
     // Si l'utilisateur est déjà inscrit, pas besoin de vérifier les autres conditions
     if (this.estInscritASeance(seance)) {
       return true;
     }
-    
+
     // Vérifier si la séance est complète
     if (this.estSeancePleine(seance)) {
       return false;
     }
-    
+
     // Vérifier si le niveau de la séance correspond au niveau de l'utilisateur
     if (!this.niveauEstCompatible(seance, user)) {
       return false;
     }
-    
+
     // Vérifier si l'utilisateur a déjà réservé 3 séances à venir
     if (this.nombreReservationsAtteint()) {
       return false;
     }
-    
+
     return true;
   }
-  
+
   // Vérifier si le niveau de la séance est compatible avec le niveau de l'utilisateur
   private niveauEstCompatible(seance: Seance, user: any): boolean {
     // Si la séance n'a pas de niveau spécifié ou est marquée "tous niveaux", tous les utilisateurs peuvent la réserver
-    const niveauSeance = seance.niveau || seance.niveauSeance || seance.niveau_seance;
+    const niveauSeance =
+      seance.niveau || seance.niveauSeance || seance.niveau_seance;
     if (!niveauSeance || niveauSeance.toLowerCase() === 'tous niveaux') {
       return true;
     }
-    
+
     // Si l'utilisateur n'a pas de niveau défini, on suppose qu'il est débutant
     const niveauUser = user.niveau || 'debutant';
-    
+
     // Définir l'ordre des niveaux (du plus bas au plus élevé)
     const ordreNiveaux: Record<string, number> = {
-      'debutant': 1,
-      'intermediaire': 2,
-      'avance': 3
+      debutant: 1,
+      intermediaire: 2,
+      avance: 3,
     };
-    
+
     // Un utilisateur ne peut pas réserver une séance d'un niveau supérieur au sien
     const niveauUserValue = ordreNiveaux[niveauUser.toLowerCase()] || 1;
     const niveauSeanceValue = ordreNiveaux[niveauSeance.toLowerCase()] || 3;
-    
+
     return niveauUserValue >= niveauSeanceValue;
   }
-  
+
   // Vérifier si l'utilisateur a déjà réservé 3 séances à venir
   private nombreReservationsAtteint(): boolean {
     const user = this.authService.currentUserValue;
     if (!user || !user.id) {
       return true; // Si pas d'utilisateur, on considère que la limite est atteinte
     }
-    
+
     // Compter le nombre de séances à venir auxquelles l'utilisateur est inscrit
-    const seancesReservees = this.seances.filter(seance => 
-      seance.statut === 'à venir' && 
-      seance.sportifs && 
-      seance.sportifs.includes(user.id)
+    const seancesReservees = this.seances.filter(
+      (seance) =>
+        seance.statut === 'à venir' &&
+        seance.sportifs &&
+        seance.sportifs.includes(user.id)
     );
-    
+
     return seancesReservees.length >= 3;
   }
-  
+
   // Vérifier si l'utilisateur peut annuler sa réservation (plus de 24h avant la séance)
   peutAnnuler(seance: Seance): boolean {
     // Vérifier si l'utilisateur est inscrit à la séance
     if (!this.estInscritASeance(seance)) {
       return false;
     }
-    
+
     // Vérifier si la séance est dans plus de 24h
     if (!seance.date) {
       return true; // Si pas de date, on autorise l'annulation
     }
-    
+
     const dateSeance = new Date(seance.date);
-    
+
     // Ajouter l'heure de début si disponible
     if (seance.heureDebut) {
       const [heures, minutes] = seance.heureDebut.split(':').map(Number);
       dateSeance.setHours(heures || 0, minutes || 0);
     }
-    
+
     const maintenant = new Date();
     const differenceEnMs = dateSeance.getTime() - maintenant.getTime();
     const differenceEnHeures = differenceEnMs / (1000 * 60 * 60);
-    
+
     return differenceEnHeures >= 24;
   }
-  
+
   // Méthode pour obtenir un message explicatif si la réservation n'est pas possible
   getMessageReservation(seance: Seance): string {
     // Vérifier si l'utilisateur est connecté
@@ -529,7 +553,7 @@ export class SeancesComponent implements OnInit {
     if (!user || !user.id) {
       return 'Veuillez vous connecter pour réserver une séance';
     }
-    
+
     // Si l'utilisateur est déjà inscrit
     if (this.estInscritASeance(seance)) {
       if (!this.peutAnnuler(seance)) {
@@ -537,89 +561,94 @@ export class SeancesComponent implements OnInit {
       }
       return 'Annuler ma réservation';
     }
-    
+
     // Si la séance est complète
     if (this.estSeancePleine(seance)) {
       return 'Cette séance est complète';
     }
-    
+
     // Si le niveau de la séance ne correspond pas au niveau de l'utilisateur
     if (!this.niveauEstCompatible(seance, user)) {
-      const niveauSeance = seance.niveau || seance.niveauSeance || seance.niveau_seance || 'tous niveaux';
+      const niveauSeance =
+        seance.niveau ||
+        seance.niveauSeance ||
+        seance.niveau_seance ||
+        'tous niveaux';
       return `Niveau requis : ${niveauSeance}`;
     }
-    
+
     // Si l'utilisateur a déjà réservé 3 séances à venir
     if (this.nombreReservationsAtteint()) {
       return 'Vous avez atteint la limite de 3 réservations';
     }
-    
+
     return 'Réserver cette séance';
   }
-  
+
   // Méthode modifiée pour réserver ou annuler une réservation
   toggleReservation(seance: Seance, event?: Event): void {
     // Empêcher la propagation de l'événement pour ne pas déclencher l'affichage des détails
     if (event) {
       event.stopPropagation();
     }
-    
+
     // Vérifier si l'utilisateur est connecté
     if (!this.isClient()) {
       this.router.navigate(['/connexion'], {
         queryParams: {
           returnUrl: '/seances',
-          message: 'Connectez-vous pour réserver une séance'
-        }
+          message: 'Connectez-vous pour réserver une séance',
+        },
       });
       return;
     }
-    
+
     // Si l'utilisateur est inscrit mais ne peut pas annuler (moins de 24h)
     if (this.estInscritASeance(seance) && !this.peutAnnuler(seance)) {
-      this.messageNotification = 'Vous ne pouvez pas annuler une séance moins de 24h avant son début';
+      this.messageNotification =
+        'Vous ne pouvez pas annuler une séance moins de 24h avant son début';
       this.typeNotification = 'error';
       this.afficherNotification = true;
-      
+
       // Fermer la notification après 3 secondes
       setTimeout(() => {
         this.afficherNotification = false;
       }, 3000);
-      
+
       return;
     }
-    
+
     // Si l'utilisateur n'est pas inscrit et ne peut pas réserver
     if (!this.estInscritASeance(seance) && !this.peutReserver(seance)) {
       this.messageNotification = this.getMessageReservation(seance);
       this.typeNotification = 'error';
       this.afficherNotification = true;
-      
+
       // Fermer la notification après 3 secondes
       setTimeout(() => {
         this.afficherNotification = false;
       }, 3000);
-      
+
       return;
     }
-    
+
     // Indiquer que la réservation est en cours
     this.reservationEnCours = true;
-    
+
     // Appeler le service pour réserver/annuler
     this.seanceService.toggleReservationSeance(seance.id).subscribe({
       next: (response) => {
         console.log('Réponse de réservation:', response);
-        
+
         // Afficher un message de succès
         this.messageNotification = response.message;
         this.typeNotification = 'success';
         this.afficherNotification = true;
-        
+
         // Mettre à jour la liste des séances pour refléter les changements
         // Ne pas désactiver l'indicateur de chargement avant que les données soient rechargées
         this.refreshSeancesWithLoadingState();
-        
+
         // Fermer la notification après 3 secondes
         setTimeout(() => {
           this.afficherNotification = false;
@@ -627,31 +656,32 @@ export class SeancesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erreur lors de la réservation:', error);
-        
+
         // Afficher un message d'erreur
-        this.messageNotification = error.message || 'Une erreur est survenue lors de la réservation';
+        this.messageNotification =
+          error.message || 'Une erreur est survenue lors de la réservation';
         this.typeNotification = 'error';
         this.afficherNotification = true;
-        
+
         // Fermer la notification après 3 secondes
         setTimeout(() => {
           this.afficherNotification = false;
         }, 3000);
-        
+
         // Désactiver l'indicateur de chargement
         this.reservationEnCours = false;
-      }
+      },
     });
   }
-  
+
   // Méthode pour rafraîchir la liste des séances avec l'état de chargement maintenu
   private refreshSeancesWithLoadingState(): void {
     this.seanceService.getAllSeances().subscribe({
       next: (seances) => {
         // Conserver uniquement les séances avec statut "prevue"
-        this.seances = seances.filter(seance => seance.statut === 'à venir');
+        this.seances = seances.filter((seance) => seance.statut === 'à venir');
         this.appliquerFiltres(); // Réappliquer les filtres
-        
+
         // Désactiver l'indicateur de chargement après un court délai pour s'assurer
         // que l'interface est mise à jour correctement
         setTimeout(() => {
@@ -662,21 +692,21 @@ export class SeancesComponent implements OnInit {
         console.error('Erreur lors du rafraîchissement des séances:', error);
         // Désactiver l'indicateur de chargement
         this.reservationEnCours = false;
-      }
+      },
     });
   }
-  
+
   // Méthode originale pour rafraîchir la liste des séances (conservée par compatibilité)
   private refreshSeances(): void {
     this.seanceService.getAllSeances().subscribe({
       next: (seances) => {
         // Conserver uniquement les séances avec statut "prevue"
-        this.seances = seances.filter(seance => seance.statut === 'à venir');
+        this.seances = seances.filter((seance) => seance.statut === 'à venir');
         this.appliquerFiltres(); // Réappliquer les filtres
       },
       error: (error) => {
         console.error('Erreur lors du rafraîchissement des séances:', error);
-      }
+      },
     });
   }
 }

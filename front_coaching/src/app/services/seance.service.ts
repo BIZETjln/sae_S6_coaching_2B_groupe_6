@@ -24,7 +24,10 @@ export class SeanceService {
   private baseImageUrl = 'https://127.0.0.1:8000/images/seances/';
 
   // Subject pour notifier les composants des changements de réservations
-  private seanceChangedSubject = new Subject<{action: 'reserve' | 'annule', seanceId: string}>();
+  private seanceChangedSubject = new Subject<{
+    action: 'reserve' | 'annule';
+    seanceId: string;
+  }>();
 
   constructor(
     private http: HttpClient,
@@ -33,13 +36,16 @@ export class SeanceService {
   ) {}
 
   // Observable pour que les composants puissent s'abonner aux changements
-  get seanceChanged$(): Observable<{action: 'reserve' | 'annule', seanceId: string}> {
+  get seanceChanged$(): Observable<{
+    action: 'reserve' | 'annule';
+    seanceId: string;
+  }> {
     return this.seanceChangedSubject.asObservable();
   }
 
   // Méthode pour notifier les composants d'un changement
   notifySeanceChanged(action: 'reserve' | 'annule', seanceId: string): void {
-    this.seanceChangedSubject.next({action, seanceId});
+    this.seanceChangedSubject.next({ action, seanceId });
   }
 
   // Récupérer toutes les séances de l'utilisateur connecté
@@ -506,7 +512,7 @@ export class SeanceService {
     return this.http
       .post<any>(`${this.apiUrl}/seances/${seanceId}/annuler`, {})
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success !== false) {
             // Notifier les autres composants du changement
             this.notifySeanceChanged('annule', seanceId);
@@ -554,19 +560,21 @@ export class SeanceService {
       // Utiliser switchMap pour chaîner avec une mise à jour des séances
       switchMap((response) => {
         console.log("Réponse d'inscription/désinscription:", response);
-        
+
         // Mettre à jour la liste des séances de l'utilisateur dans le AuthService
         // en forçant une requête au serveur pour récupérer les données les plus récentes
         return this.authService.getUserSeances(true).pipe(
           map(() => {
-            console.log('Données des séances mises à jour après inscription/désinscription');
-            
+            console.log(
+              'Données des séances mises à jour après inscription/désinscription'
+            );
+
             // Notifier les autres composants du changement avec l'action appropriée
             this.notifySeanceChanged(
               response.estInscrit ? 'reserve' : 'annule',
               seanceId
             );
-            
+
             return {
               success: true,
               message: response.message,
